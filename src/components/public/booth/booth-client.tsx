@@ -16,6 +16,7 @@ import { WelcomeModal } from "@/components/public/booth/welcome-modal";
 import { useSingleSession } from "@/lib/booth/single-session";
 import { STORAGE_BUCKETS } from "@/lib/constants";
 import { composeStrip } from "@/lib/frames/compose-strip";
+import { getCoverSourceRect } from "@/lib/frames/geometry";
 import { loadImage } from "@/lib/frames/image";
 import type { FrameSlot } from "@/lib/frames/types";
 import { createClient } from "@/lib/supabase/client";
@@ -717,11 +718,22 @@ export function BoothClient({
       const ctx = output.getContext("2d");
       if (!ctx) return null;
 
+      // Samakan dengan preview /booth: latar putih. PNG frame bisa punya tepi
+      // transparan (mis. 1px kiri / 3px bawah) yang menjadi garis putih pada
+      // hasil; gambar digambar sedikit lebih besar (overscan) agar tepi
+      // transparan itu terdorong keluar kanvas -> hasil penuh tanpa garis putih.
+      const overscan = Math.max(2, Math.ceil(outputScale * 4));
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, output.width, output.height);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(composed, 0, 0, output.width, output.height);
+      ctx.drawImage(
+        composed,
+        -overscan,
+        -overscan,
+        output.width + overscan * 2,
+        output.height + overscan * 2,
+      );
 
       return output.toDataURL("image/png", quality);
     },
@@ -799,11 +811,19 @@ export function BoothClient({
         return;
       }
 
+      // Rasio kanvas GIF disamakan dengan slot pada frame terpilih supaya tiap
+      // foto mengisi penuh (tanpa margin latar) seperti pada preview /booth.
+      const refSlot = slots.find((slot) => slot.w > 0 && slot.h > 0);
+      const gifWidth = GIF_WIDTH;
+      const gifHeight = refSlot
+        ? Math.max(1, Math.round((GIF_WIDTH * refSlot.h) / refSlot.w))
+        : GIF_HEIGHT;
+
       const gif = new GIF({
         workers: 4,
         quality: 10,
-        width: GIF_WIDTH,
-        height: GIF_HEIGHT,
+        width: gifWidth,
+        height: gifHeight,
         dither: false,
         workerScript: "/js/gif.worker.js",
       });
@@ -831,21 +851,25 @@ export function BoothClient({
         image.crossOrigin = "anonymous";
         image.onload = () => {
           const canvas = document.createElement("canvas");
-          canvas.width = GIF_WIDTH;
-          canvas.height = GIF_HEIGHT;
+          canvas.width = gifWidth;
+          canvas.height = gifHeight;
           const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = "high";
-            const fit = Math.min(
-              canvas.width / image.width,
-              canvas.height / image.height,
-            );
-            const x = (canvas.width - image.width * fit) / 2;
-            const y = (canvas.height - image.height * fit) / 2;
             ctx.fillStyle = FRAME_BACKGROUND;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(image, x, y, image.width * fit, image.height * fit);
+            const sourceWidth = image.naturalWidth || image.width;
+            const sourceHeight = image.naturalHeight || image.height;
+            if (sourceWidth > 0 && sourceHeight > 0) {
+              const { sx, sy, sw, sh } = getCoverSourceRect(
+                sourceWidth,
+                sourceHeight,
+                gifWidth,
+                gifHeight,
+              );
+              ctx.drawImage(image, sx, sy, sw, sh, 0, 0, gifWidth, gifHeight);
+            }
           }
           gif.addFrame(canvas, { delay: 1000, copy: true });
           setGifProgress({
@@ -860,7 +884,7 @@ export function BoothClient({
         image.src = photo;
       });
     });
-  }, [photos]);
+  }, [photos, slots]);
 
   async function handleCreateGif() {
     setIsGifLoading(true);
