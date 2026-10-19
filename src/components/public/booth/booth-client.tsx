@@ -14,9 +14,11 @@ import {
 } from "@/components/public/booth/crop-modal";
 import { WelcomeModal } from "@/components/public/booth/welcome-modal";
 import { useSingleSession } from "@/lib/booth/single-session";
+import { STORAGE_BUCKETS } from "@/lib/constants";
 import { composeStrip } from "@/lib/frames/compose-strip";
 import { loadImage } from "@/lib/frames/image";
 import type { FrameSlot } from "@/lib/frames/types";
+import { createClient } from "@/lib/supabase/client";
 
 export type BoothFrame = {
   id: number;
@@ -926,17 +928,61 @@ export function BoothClient({
 
       setDriveProgress({ percentage: 60, text: "Mengupload file..." });
 
-      const formData = new FormData();
-      formData.append("photo", photoBlob, "Panoricam💫.png");
-      formData.append("gif", gifFile, "PanoricamGif✨.gif");
-      formData.append("email", target);
-      formData.append("frame_id", String(frame.id));
+      const uploadResponse = await fetch("/api/send-email/upload-urls", {
+        method: "POST",
+      });
+      const uploadTargets = (await uploadResponse.json()) as {
+        success?: boolean;
+        message?: string;
+        photo?: { path: string; token: string };
+        gif?: { path: string; token: string };
+      };
+      if (
+        !uploadResponse.ok ||
+        !uploadTargets.success ||
+        !uploadTargets.photo ||
+        !uploadTargets.gif
+      ) {
+        throw new Error(uploadTargets.message ?? "Gagal menyiapkan upload");
+      }
 
-      setDriveProgress({ percentage: 80, text: "Mengirim email..." });
+      const supabase = createClient();
+      const photoUpload = await supabase.storage
+        .from(STORAGE_BUCKETS.photoResults)
+        .uploadToSignedUrl(
+          uploadTargets.photo.path,
+          uploadTargets.photo.token,
+          photoBlob,
+          { contentType: "image/png" },
+        );
+      if (photoUpload.error) {
+        throw new Error(`Gagal mengunggah foto: ${photoUpload.error.message}`);
+      }
+
+      setDriveProgress({ percentage: 75, text: "Mengupload GIF..." });
+      const gifUpload = await supabase.storage
+        .from(STORAGE_BUCKETS.photoResults)
+        .uploadToSignedUrl(
+          uploadTargets.gif.path,
+          uploadTargets.gif.token,
+          gifFile,
+          { contentType: "image/gif" },
+        );
+      if (gifUpload.error) {
+        throw new Error(`Gagal mengunggah GIF: ${gifUpload.error.message}`);
+      }
+
+      setDriveProgress({ percentage: 85, text: "Mengirim email..." });
 
       const response = await fetch("/api/send-email", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: target,
+          frame_id: frame.id,
+          photo_path: uploadTargets.photo.path,
+          gif_path: uploadTargets.gif.path,
+        }),
       });
       const result = (await response.json()) as {
         success?: boolean;

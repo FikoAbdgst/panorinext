@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 
+import { STORAGE_BUCKETS } from "@/lib/constants";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  isSupabaseAdminConfigured,
+  warnSupabaseNotConfigured,
+} from "@/lib/supabase/config";
+
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
-const ALLOWED_PHOTO_TYPES = ["image/png", "image/jpg", "image/jpeg"];
-const ALLOWED_GIF_TYPES = ["image/gif"];
 
 const EMAIL_SUBJECT = "🎉 Kenangan Indah Anda Siap Disimpan! - PanoriCam";
 
@@ -51,87 +56,104 @@ Tim PanoriCam 📷✨
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Email ini dikirim otomatis. Mohon tidak membalas.
-Butuh bantuan? Hubungi kami di panoricam.impaxion.my.id
+Butuh bantuan? Hubungi kami di panoricamofficial.com
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `;
+
+/** Path yang dibuat oleh `/api/send-email/upload-urls`. */
+const PHOTO_PATH_PATTERN =
+  /^photo-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png$/;
+const GIF_PATH_PATTERN =
+  /^gif-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.gif$/;
+
+type SendEmailPayload = {
+  email?: unknown;
+  frame_id?: unknown;
+  photo_path?: unknown;
+  gif_path?: unknown;
+};
+
+function fail(message: string, status: number) {
+  return NextResponse.json({ success: false, message }, { status });
+}
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function isValidFrameId(value: string | null): boolean {
-  if (!value) return false;
-  const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed > 0;
+function readPath(value: unknown, pattern: RegExp): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.length > 200 || trimmed.includes("..")) {
+    return null;
+  }
+  return pattern.test(trimmed) ? trimmed : null;
 }
 
 export async function POST(request: Request) {
-  let formData: FormData;
+  let payload: SendEmailPayload;
   try {
-    formData = await request.formData();
+    payload = (await request.json()) as SendEmailPayload;
   } catch {
-    return NextResponse.json(
-      { success: false, message: "Gagal mengirim email: data tidak valid" },
-      { status: 400 },
-    );
+    return fail("Gagal mengirim email: data tidak valid", 400);
   }
 
-  const email = String(formData.get("email") ?? "").trim();
-  const frameId = formData.get("frame_id")?.toString() ?? null;
-  const photo = formData.get("photo");
-  const gif = formData.get("gif");
+  const email = typeof payload.email === "string" ? payload.email.trim() : "";
+  const frameId = Number(payload.frame_id);
+  const photoPath = readPath(payload.photo_path, PHOTO_PATH_PATTERN);
+  const gifPath = readPath(payload.gif_path, GIF_PATH_PATTERN);
 
   if (!isValidEmail(email)) {
-    return NextResponse.json(
-      { success: false, message: "Gagal mengirim email: format email tidak valid" },
-      { status: 400 },
-    );
+    return fail("Gagal mengirim email: format email tidak valid", 400);
   }
 
-  if (!isValidFrameId(frameId)) {
-    return NextResponse.json(
-      { success: false, message: "Gagal mengirim email: frame tidak valid" },
-      { status: 400 },
-    );
+  if (!Number.isInteger(frameId) || frameId <= 0) {
+    return fail("Gagal mengirim email: frame tidak valid", 400);
   }
 
-  if (!(photo instanceof File) || !ALLOWED_PHOTO_TYPES.includes(photo.type)) {
-    return NextResponse.json(
-      { success: false, message: "Gagal mengirim email: foto harus PNG/JPG" },
-      { status: 400 },
-    );
-  }
-
-  if (!(gif instanceof File) || !ALLOWED_GIF_TYPES.includes(gif.type)) {
-    return NextResponse.json(
-      { success: false, message: "Gagal mengirim email: GIF tidak valid" },
-      { status: 400 },
-    );
-  }
-
-  if (photo.size > MAX_FILE_BYTES || gif.size > MAX_FILE_BYTES) {
-    return NextResponse.json(
-      { success: false, message: "Gagal mengirim email: ukuran file melebihi 10MB" },
-      { status: 400 },
-    );
+  if (!photoPath || !gifPath) {
+    return fail("Gagal mengirim email: berkas tidak valid", 400);
   }
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    return NextResponse.json(
-      {
-        success: false,
-        message:
-          "Gagal mengirim email: Masalah konfigurasi email server. Silakan hubungi admin.",
-      },
-      { status: 500 },
+    return fail(
+      "Gagal mengirim email: Masalah konfigurasi email server. Silakan hubungi admin.",
+      500,
     );
   }
 
+  if (!isSupabaseAdminConfigured()) {
+    warnSupabaseNotConfigured();
+    return fail("Gagal mengirim email: penyimpanan belum dikonfigurasi.", 503);
+  }
+
+  const supabase = createAdminClient();
+  const bucket = supabase.storage.from(STORAGE_BUCKETS.photoResults);
+
   try {
+    const [photoDownload, gifDownload] = await Promise.all([
+      bucket.download(photoPath),
+      bucket.download(gifPath),
+    ]);
+
+    if (photoDownload.error || !photoDownload.data) {
+      return fail("Gagal mengirim email: foto tidak ditemukan.", 400);
+    }
+    if (gifDownload.error || !gifDownload.data) {
+      return fail("Gagal mengirim email: GIF tidak ditemukan.", 400);
+    }
+
+    if (
+      photoDownload.data.size > MAX_FILE_BYTES ||
+      gifDownload.data.size > MAX_FILE_BYTES
+    ) {
+      return fail("Gagal mengirim email: ukuran file melebihi 10MB", 400);
+    }
+
     const [photoBuffer, gifBuffer] = await Promise.all([
-      photo.arrayBuffer(),
-      gif.arrayBuffer(),
+      photoDownload.data.arrayBuffer(),
+      gifDownload.data.arrayBuffer(),
     ]);
 
     const response = await fetch("https://api.resend.com/emails", {
@@ -160,12 +182,9 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const detail = await response.text();
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Gagal mengirim email: ${detail || "penyedia email menolak permintaan"}`,
-        },
-        { status: 500 },
+      return fail(
+        `Gagal mengirim email: ${detail || "penyedia email menolak permintaan"}`,
+        500,
       );
     }
 
@@ -174,14 +193,14 @@ export async function POST(request: Request) {
       message: `Foto HD dan GIF animasi berhasil dikirim ke email ${email}`,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: `Gagal mengirim email: ${
-          error instanceof Error ? error.message : "kesalahan tidak diketahui"
-        }`,
-      },
-      { status: 500 },
+    return fail(
+      `Gagal mengirim email: ${
+        error instanceof Error ? error.message : "kesalahan tidak diketahui"
+      }`,
+      500,
     );
+  } finally {
+    // photo-results hanya berfungsi sebagai perantara sementara untuk email.
+    await bucket.remove([photoPath, gifPath]);
   }
 }
