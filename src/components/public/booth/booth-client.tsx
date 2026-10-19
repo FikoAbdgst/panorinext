@@ -226,10 +226,12 @@ export function BoothClient({
   useEffect(() => {
     const startTimer = window.setTimeout(() => {
       let downloaded = false;
-      try {
-        downloaded = window.localStorage.getItem(downloadedKey) === "1";
-      } catch {
-        downloaded = false;
+      if (!frame.isFree) {
+        try {
+          downloaded = window.localStorage.getItem(downloadedKey) === "1";
+        } catch {
+          downloaded = false;
+        }
       }
       if (downloaded) {
         setHasDownloaded(true);
@@ -239,7 +241,7 @@ export function BoothClient({
       }
     }, 500);
     return () => window.clearTimeout(startTimer);
-  }, [downloadedKey]);
+  }, [downloadedKey, frame.isFree]);
 
   const showToast = useCallback(
     (message: string, type: ToastType = "info", duration = 4000) => {
@@ -757,11 +759,13 @@ export function BoothClient({
       }
       setPreviewImage(image);
       triggerDownload(image, "Panoricam💫.png");
-      setHasDownloaded(true);
-      try {
-        window.localStorage.setItem(downloadedKey, "1");
-      } catch {
-        /* localStorage bisa diblokir; tidak fatal */
+      if (!frame.isFree) {
+        setHasDownloaded(true);
+        try {
+          window.localStorage.setItem(downloadedKey, "1");
+        } catch {
+          /* localStorage bisa diblokir; tidak fatal */
+        }
       }
       showToast("Download berhasil!", "success", 2000);
       if (!hasShownTestimoniRef.current) {

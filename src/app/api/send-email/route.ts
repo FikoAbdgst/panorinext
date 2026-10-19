@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 
 import { STORAGE_BUCKETS } from "@/lib/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -115,8 +116,9 @@ export async function POST(request: Request) {
     return fail("Gagal mengirim email: berkas tidak valid", 400);
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
+  const gmailUser = process.env.GMAIL_USER?.trim();
+  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, "");
+  if (!gmailUser || !gmailAppPassword) {
     return fail(
       "Gagal mengirim email: Masalah konfigurasi email server. Silakan hubungi admin.",
       500,
@@ -156,37 +158,36 @@ export async function POST(request: Request) {
       gifDownload.data.arrayBuffer(),
     ]);
 
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: process.env.EMAIL_FROM ?? "PanoriCam <onboarding@resend.dev>",
-        to: [email],
-        subject: EMAIL_SUBJECT,
-        text: EMAIL_TEXT,
-        attachments: [
-          {
-            filename: "Panoricam💫.png",
-            content: Buffer.from(photoBuffer).toString("base64"),
-          },
-          {
-            filename: "PanoricamGif✨.gif",
-            content: Buffer.from(gifBuffer).toString("base64"),
-          },
-        ],
-      }),
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: { user: gmailUser, pass: gmailAppPassword },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 20000,
     });
 
-    if (!response.ok) {
-      const detail = await response.text();
-      return fail(
-        `Gagal mengirim email: ${detail || "penyedia email menolak permintaan"}`,
-        500,
-      );
-    }
+    const from = process.env.EMAIL_FROM?.trim() || `PanoriCam <${gmailUser}>`;
+
+    await transporter.sendMail({
+      from,
+      to: email,
+      subject: EMAIL_SUBJECT,
+      text: EMAIL_TEXT,
+      attachments: [
+        {
+          filename: "Panoricam💫.png",
+          content: Buffer.from(photoBuffer),
+          contentType: "image/png",
+        },
+        {
+          filename: "PanoricamGif✨.gif",
+          content: Buffer.from(gifBuffer),
+          contentType: "image/gif",
+        },
+      ],
+    });
 
     return NextResponse.json({
       success: true,
