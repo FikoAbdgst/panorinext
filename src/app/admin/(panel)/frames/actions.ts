@@ -126,15 +126,46 @@ function readFrameFields(formData: FormData):
   return { name, slug, categoryId, price, width, height, slots };
 }
 
-function readPng(formData: FormData): { file: File } | { error: string } | null {
-  const file = formData.get("frame_image");
-  if (!(file instanceof File) || file.size === 0) {
-    return null;
+const IMAGE_PATH_PATTERN = /^[a-z0-9][a-z0-9._-]*\.png$/;
+
+function readImagePath(formData: FormData): string {
+  const raw = formData.get("image_path");
+  return typeof raw === "string" ? raw.trim() : "";
+}
+
+function isValidImagePath(path: string): boolean {
+  return (
+    path.length > 0 &&
+    path.length <= 200 &&
+    !path.includes("..") &&
+    IMAGE_PATH_PATTERN.test(path)
+  );
+}
+
+export type FrameUploadTarget = { path: string; token: string };
+
+/**
+ * Membuat signed upload URL agar browser mengunggah PNG langsung ke Supabase.
+ * Ini menghindari batas 4.5 MB body Server Action di Vercel.
+ */
+export async function createFrameUploadUrlAction(
+  slug: string,
+): Promise<FrameUploadTarget | { error: string }> {
+  await requireAdmin();
+
+  const safeSlug = slugify(slug) || "frame";
+  const path = `${safeSlug}-${crypto.randomUUID()}.png`;
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.storage
+    .from(STORAGE_BUCKETS.frames)
+    .createSignedUploadUrl(path, { upsert: false });
+
+  if (error || !data) {
+    return { error: error?.message ?? "Gagal membuat URL unggah." };
   }
-  if (file.type && file.type !== "image/png") {
-    return { error: "File overlay harus berformat PNG." };
-  }
-  return { file };
+
+  return { path: data.path, token: data.token };
 }
 
 export async function createFrameAction(
@@ -147,26 +178,12 @@ export async function createFrameAction(
     return { status: "error", message: fields.error };
   }
 
-  const png = readPng(formData);
-  if (png === null) {
+  const imagePath = readImagePath(formData);
+  if (!isValidImagePath(imagePath)) {
     return { status: "error", message: "File PNG overlay wajib diunggah." };
-  }
-  if ("error" in png) {
-    return { status: "error", message: png.error };
   }
 
   const supabase = createAdminClient();
-  const imagePath = `${fields.slug}-${crypto.randomUUID()}.png`;
-
-  const { error: uploadError } = await supabase.storage
-    .from(STORAGE_BUCKETS.frames)
-    .upload(imagePath, await png.file.arrayBuffer(), {
-      contentType: "image/png",
-      upsert: false,
-    });
-  if (uploadError) {
-    return { status: "error", message: `Gagal mengunggah PNG: ${uploadError.message}` };
-  }
 
   const { error: insertError } = await supabase.from("frames").insert({
     name: fields.name,
@@ -217,22 +234,13 @@ export async function updateFrameAction(
   let imagePath = existing.image_path;
   let uploadedPath: string | null = null;
 
-  const png = readPng(formData);
-  if (png && "error" in png) {
-    return { status: "error", message: png.error };
-  }
-  if (png) {
-    imagePath = `${fields.slug}-${crypto.randomUUID()}.png`;
-    const { error: uploadError } = await supabase.storage
-      .from(STORAGE_BUCKETS.frames)
-      .upload(imagePath, await png.file.arrayBuffer(), {
-        contentType: "image/png",
-        upsert: false,
-      });
-    if (uploadError) {
-      return { status: "error", message: `Gagal mengunggah PNG: ${uploadError.message}` };
+  const submittedPath = readImagePath(formData);
+  if (submittedPath && submittedPath !== existing.image_path) {
+    if (!isValidImagePath(submittedPath)) {
+      return { status: "error", message: "File PNG overlay tidak valid." };
     }
-    uploadedPath = imagePath;
+    imagePath = submittedPath;
+    uploadedPath = submittedPath;
   }
 
   const { error: updateError } = await supabase

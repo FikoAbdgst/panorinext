@@ -152,6 +152,7 @@ export function BoothClient({
   const [cameraError, setCameraError] = useState<string | null>(null);
 
   const [retakeIndex, setRetakeIndex] = useState<number | null>(null);
+  const [revealedSlot, setRevealedSlot] = useState<number | null>(null);
   const [isResetOpen, setIsResetOpen] = useState(false);
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -396,25 +397,16 @@ export function BoothClient({
         return;
       }
 
-      const targetAspectRatio = slot.w / slot.h;
-      const videoAspectRatio = video.videoWidth / video.videoHeight;
-
-      let sourceWidth = video.videoWidth;
-      let sourceHeight = video.videoHeight;
-      let sourceX = 0;
-      let sourceY = 0;
-
-      if (videoAspectRatio > targetAspectRatio) {
-        sourceWidth = video.videoHeight * targetAspectRatio;
-        sourceX = (video.videoWidth - sourceWidth) / 2;
-      } else {
-        sourceHeight = video.videoWidth / targetAspectRatio;
-        sourceY = (video.videoHeight - sourceHeight) / 2;
-      }
+      // Simpan seluruh frame kamera (tidak langsung dipotong ke rasio slot)
+      // supaya pengguna masih bisa memilih area potong lewat Recrop. Penyesuaian
+      // ke ukuran frame terjadi saat ditampilkan/dikomposit (mode "cover").
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+      const outputScale = CAPTURE_OUTPUT_WIDTH / Math.max(videoWidth, videoHeight);
 
       const canvas = document.createElement("canvas");
-      canvas.width = CAPTURE_OUTPUT_WIDTH;
-      canvas.height = CAPTURE_OUTPUT_WIDTH / targetAspectRatio;
+      canvas.width = Math.round(videoWidth * outputScale);
+      canvas.height = Math.round(videoHeight * outputScale);
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         setIsCapturing(false);
@@ -433,10 +425,10 @@ export function BoothClient({
       ctx.filter = flashEnabled ? `${videoFilter} brightness(1.2)` : videoFilter;
       ctx.drawImage(
         video,
-        sourceX,
-        sourceY,
-        sourceWidth,
-        sourceHeight,
+        0,
+        0,
+        videoWidth,
+        videoHeight,
         0,
         0,
         canvas.width,
@@ -1355,6 +1347,10 @@ export function BoothClient({
                     style={slotStyle}
                     data-photo-index={index}
                     data-has-photo={photo ? "true" : "false"}
+                    onClick={() => {
+                      if (!photo || isCapturing) return;
+                      setRevealedSlot((current) => (current === index ? null : index));
+                    }}
                   >
                     <div className="photo-slot relative h-full w-full">
                       {photo ? (
@@ -1365,7 +1361,11 @@ export function BoothClient({
                         />
                       ) : null}
                       {photo ? (
-                        <div className="absolute inset-0 mr-5 flex items-center justify-center gap-5">
+                        <div
+                          className={`photo-actions absolute inset-0 mr-5 flex items-center justify-center gap-5 ${
+                            revealedSlot === index ? "is-visible" : ""
+                          }`}
+                        >
                           <button
                             type="button"
                             className="retake-button booth-retake-button flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-lg shadow-md transition-all hover:bg-white"

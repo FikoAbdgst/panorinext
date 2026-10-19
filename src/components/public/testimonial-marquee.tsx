@@ -68,7 +68,7 @@ export function TestimonialMarquee({ items }: { items: TestimonialItem[] }) {
 
   return (
     <>
-      <div className="marquee-container relative bg-[#FEF3E2]" data-aos="fade-up">
+      <div className="marquee-container relative bg-[#FEF3E2]" data-aos="fade-up" suppressHydrationWarning>
         <div ref={marqueeRef} className="marquee-content">
           {items.length === 0 ? (
             <div className="text-center py-12 w-full">

@@ -32,17 +32,17 @@ export default function FramePage({ searchParams }: PageProps<"/frame">) {
           <div className="text-center mb-16">
             <h2
               className="text-3xl font-bold text-gray-900 inline-block relative"
-              data-aos="fade-up"
+              data-aos="fade-up" suppressHydrationWarning
               data-aos-delay="100"
             >
               <span className="bg-clip-text text-transparent bg-[#BF3131]">Pilih Frame Terbaikmu</span>
               <div
                 className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-[#BF3131] rounded-full"
-                data-aos="fade-right"
+                data-aos="fade-right" suppressHydrationWarning
                 data-aos-delay="300"
               />
             </h2>
-            <p className="mt-4 text-gray-600 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+            <p className="mt-4 text-gray-600 max-w-2xl mx-auto" data-aos="fade-up" suppressHydrationWarning data-aos-delay="200">
               Temukan koleksi frame eksklusif untuk menciptakan kenangan yang tak terlupakan
             </p>
           </div>

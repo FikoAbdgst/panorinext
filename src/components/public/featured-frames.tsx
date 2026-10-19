@@ -9,7 +9,7 @@ export async function FeaturedFrames() {
   return (
     <div className="py-16 bg-[#FEF3E2] content_section">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16" data-aos="fade-up">
+        <div className="text-center mb-16" data-aos="fade-up" suppressHydrationWarning>
           <h2 className="text-3xl font-bold text-gray-900 inline-block relative">
             <span className="bg-clip-text text-transparent bg-[#BF3131]">Frame Unggulan</span>
             <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-[#BF3131] rounded-full" />
@@ -43,7 +43,7 @@ export async function FeaturedFrames() {
         ) : (
           <div
             className="text-center py-12 bg-gradient-to-r from-red-50 to-red-50 rounded-2xl shadow-inner mb-16"
-            data-aos="fade-up"
+            data-aos="fade-up" suppressHydrationWarning
           >
             <div className="inline-block text-7xl mb-6 animate-pulse">🖼️</div>
             <p className="text-xl text-gray-600 font-light">Belum ada frame unggulan saat ini.</p>
@@ -51,7 +51,7 @@ export async function FeaturedFrames() {
           </div>
         )}
 
-        <div className="mt-16 text-center" data-aos="fade-up" data-aos-delay="100">
+        <div className="mt-16 text-center" data-aos="fade-up" suppressHydrationWarning data-aos-delay="100">
           <Link
             href="/frame"
             className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#BF3131] hover:bg-[#F16767] transition duration-300 shadow-md hover:shadow-lg"

@@ -26,10 +26,30 @@ export function CatalogFrameCard({
     <div
       className={`group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 frame-card relative ${className}`}
       data-frame-id={frame.id}
-      data-aos="frame-fade-up"
+      data-aos="frame-fade-up" suppressHydrationWarning
       data-aos-delay={(index % 4) * 100}
       style={{ "--aos-order": index % 4 } as CSSProperties}
     >
+      <div className="absolute top-3 left-3 z-10">
+        <span className="flex items-center gap-1 rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-xs font-semibold text-gray-800 shadow-md">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3 text-[#BF3131]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M4 6a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm9 0a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2h-3a2 2 0 01-2-2V6z"
+            />
+          </svg>
+          {frame.slots.length} Slot
+        </span>
+      </div>
+
       <div className="absolute top-3 right-3 z-10">
         {isFree ? (
           <span className="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center">

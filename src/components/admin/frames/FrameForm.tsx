@@ -2,12 +2,16 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 
-import type { FrameFormState } from "@/app/admin/(panel)/frames/actions";
-import { FRAME_STANDARD_SIZE } from "@/lib/constants";
+import {
+  createFrameUploadUrlAction,
+  type FrameFormState,
+} from "@/app/admin/(panel)/frames/actions";
+import { FRAME_STANDARD_SIZE, STORAGE_BUCKETS } from "@/lib/constants";
 import { detectSlots, hasTransparentPixels } from "@/lib/frames/detect-slots";
 import { getImageData, loadImage, loadImageFromFile } from "@/lib/frames/image";
 import type { FrameSlot } from "@/lib/frames/types";
 import { getFramePublicUrl } from "@/lib/frames/url";
+import { createClient } from "@/lib/supabase/client";
 
 import { SlotEditor } from "./SlotEditor";
 
@@ -70,6 +74,8 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     frame?.image_path ? getFramePublicUrl(frame.image_path) : null,
   );
+  const [imagePath, setImagePath] = useState<string | null>(frame?.image_path ?? null);
+  const [isUploading, setIsUploading] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
 
@@ -161,6 +167,33 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
       runDetection(image);
     } catch {
       setFileError("Gagal membaca gambar.");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const target = await createFrameUploadUrlAction(slug);
+      if ("error" in target) {
+        setFileError(target.error);
+        return;
+      }
+
+      const supabase = createClient();
+      const { error } = await supabase.storage
+        .from(STORAGE_BUCKETS.frames)
+        .uploadToSignedUrl(target.path, target.token, file, {
+          contentType: "image/png",
+        });
+      if (error) {
+        setFileError(`Gagal mengunggah PNG: ${error.message}`);
+        return;
+      }
+
+      setImagePath(target.path);
+    } catch {
+      setFileError("Gagal mengunggah PNG. Coba lagi.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -266,7 +299,6 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
 
         <input
           type="file"
-          name="frame_image"
           accept="image/png"
           onChange={handleFileChange}
           className="block w-full text-sm text-neutral-600 file:mr-3 file:rounded-lg file:border-0 file:bg-[#BF3131] file:px-4 file:py-2 file:text-white"
@@ -275,6 +307,12 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
           <p className="mt-1 text-xs text-neutral-500">
             Biarkan kosong jika tidak ingin mengganti overlay.
           </p>
+        ) : null}
+        {isUploading ? (
+          <p className="mt-2 text-sm text-neutral-600">Mengunggah PNG ke storage...</p>
+        ) : null}
+        {!isUploading && imagePath ? (
+          <p className="mt-2 text-sm text-green-700">PNG siap disimpan.</p>
         ) : null}
         {fileError ? <p className="mt-2 text-sm text-red-600">{fileError}</p> : null}
 
@@ -317,8 +355,13 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
               </ul>
             ) : null}
 
-            <p className="text-xs text-neutral-500">
-              Total {slots.length} slot terdeteksi.
+            <p className="text-sm">
+              <span className="inline-flex items-center rounded-full bg-[#FEF3E2] px-3 py-1 font-semibold text-[#BF3131]">
+                {slots.length} Slot
+              </span>
+              <span className="ml-2 text-xs text-neutral-500">
+                terdeteksi / diatur manual.
+              </span>
             </p>
           </div>
         </div>
@@ -327,14 +370,21 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
       <input type="hidden" name="width" value={dimensions.width} />
       <input type="hidden" name="height" value={dimensions.height} />
       <input type="hidden" name="slots" value={JSON.stringify(slots)} />
+      <input type="hidden" name="image_path" value={imagePath ?? ""} />
 
       <div className="flex gap-3">
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || isUploading}
           className="rounded-lg bg-[#BF3131] px-5 py-2 font-medium text-white hover:bg-[#a52929] disabled:opacity-60"
         >
-          {isPending ? "Menyimpan..." : mode === "create" ? "Simpan Frame" : "Perbarui Frame"}
+          {isPending
+            ? "Menyimpan..."
+            : isUploading
+              ? "Mengunggah..."
+              : mode === "create"
+                ? "Simpan Frame"
+                : "Perbarui Frame"}
         </button>
       </div>
     </form>

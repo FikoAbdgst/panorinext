@@ -35,7 +35,7 @@ export function Navbar() {
           <div className="flex items-center justify-between w-full">
             <div
               className="flex-shrink-0 flex items-center"
-              data-aos="fade-down"
+              data-aos="fade-down" suppressHydrationWarning
               data-aos-delay="100"
             >
               <Link href="/" className="text-2xl font-bold text-[#BF3131]">
@@ -49,7 +49,7 @@ export function Navbar() {
             </div>
             <div
               className="flex items-center gap-2 sm:gap-5"
-              data-aos="fade-down"
+              data-aos="fade-down" suppressHydrationWarning
               data-aos-delay="100"
             >
               {LINKS.map((link) => {

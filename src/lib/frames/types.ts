@@ -42,4 +42,6 @@ export type CatalogFilters = {
   freeOnly?: boolean;
   sortRating?: "asc" | "desc" | null;
   sortPopular?: "asc" | "desc" | null;
+  /** Filter jumlah slot foto pada frame. `null`/absen = semua. */
+  slots?: number | null;
 };

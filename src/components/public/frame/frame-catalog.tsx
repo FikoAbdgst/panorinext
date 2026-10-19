@@ -1,4 +1,8 @@
-import { listCatalogFrames, listCategories } from "@/lib/frames/queries";
+import {
+  listCatalogFrames,
+  listCategories,
+  listFrameSlotCounts,
+} from "@/lib/frames/queries";
 
 import { CategorySelector } from "./category-selector";
 import { FilterControls, type CatalogFilterState } from "./filter-controls";
@@ -16,6 +20,7 @@ export async function FrameCatalog({ searchParams }: { searchParams: Promise<Raw
   const freeParam = first(raw.free);
   const ratingParam = first(raw.sort_rating);
   const popularParam = first(raw.sort_popular);
+  const slotParam = first(raw.slot);
 
   const categories = await listCategories("idDesc");
 
@@ -30,34 +35,39 @@ export async function FrameCatalog({ searchParams }: { searchParams: Promise<Raw
     popularParam === "asc" || popularParam === "desc" ? popularParam : null;
   const freeOnly = freeParam === "true";
 
-  const frames = await listCatalogFrames({
-    categoryId: selected?.id ?? null,
-    freeOnly,
-    sortRating,
-    sortPopular,
-  });
+  const requestedSlots = slotParam ? Number(slotParam) : NaN;
+  const selectedSlots =
+    Number.isInteger(requestedSlots) && requestedSlots > 0 ? requestedSlots : null;
 
-  const base = new URLSearchParams();
-  if (selected) base.set("category", String(selected.id));
-  if (freeOnly) base.set("free", "true");
+  const [frames, slotCounts] = await Promise.all([
+    listCatalogFrames({
+      categoryId: selected?.id ?? null,
+      freeOnly,
+      sortRating,
+      sortPopular,
+      slots: selectedSlots,
+    }),
+    listFrameSlotCounts(),
+  ]);
 
-  const withParam = (extra: Record<string, string>): string => {
-    const search = new URLSearchParams(base);
-    for (const [key, value] of Object.entries(extra)) search.set(key, value);
+  const href = (overrides: Record<string, string | null>): string => {
+    const search = new URLSearchParams();
+    if (selected) search.set("category", String(selected.id));
+    if (freeOnly) search.set("free", "true");
+    if (selectedSlots) search.set("slot", String(selectedSlots));
+    if (sortRating) search.set("sort_rating", sortRating);
+    if (sortPopular) search.set("sort_popular", sortPopular);
+    for (const [key, value] of Object.entries(overrides)) {
+      if (value === null) search.delete(key);
+      else search.set(key, value);
+    }
     const qs = search.toString();
     return qs ? `/frame?${qs}` : "/frame";
   };
 
-  const freeSearch = new URLSearchParams();
-  if (selected) freeSearch.set("category", String(selected.id));
-  if (!freeOnly) freeSearch.set("free", "true");
-  if (sortRating) freeSearch.set("sort_rating", sortRating);
-  if (sortPopular) freeSearch.set("sort_popular", sortPopular);
-  const freeQuery = freeSearch.toString();
-
   const filters: CatalogFilterState = {
     activeSort: Boolean(sortRating || sortPopular),
-    ratingHref: withParam({ sort_rating: sortRating === "desc" ? "asc" : "desc" }),
+    ratingHref: href({ sort_rating: sortRating === "desc" ? "asc" : "desc" }),
     ratingLabel:
       sortRating === "desc"
         ? "Tinggi ke Rendah"
@@ -66,7 +76,7 @@ export async function FrameCatalog({ searchParams }: { searchParams: Promise<Raw
           : "",
     ratingActive: Boolean(sortRating),
     ratingIconPath: sortRating === "desc" ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7",
-    popularHref: withParam({ sort_popular: sortPopular === "desc" ? "asc" : "desc" }),
+    popularHref: href({ sort_popular: sortPopular === "desc" ? "asc" : "desc" }),
     popularLabel:
       sortPopular === "desc"
         ? "Tinggi ke Rendah"
@@ -78,10 +88,20 @@ export async function FrameCatalog({ searchParams }: { searchParams: Promise<Raw
       sortPopular === "desc"
         ? "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
         : "M13 17h8m0 0V9m0 8l-8-8-4 4-6-6",
-    defaultHref: withParam({}),
+    defaultHref: href({ sort_rating: null, sort_popular: null }),
     defaultActive: !sortRating && !sortPopular,
-    freeHref: freeQuery ? `/frame?${freeQuery}` : "/frame",
+    freeHref: href({ free: freeOnly ? null : "true" }),
     freeActive: freeOnly,
+    slotActive: selectedSlots !== null,
+    slotOptions: [
+      { value: null, label: "Semua", href: href({ slot: null }), active: selectedSlots === null },
+      ...slotCounts.map((count) => ({
+        value: count,
+        label: `${count} Slot`,
+        href: href({ slot: String(count) }),
+        active: selectedSlots === count,
+      })),
+    ],
     frameCount: frames.length,
   };
 

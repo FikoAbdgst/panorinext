@@ -8,41 +8,41 @@ export async function CustomFrameSection() {
     <div className="py-16 bg-[#FEF3E2] font-['Poppins'] relative overflow-hidden">
       <div
         className="absolute top-0 left-0 w-32 h-32 bg-[#F16767] opacity-10 rounded-full -translate-x-16 -translate-y-16"
-        data-aos="fade-right"
+        data-aos="fade-right" suppressHydrationWarning
         data-aos-duration="1000"
       />
       <div
         className="absolute bottom-0 right-0 w-40 h-40 bg-[#BF3131] opacity-10 rounded-full translate-x-20 translate-y-20"
-        data-aos="fade-left"
+        data-aos="fade-left" suppressHydrationWarning
         data-aos-duration="1000"
         data-aos-delay="200"
       />
       <div
         className="absolute top-1/2 left-10 w-6 h-6 bg-[#F16767] opacity-30 rounded-full float-animation"
-        data-aos="zoom-in"
+        data-aos="zoom-in" suppressHydrationWarning
         data-aos-duration="800"
         data-aos-delay="400"
       />
       <div
         className="absolute top-1/4 right-20 w-4 h-4 bg-[#BF3131] opacity-40 rounded-full float-animation"
         style={{ animationDelay: "1s" }}
-        data-aos="zoom-in"
+        data-aos="zoom-in" suppressHydrationWarning
         data-aos-duration="800"
         data-aos-delay="600"
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center mb-12" data-aos="fade-up" data-aos-duration="800">
+        <div className="text-center mb-12" data-aos="fade-up" suppressHydrationWarning data-aos-duration="800">
           <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">Butuh Frame Khusus?</h2>
           <div
             className="w-24 h-1 bg-[#BF3131] mx-auto rounded-full mb-4"
-            data-aos="scale-x-0"
+            data-aos="scale-x-0" suppressHydrationWarning
             data-aos-duration="600"
             data-aos-delay="200"
           />
           <p
             className="max-w-2xl mx-auto text-lg text-gray-600"
-            data-aos="fade-up"
+            data-aos="fade-up" suppressHydrationWarning
             data-aos-duration="800"
             data-aos-delay="300"
           >
@@ -51,13 +51,13 @@ export async function CustomFrameSection() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8" data-aos="fade-right" data-aos-duration="1000" data-aos-delay="400">
+          <div className="space-y-8" data-aos="fade-right" suppressHydrationWarning data-aos-duration="1000" data-aos-delay="400">
             <div className="space-y-6">
-              <div className="flex items-start space-x-4" data-aos="fade-up" data-aos-duration="800" data-aos-delay="500">
+              <div className="flex items-start space-x-4" data-aos="fade-up" suppressHydrationWarning data-aos-duration="800" data-aos-delay="500">
                 <div className="flex-shrink-0">
                   <div
                     className="w-12 h-12 bg-[#BF3131] rounded-full flex items-center justify-center shadow-lg"
-                    data-aos="zoom-in"
+                    data-aos="zoom-in" suppressHydrationWarning
                     data-aos-duration="600"
                     data-aos-delay="600"
                   >
@@ -79,11 +79,11 @@ export async function CustomFrameSection() {
                 </div>
               </div>
 
-              <div className="flex items-start space-x-4" data-aos="fade-up" data-aos-duration="800" data-aos-delay="700">
+              <div className="flex items-start space-x-4" data-aos="fade-up" suppressHydrationWarning data-aos-duration="800" data-aos-delay="700">
                 <div className="flex-shrink-0">
                   <div
                     className="w-12 h-12 bg-[#F16767] rounded-full flex items-center justify-center shadow-lg"
-                    data-aos="zoom-in"
+                    data-aos="zoom-in" suppressHydrationWarning
                     data-aos-duration="600"
                     data-aos-delay="800"
                   >
@@ -98,11 +98,11 @@ export async function CustomFrameSection() {
                 </div>
               </div>
 
-              <div className="flex items-start space-x-4" data-aos="fade-up" data-aos-duration="800" data-aos-delay="900">
+              <div className="flex items-start space-x-4" data-aos="fade-up" suppressHydrationWarning data-aos-duration="800" data-aos-delay="900">
                 <div className="flex-shrink-0">
                   <div
                     className="w-12 h-12 bg-[#BF3131] rounded-full flex items-center justify-center shadow-lg"
-                    data-aos="zoom-in"
+                    data-aos="zoom-in" suppressHydrationWarning
                     data-aos-duration="600"
                     data-aos-delay="1000"
                   >
@@ -126,17 +126,17 @@ export async function CustomFrameSection() {
             </div>
           </div>
 
-          <div className="relative" data-aos="fade-left" data-aos-duration="1000" data-aos-delay="400">
+          <div className="relative" data-aos="fade-left" suppressHydrationWarning data-aos-duration="1000" data-aos-delay="400">
             <div
               className="absolute inset-0 gradient-bg rounded-3xl transform rotate-3 opacity-10"
-              data-aos="rotate-in"
+              data-aos="rotate-in" suppressHydrationWarning
               data-aos-duration="1200"
               data-aos-delay="600"
             />
 
-            <div className="relative bg-white rounded-2xl p-8 custom-shadow" data-aos="zoom-in" data-aos-duration="800" data-aos-delay="800">
+            <div className="relative bg-white rounded-2xl p-8 custom-shadow" data-aos="zoom-in" suppressHydrationWarning data-aos-duration="800" data-aos-delay="800">
               <div className="text-center">
-                <div className="relative inline-block mb-6" data-aos="bounce" data-aos-duration="1000" data-aos-delay="1000">
+                <div className="relative inline-block mb-6" data-aos="bounce" suppressHydrationWarning data-aos-duration="1000" data-aos-delay="1000">
                   <div className="absolute inset-0 bg-green-400 rounded-full pulse-ring opacity-25" />
                   <div className="relative w-20 h-20 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
                     <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -145,17 +145,17 @@ export async function CustomFrameSection() {
                   </div>
                 </div>
 
-                <h3 className="text-2xl font-bold text-gray-900 mb-4" data-aos="fade-up" data-aos-duration="600" data-aos-delay="1200">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4" data-aos="fade-up" suppressHydrationWarning data-aos-duration="600" data-aos-delay="1200">
                   Konsultasi Gratis
                 </h3>
-                <p className="text-gray-600 mb-6" data-aos="fade-up" data-aos-duration="600" data-aos-delay="1300">
+                <p className="text-gray-600 mb-6" data-aos="fade-up" suppressHydrationWarning data-aos-duration="600" data-aos-delay="1300">
                   Ceritakan konsep frame impian Anda dan kami akan membuatkannya dengan sempurna
                 </p>
 
                 <a
                   href="https://wa.me/62882001330851?text=Halo,%20saya%20ingin%20konsultasi%20untuk%20custom%20frame%20photo%20booth"
                   className="inline-flex items-center px-8 py-4 gradient-bg text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 group"
-                  data-aos="fade-up"
+                  data-aos="fade-up" suppressHydrationWarning
                   data-aos-duration="600"
                   data-aos-delay="1400"
                 >
@@ -167,7 +167,7 @@ export async function CustomFrameSection() {
 
                 <div
                   className="mt-6 flex items-center justify-center space-x-4 text-sm text-gray-500"
-                  data-aos="fade-up"
+                  data-aos="fade-up" suppressHydrationWarning
                   data-aos-duration="600"
                   data-aos-delay="1500"
                 >
@@ -186,7 +186,7 @@ export async function CustomFrameSection() {
         </div>
 
         <div className="mt-16">
-          <div className="text-center mb-8" data-aos="fade-up" data-aos-duration="800" data-aos-delay="200">
+          <div className="text-center mb-8" data-aos="fade-up" suppressHydrationWarning data-aos-duration="800" data-aos-delay="200">
             <h3 className="text-2xl font-semibold text-gray-900 mb-2">Contoh Frame Custom</h3>
             <p className="text-gray-600">Beberapa desain yang pernah kami buat</p>
           </div>
@@ -194,7 +194,7 @@ export async function CustomFrameSection() {
           {customFrames.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {customFrames.map((frame) => (
-                <div key={frame.id} className="group" data-aos="flip-left" data-aos-duration="800" data-aos-delay="300">
+                <div key={frame.id} className="group" data-aos="flip-left" suppressHydrationWarning data-aos-duration="800" data-aos-delay="300">
                   <div className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-300">
                     <div className="aspect-square bg-gray-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
                       {frame.image_path ? (

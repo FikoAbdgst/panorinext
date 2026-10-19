@@ -302,7 +302,28 @@ export async function listCatalogFrames(
       category_name: category?.name ?? null,
       avg_rating: frame.avg_rating,
     };
-  });
+  }).filter((frame) =>
+    filters.slots ? frame.slots.length === filters.slots : true,
+  );
+}
+
+/** Daftar jumlah slot unik yang ada di seluruh frame, urut menaik. */
+export async function listFrameSlotCounts(): Promise<number[]> {
+  await connection();
+  if (!isSupabaseAdminConfigured()) {
+    warnSupabaseNotConfigured();
+    return [];
+  }
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.from("frames").select("id, slots");
+  if (error) {
+    throw new Error(`Gagal memuat jumlah slot: ${error.message}`);
+  }
+  const counts = new Set<number>();
+  for (const row of data ?? []) {
+    counts.add((row.slots ?? []).length);
+  }
+  return [...counts].sort((a, b) => a - b);
 }
 
 export async function listCustomFrames(limit = 4): Promise<CustomFrameRow[]> {

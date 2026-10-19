@@ -4,12 +4,12 @@ export function Hero() {
   return (
     <div
       className="py-12 bg-[#FEF3E2] font-['Poppins'] h-screen relative"
-      data-aos="fade-in"
+      data-aos="fade-in" suppressHydrationWarning
       data-aos-duration="1500"
     >
       <div
         className="absolute left-0 top-1/2 transform -translate-y-1/2 z-30 hidden md:block"
-        data-aos="slide-right"
+        data-aos="slide-right" suppressHydrationWarning
         data-aos-duration="1200"
         data-aos-delay="400"
         data-aos-easing="ease-out-back"
@@ -17,7 +17,7 @@ export function Hero() {
         <div className="relative">
           <div
             className="absolute -left-16 -top-20 transform shadow-2xl frame-left-rotate"
-            data-aos="zoom-in-right-rotated"
+            data-aos="zoom-in-right-rotated" suppressHydrationWarning
             data-aos-duration="800"
             data-aos-delay="600"
           >
@@ -25,7 +25,7 @@ export function Hero() {
               <div className="border-2 border-[#BF3131] mx-2">
                 <div
                   className="absolute top-2 right-2"
-                  data-aos="flip-left"
+                  data-aos="flip-left" suppressHydrationWarning
                   data-aos-duration="600"
                   data-aos-delay="1000"
                 >
@@ -39,19 +39,19 @@ export function Hero() {
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-1 px-2">
-                <div className="relative" data-aos="fade-right" data-aos-duration="600" data-aos-delay="800">
+                <div className="relative" data-aos="fade-right" suppressHydrationWarning data-aos-duration="600" data-aos-delay="800">
                   <div className="h-32 overflow-hidden flex justify-center rounded">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/images/m1.jpeg" alt="Memory placeholder 1" className="object-cover w-full h-full" />
                   </div>
                 </div>
-                <div className="relative" data-aos="fade-right" data-aos-duration="600" data-aos-delay="900">
+                <div className="relative" data-aos="fade-right" suppressHydrationWarning data-aos-duration="600" data-aos-delay="900">
                   <div className="h-32 overflow-hidden flex justify-center rounded">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/images/m2.jpeg" alt="Memory placeholder 2" className="object-cover w-full h-full" />
                   </div>
                 </div>
-                <div className="relative" data-aos="fade-right" data-aos-duration="600" data-aos-delay="1000">
+                <div className="relative" data-aos="fade-right" suppressHydrationWarning data-aos-duration="600" data-aos-delay="1000">
                   <div className="h-32 overflow-hidden flex justify-center rounded">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/images/m3.jpeg" alt="Memory placeholder 3" className="object-cover w-full h-full" />
@@ -65,7 +65,7 @@ export function Hero() {
 
       <div
         className="absolute right-0 top-1/2 transform -translate-y-1/2 z-30 hidden md:block"
-        data-aos="slide-left"
+        data-aos="slide-left" suppressHydrationWarning
         data-aos-duration="1200"
         data-aos-delay="500"
         data-aos-easing="ease-out-back"
@@ -73,7 +73,7 @@ export function Hero() {
         <div className="relative">
           <div
             className="absolute -right-16 -top-20 transform shadow-2xl frame-right-rotate"
-            data-aos="zoom-in-left-rotated"
+            data-aos="zoom-in-left-rotated" suppressHydrationWarning
             data-aos-duration="800"
             data-aos-delay="700"
           >
@@ -81,7 +81,7 @@ export function Hero() {
               <div className="border-2 border-[#BF3131] mx-2">
                 <div
                   className="absolute top-2 left-2"
-                  data-aos="flip-right"
+                  data-aos="flip-right" suppressHydrationWarning
                   data-aos-duration="600"
                   data-aos-delay="1100"
                 >
@@ -102,19 +102,19 @@ export function Hero() {
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-1 px-2">
-                <div className="relative" data-aos="fade-left" data-aos-duration="600" data-aos-delay="900">
+                <div className="relative" data-aos="fade-left" suppressHydrationWarning data-aos-duration="600" data-aos-delay="900">
                   <div className="h-32 overflow-hidden flex justify-center rounded">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/images/k1.jpeg" alt="Memory placeholder 1" className="object-cover w-full h-full" />
                   </div>
                 </div>
-                <div className="relative" data-aos="fade-left" data-aos-duration="600" data-aos-delay="1000">
+                <div className="relative" data-aos="fade-left" suppressHydrationWarning data-aos-duration="600" data-aos-delay="1000">
                   <div className="h-32 overflow-hidden flex justify-center rounded">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/images/k2.jpeg" alt="Memory placeholder 2" className="object-cover w-full h-full" />
                   </div>
                 </div>
-                <div className="relative" data-aos="fade-left" data-aos-duration="600" data-aos-delay="1100">
+                <div className="relative" data-aos="fade-left" suppressHydrationWarning data-aos-duration="600" data-aos-delay="1100">
                   <div className="h-32 overflow-hidden flex justify-center rounded">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/images/k3.jpeg" alt="Memory placeholder 3" className="object-cover w-full h-full" />
@@ -129,7 +129,7 @@ export function Hero() {
       <div className="absolute inset-0 z-20">
         <div
           className="absolute top-1/4 left-1/4 w-12 h-12 text-red-500 opacity-20"
-          data-aos="zoom-in"
+          data-aos="zoom-in" suppressHydrationWarning
           data-aos-duration="1000"
           data-aos-delay="1500"
           data-aos-easing="ease-out-bounce"
@@ -145,7 +145,7 @@ export function Hero() {
         </div>
         <div
           className="absolute bottom-1/4 right-1/4 w-16 h-16 text-red-500 opacity-20"
-          data-aos="zoom-in"
+          data-aos="zoom-in" suppressHydrationWarning
           data-aos-duration="1000"
           data-aos-delay="1700"
           data-aos-easing="ease-out-bounce"
@@ -165,7 +165,7 @@ export function Hero() {
         <div className="text-center">
           <h1
             className="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl"
-            data-aos="fade-up"
+            data-aos="fade-up" suppressHydrationWarning
             data-aos-duration="1000"
             data-aos-delay="200"
             data-aos-easing="ease-out-cubic"
@@ -174,7 +174,7 @@ export function Hero() {
           </h1>
           <p
             className="mt-5 max-w-xl mx-auto text-xl text-gray-500"
-            data-aos="fade-up"
+            data-aos="fade-up" suppressHydrationWarning
             data-aos-duration="800"
             data-aos-delay="400"
             data-aos-easing="ease-out-cubic"
@@ -183,7 +183,7 @@ export function Hero() {
           </p>
           <div
             className="mt-8"
-            data-aos="fade-up"
+            data-aos="fade-up" suppressHydrationWarning
             data-aos-duration="800"
             data-aos-delay="600"
             data-aos-easing="ease-out-back"
@@ -195,7 +195,7 @@ export function Hero() {
                 document.querySelector(".content_section")?.scrollIntoView({ behavior: "smooth" });
               }}
               className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#BF3131] hover:bg-[#F16767] transition duration-300 shadow-sm hover:shadow-lg cursor-pointer hover:scale-105"
-              data-aos="pulse"
+              data-aos="pulse" suppressHydrationWarning
               data-aos-duration="2000"
               data-aos-delay="1200"
               data-aos-infinite="true"

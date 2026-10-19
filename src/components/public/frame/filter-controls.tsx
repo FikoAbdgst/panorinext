@@ -17,6 +17,13 @@ export type CatalogFilterState = {
   defaultActive: boolean;
   freeHref: string;
   freeActive: boolean;
+  slotActive: boolean;
+  slotOptions: {
+    value: number | null;
+    label: string;
+    href: string;
+    active: boolean;
+  }[];
   frameCount: number;
 };
 
@@ -106,6 +113,35 @@ export function FilterControls({ filters }: { filters: CatalogFilterState }) {
       />
     </svg>
   );
+  const slotIcon = (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="M4 6a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm9 0a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2h-3a2 2 0 01-2-2V6zM4 15a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2H6a2 2 0 01-2-2v-3zm9 0a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2h-3a2 2 0 01-2-2v-3z"
+      />
+    </svg>
+  );
+  const slotChips = (small: boolean) => (
+    <div className={small ? "flex flex-wrap items-center gap-1" : "flex flex-wrap items-center gap-2"}>
+      <span className={`flex items-center gap-1 ${small ? "text-xs" : "text-sm"} font-medium text-gray-600`}>
+        {slotIcon}
+        Slot
+      </span>
+      {filters.slotOptions.map((option) => (
+        <Link
+          key={option.value ?? "all"}
+          href={option.href}
+          className={`slot-filter-btn flex items-center gap-1 rounded-md font-medium transition-all duration-300 border ${
+            small ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-sm"
+          } ${option.active ? "active" : ""}`}
+        >
+          {option.label}
+        </Link>
+      ))}
+    </div>
+  );
 
   return (
     <>
@@ -171,6 +207,9 @@ export function FilterControls({ filters }: { filters: CatalogFilterState }) {
           {freeIcon}
           <span>Gratis</span>
         </Link>
+        {filters.slotOptions.length > 1 ? (
+          <div className="mt-3">{slotChips(false)}</div>
+        ) : null}
         <div className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#FEF3E2] to-red-50 px-4 py-3 mt-5 rounded-lg border border-red-200">
           {countIcon}
           <span className="text-sm font-medium text-gray-700">
@@ -180,7 +219,7 @@ export function FilterControls({ filters }: { filters: CatalogFilterState }) {
       </div>
 
       {/* Desktop Filter Layout */}
-      <div className="hidden sm:flex sm:flex-row gap-4 justify-between items-center" data-aos="fade-up" data-aos-delay="200">
+      <div className="hidden sm:flex sm:flex-row gap-4 justify-between items-center" data-aos="fade-up" suppressHydrationWarning data-aos-delay="200">
         <div className="flex items-center gap-4">
           <button
             id="toggleFilter"
@@ -243,6 +282,12 @@ export function FilterControls({ filters }: { filters: CatalogFilterState }) {
                 <span>Gratis</span>
               </Link>
             </div>
+            {filters.slotOptions.length > 1 ? (
+              <>
+                <div className="w-px h-6 bg-gray-300" />
+                {slotChips(true)}
+              </>
+            ) : null}
           </div>
         </div>
 

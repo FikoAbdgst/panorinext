@@ -6,7 +6,7 @@ export async function TestimonialsSection() {
 
   return (
     <div className="hero-bg min-h-screen">
-      <div className="text-center header-section bg-[#FEF3E2] py-20 relative" data-aos="fade-up">
+      <div className="text-center header-section bg-[#FEF3E2] py-20 relative" data-aos="fade-up" suppressHydrationWarning>
         <div className="floating-elements">
           <i className="floating-star fas fa-star" style={{ top: "20%", left: "10%", animationDelay: "0s" }} />
           <i className="floating-star fas fa-heart" style={{ top: "30%", right: "15%", animationDelay: "2s" }} />
@@ -14,14 +14,14 @@ export async function TestimonialsSection() {
           <i className="floating-star fas fa-smile" style={{ top: "60%", right: "20%", animationDelay: "6s" }} />
         </div>
 
-        <h1 className="text-6xl font-extrabold text-gray-900 mb-8 tracking-tight" data-aos="fade-up">
+        <h1 className="text-6xl font-extrabold text-gray-900 mb-8 tracking-tight" data-aos="fade-up" suppressHydrationWarning>
           Apa Kata Mereka?
         </h1>
-        <p className="text-gray-600 text-xl max-w-4xl mx-auto px-6 leading-relaxed" data-aos="fade-up">
+        <p className="text-gray-600 text-xl max-w-4xl mx-auto px-6 leading-relaxed" data-aos="fade-up" suppressHydrationWarning>
           Kepuasan kamu adalah tujuan utama kami. Lihat cerita seru dari pengguna yang sudah mencoba PhotoBooth ini
           dan punya pengalaman seru yang nggak terlupakan!
         </p>
-        <div className="mt-8" data-aos="fade-up">
+        <div className="mt-8" data-aos="fade-up" suppressHydrationWarning>
           <div className="inline-flex items-center space-x-2 bg-white rounded-full px-6 py-3 shadow-lg border-2 border-[#BF3131]">
             <i className="fas fa-users text-[#BF3131]" />
             <span className="font-semibold text-gray-700">1000+ Pelanggan Puas</span>
@@ -32,7 +32,7 @@ export async function TestimonialsSection() {
 
       <TestimonialMarquee items={items} />
 
-      <div className="relative bg-gradient-to-br bg-[#FEF3E2] overflow-hidden" data-aos="fade-up">
+      <div className="relative bg-gradient-to-br bg-[#FEF3E2] overflow-hidden" data-aos="fade-up" suppressHydrationWarning>
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-24 -left-24 w-96 h-96 bg-gradient-to-br from-[#BF3131] to-[#F16767] rounded-full opacity-5 animate-pulse" />
           <div
@@ -58,18 +58,18 @@ export async function TestimonialsSection() {
             <div className="mb-16">
               <div
                 className="inline-flex items-center justify-center mb-6"
-                data-aos="flip-up"
+                data-aos="flip-up" suppressHydrationWarning
                 data-aos-duration="800"
                 data-aos-delay="100"
               >
                 <div
                   className="h-px bg-gradient-to-r from-transparent via-[#BF3131] to-transparent w-32"
-                  data-aos="slide-right"
+                  data-aos="slide-right" suppressHydrationWarning
                   data-aos-delay="200"
                 />
                 <div
                   className="mx-4 bg-white border-2 border-[#BF3131] rounded-full px-4 py-2"
-                  data-aos="rotate-in"
+                  data-aos="rotate-in" suppressHydrationWarning
                   data-aos-duration="800"
                   data-aos-delay="300"
                 >
@@ -77,13 +77,13 @@ export async function TestimonialsSection() {
                 </div>
                 <div
                   className="h-px bg-gradient-to-l from-transparent via-[#BF3131] to-transparent w-32"
-                  data-aos="slide-left"
+                  data-aos="slide-left" suppressHydrationWarning
                   data-aos-delay="400"
                 />
               </div>
               <p
                 className="text-2xl font-semibold text-gray-700 mb-2"
-                data-aos="slide-up"
+                data-aos="slide-up" suppressHydrationWarning
                 data-aos-duration="800"
                 data-aos-delay="500"
               >
@@ -91,7 +91,7 @@ export async function TestimonialsSection() {
               </p>
               <p
                 className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed"
-                data-aos="slide-up"
+                data-aos="slide-up" suppressHydrationWarning
                 data-aos-duration="800"
                 data-aos-delay="700"
               >

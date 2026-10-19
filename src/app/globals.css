@@ -1056,7 +1056,8 @@ body {
 .page-frame .filter-btn,
 .page-frame .rating-filter-btn,
 .page-frame .popular-filter-btn,
-.page-frame .default-filter-btn {
+.page-frame .default-filter-btn,
+.page-frame .slot-filter-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1074,7 +1075,8 @@ body {
 .page-frame .filter-btn:hover,
 .page-frame .rating-filter-btn:hover,
 .page-frame .popular-filter-btn:hover,
-.page-frame .default-filter-btn:hover {
+.page-frame .default-filter-btn:hover,
+.page-frame .slot-filter-btn:hover {
   background-color: #fff5f5;
   border-color: #fed7d7;
   color: #bf3131;
@@ -1085,7 +1087,8 @@ body {
 .page-frame .filter-btn.active,
 .page-frame .rating-filter-btn.active,
 .page-frame .popular-filter-btn.active,
-.page-frame .default-filter-btn.active {
+.page-frame .default-filter-btn.active,
+.page-frame .slot-filter-btn.active {
   background-color: #bf3131;
   border-color: #bf3131;
   color: white;
@@ -1094,7 +1097,8 @@ body {
 .page-frame .filter-btn.active svg,
 .page-frame .rating-filter-btn.active svg,
 .page-frame .popular-filter-btn.active svg,
-.page-frame .default-filter-btn.active svg {
+.page-frame .default-filter-btn.active svg,
+.page-frame .slot-filter-btn.active svg {
   color: white;
 }
 
@@ -1499,6 +1503,20 @@ body {
 .page-booth .photo-overlay.hidden {
   opacity: 0;
   pointer-events: none;
+}
+
+/* Tombol retake/recrop hanya muncul saat slot foto di-hover. */
+.page-booth .photo-actions {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.page-booth [data-has-photo="true"]:hover .photo-actions,
+.page-booth .photo-slot:focus-within .photo-actions,
+.page-booth .photo-actions.is-visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .page-booth .watermark {

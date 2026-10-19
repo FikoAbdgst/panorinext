@@ -223,24 +223,15 @@ export function FramePreviewModal({
         return null;
       }
 
-      /* Pangkas video sesuai aspek rasio slot — logika sama dengan /booth. */
-      const targetAspectRatio = slot.w / slot.h;
-      const videoAspectRatio = video.videoWidth / video.videoHeight;
-      let sourceWidth = video.videoWidth;
-      let sourceHeight = video.videoHeight;
-      let sourceX = 0;
-      let sourceY = 0;
-      if (videoAspectRatio > targetAspectRatio) {
-        sourceWidth = video.videoHeight * targetAspectRatio;
-        sourceX = (video.videoWidth - sourceWidth) / 2;
-      } else {
-        sourceHeight = video.videoWidth / targetAspectRatio;
-        sourceY = (video.videoHeight - sourceHeight) / 2;
-      }
+      /* Simpan seluruh frame kamera — penyesuaian ke ukuran slot terjadi saat
+       * ditampilkan/dikomposit dengan mode "cover". */
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+      const outputScale = CAPTURE_OUTPUT_WIDTH / Math.max(videoWidth, videoHeight);
 
       const canvas = document.createElement("canvas");
-      canvas.width = CAPTURE_OUTPUT_WIDTH;
-      canvas.height = Math.round(CAPTURE_OUTPUT_WIDTH / targetAspectRatio);
+      canvas.width = Math.round(videoWidth * outputScale);
+      canvas.height = Math.round(videoHeight * outputScale);
       const ctx = canvas.getContext("2d");
       if (!ctx) return null;
       ctx.imageSmoothingEnabled = true;
@@ -252,10 +243,10 @@ export function FramePreviewModal({
       }
       ctx.drawImage(
         video,
-        sourceX,
-        sourceY,
-        sourceWidth,
-        sourceHeight,
+        0,
+        0,
+        videoWidth,
+        videoHeight,
         0,
         0,
         canvas.width,
@@ -339,7 +330,12 @@ export function FramePreviewModal({
 
       <div className="preview-modal-panel relative max-h-[90vh] w-full overflow-y-auto rounded-t-xl bg-white shadow-xl md:mx-4 md:max-h-none md:max-w-4xl md:overflow-visible md:rounded-xl md:p-6">
         <div className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-200 bg-white px-4 py-3 md:static md:border-none md:py-0 md:pb-4">
-          <h2 className="text-xl font-semibold">Frame Preview</h2>
+          <h2 className="text-xl font-semibold">
+            Frame Preview
+            <span className="ml-3 rounded-full bg-[#FEF3E2] px-3 py-1 align-middle text-xs font-semibold text-[#BF3131]">
+              {slots.length} Slot Foto
+            </span>
+          </h2>
           <button
             type="button"
             className="absolute top-3 right-4 cursor-pointer text-2xl text-gray-500 hover:text-black"

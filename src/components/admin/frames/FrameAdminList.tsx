@@ -35,6 +35,15 @@ export function FrameAdminList({
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [priceFilter, setPriceFilter] = useState("all");
+  const [slotFilter, setSlotFilter] = useState("all");
+
+  const slotCounts = useMemo(() => {
+    const set = new Set<number>();
+    for (const frame of frames) {
+      set.add(frame.slots.length);
+    }
+    return [...set].sort((a, b) => a - b);
+  }, [frames]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -57,12 +66,18 @@ export function FrameAdminList({
       if (priceFilter === "berbayar" && frame.price === 0) {
         return false;
       }
+      if (slotFilter !== "all" && String(frame.slots.length) !== slotFilter) {
+        return false;
+      }
       return true;
     });
-  }, [frames, search, categoryFilter, priceFilter]);
+  }, [frames, search, categoryFilter, priceFilter, slotFilter]);
 
   const hasFilters =
-    search.trim() !== "" || categoryFilter !== "all" || priceFilter !== "all";
+    search.trim() !== "" ||
+    categoryFilter !== "all" ||
+    priceFilter !== "all" ||
+    slotFilter !== "all";
 
   return (
     <div className="space-y-4">
@@ -96,6 +111,20 @@ export function FrameAdminList({
             <option value="gratis">Gratis</option>
             <option value="berbayar">Berbayar</option>
           </select>
+          {slotCounts.length > 1 ? (
+            <select
+              value={slotFilter}
+              onChange={(event) => setSlotFilter(event.target.value)}
+              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            >
+              <option value="all">Semua Slot</option>
+              {slotCounts.map((count) => (
+                <option key={count} value={String(count)}>
+                  {count} Slot
+                </option>
+              ))}
+            </select>
+          ) : null}
         </div>
         <FrameCreateModal categories={categories} />
       </div>
@@ -149,7 +178,11 @@ export function FrameAdminList({
                       ? "Gratis"
                       : `Rp ${frame.price.toLocaleString("id-ID")}`}
                   </td>
-                  <td className="px-4 py-3 text-neutral-600">{frame.slots.length}</td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center rounded-full bg-[#FEF3E2] px-2.5 py-1 text-xs font-semibold text-[#BF3131]">
+                      {frame.slots.length} Slot
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-neutral-600">{frame.used}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-4">

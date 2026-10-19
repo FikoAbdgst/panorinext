@@ -45,13 +45,13 @@ export function CategorySelector({
         </div>
       </div>
 
-      <div className="hidden sm:flex justify-center items-center" data-aos="fade-up" data-aos-delay="300">
+      <div className="hidden sm:flex justify-center items-center" data-aos="fade-up" suppressHydrationWarning data-aos-delay="300">
         <div className="w-4/5 category-scroll-desktop">
           <Link
             href="/frame"
             className="category-btn group flex-shrink-0"
             style={{ scrollSnapAlign: "start" }}
-            data-aos="zoom-in"
+            data-aos="zoom-in" suppressHydrationWarning
             data-aos-delay="400"
           >
             <div className={`category-icon ${isAll ? "active" : ""}`}>
@@ -65,7 +65,7 @@ export function CategorySelector({
               href={`/frame?category=${category.id}`}
               className="category-btn group flex-shrink-0"
               style={{ scrollSnapAlign: "start" }}
-              data-aos="zoom-in"
+              data-aos="zoom-in" suppressHydrationWarning
               data-aos-delay={400 + index * 100}
             >
               <div
