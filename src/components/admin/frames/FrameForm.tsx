@@ -1,6 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import {
   createFrameUploadUrlAction,
@@ -8,11 +14,17 @@ import {
 } from "@/app/admin/(panel)/frames/actions";
 import { FRAME_STANDARD_SIZE, STORAGE_BUCKETS } from "@/lib/constants";
 import { detectSlots, hasTransparentPixels } from "@/lib/frames/detect-slots";
-import { getImageData, loadImage, loadImageFromFile } from "@/lib/frames/image";
+import {
+  getImageData,
+  loadImage,
+  loadImageFromBlob,
+  loadImageFromFile,
+} from "@/lib/frames/image";
 import type { FrameSlot } from "@/lib/frames/types";
 import { getFramePublicUrl } from "@/lib/frames/url";
 import { createClient } from "@/lib/supabase/client";
 
+import { FrameImageEditor, type FrameImageEditResult } from "./FrameImageEditor";
 import { SlotEditor } from "./SlotEditor";
 
 type CategoryOption = {
@@ -75,12 +87,15 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
     frame?.image_path ? getFramePublicUrl(frame.image_path) : null,
   );
   const [imagePath, setImagePath] = useState<string | null>(frame?.image_path ?? null);
+  const [pendingBlob, setPendingBlob] = useState<Blob | null>(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
 
   const imageRef = useRef<HTMLImageElement | null>(null);
   const objectUrlRef = useRef<string | null>(null);
+  const uploadedPathRef = useRef<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -164,37 +179,97 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
       objectUrlRef.current = objectUrl;
       imageRef.current = image;
       setPreviewUrl(objectUrl);
+      setPendingBlob(file);
+      setImagePath(null);
+      uploadedPathRef.current = null;
+      setIsEditorOpen(false);
       runDetection(image);
     } catch {
       setFileError("Gagal membaca gambar.");
+    }
+  };
+
+  const handleApplyEdit = async (result: FrameImageEditResult) => {
+    const { image, objectUrl } = await loadImageFromBlob(result.blob);
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+    }
+    objectUrlRef.current = objectUrl;
+    imageRef.current = image;
+    setPreviewUrl(objectUrl);
+    setPendingBlob(result.blob);
+    setImagePath(null);
+    uploadedPathRef.current = null;
+    setDimensions({ width: result.width, height: result.height });
+    setSlots(result.slots);
+    setFileError(null);
+    setWarnings(
+      result.slots.length === 0
+        ? ["Belum ada slot. Hapus area slot lalu terapkan ulang."]
+        : [],
+    );
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isPending || isUploading) {
       return;
     }
 
-    setIsUploading(true);
-    try {
-      const target = await createFrameUploadUrlAction(slug);
-      if ("error" in target) {
-        setFileError(target.error);
-        return;
-      }
-
-      const supabase = createClient();
-      const { error } = await supabase.storage
-        .from(STORAGE_BUCKETS.frames)
-        .uploadToSignedUrl(target.path, target.token, file, {
-          contentType: "image/png",
-        });
-      if (error) {
-        setFileError(`Gagal mengunggah PNG: ${error.message}`);
-        return;
-      }
-
-      setImagePath(target.path);
-    } catch {
-      setFileError("Gagal mengunggah PNG. Coba lagi.");
-    } finally {
-      setIsUploading(false);
+    const form = event.currentTarget;
+    if (!pendingBlob && !imagePath) {
+      setFileError("File PNG overlay wajib diunggah.");
+      return;
     }
+
+    if (state.status === "error") {
+      uploadedPathRef.current = null;
+    }
+
+    void (async () => {
+      const formData = new FormData(form);
+
+      if (pendingBlob) {
+        setIsUploading(true);
+        setFileError(null);
+        try {
+          let path = uploadedPathRef.current;
+          if (!path) {
+            const target = await createFrameUploadUrlAction(slug);
+            if ("error" in target) {
+              setFileError(target.error);
+              return;
+            }
+
+            const supabase = createClient();
+            const { error } = await supabase.storage
+              .from(STORAGE_BUCKETS.frames)
+              .uploadToSignedUrl(target.path, target.token, pendingBlob, {
+                contentType: "image/png",
+              });
+            if (error) {
+              setFileError(`Gagal mengunggah PNG: ${error.message}`);
+              return;
+            }
+
+            path = target.path;
+            uploadedPathRef.current = path;
+          }
+
+          formData.set("image_path", path);
+          setImagePath(path);
+        } catch {
+          setFileError("Gagal mengunggah PNG. Coba lagi.");
+          return;
+        } finally {
+          setIsUploading(false);
+        }
+      }
+
+      startTransition(() => {
+        formAction(formData);
+      });
+    })();
   };
 
   const handleRedetect = () => {
@@ -204,7 +279,7 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
   };
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {state.status === "error" && state.message ? (
         <p className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
           {state.message}
@@ -287,14 +362,24 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
               Lubang transparan pada PNG menjadi slot foto.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleRedetect}
-            disabled={!previewUrl}
-            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 disabled:opacity-50"
-          >
-            Deteksi Ulang Slot
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsEditorOpen(true)}
+              disabled={!previewUrl || isUploading || isPending}
+              className="rounded-lg bg-[#BF3131] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#a52929] disabled:opacity-50"
+            >
+              Edit PNG
+            </button>
+            <button
+              type="button"
+              onClick={handleRedetect}
+              disabled={!previewUrl || isUploading || isPending}
+              className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 disabled:opacity-50"
+            >
+              Deteksi Ulang Slot
+            </button>
+          </div>
         </div>
 
         <input
@@ -308,10 +393,16 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
             Biarkan kosong jika tidak ingin mengganti overlay.
           </p>
         ) : null}
+        <p className="mt-2 text-xs text-neutral-500">
+          Tidak ada area transparan? Klik Edit PNG, lalu hapus area slot dengan
+          Magic Wand atau Kotak Slot.
+        </p>
         {isUploading ? (
-          <p className="mt-2 text-sm text-neutral-600">Mengunggah PNG ke storage...</p>
+          <p className="mt-2 text-sm text-neutral-600">
+            Mengunggah PNG ke storage...
+          </p>
         ) : null}
-        {!isUploading && imagePath ? (
+        {!isUploading && (pendingBlob || imagePath) ? (
           <p className="mt-2 text-sm text-green-700">PNG siap disimpan.</p>
         ) : null}
         {fileError ? <p className="mt-2 text-sm text-red-600">{fileError}</p> : null}
@@ -375,7 +466,7 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
       <div className="flex gap-3">
         <button
           type="submit"
-          disabled={isPending || isUploading}
+          disabled={isPending || isUploading || (!pendingBlob && !imagePath)}
           className="rounded-lg bg-[#BF3131] px-5 py-2 font-medium text-white hover:bg-[#a52929] disabled:opacity-60"
         >
           {isPending
@@ -387,6 +478,17 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
                 : "Perbarui Frame"}
         </button>
       </div>
+
+      {isEditorOpen ? (
+        <FrameImageEditor
+          key={previewUrl ?? "none"}
+          open
+          imageUrl={previewUrl}
+          initialSlots={slots}
+          onClose={() => setIsEditorOpen(false)}
+          onApply={handleApplyEdit}
+        />
+      ) : null}
     </form>
   );
 }

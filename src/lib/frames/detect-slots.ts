@@ -1,3 +1,4 @@
+import { sortSlots } from "./edit-image";
 import type { AlphaImageData, FrameSlot } from "./types";
 
 export type DetectSlotsOptions = {
@@ -121,9 +122,7 @@ export function detectSlots(
     }
   }
 
-  found.sort((a, b) => (a.y === b.y ? a.x - b.x : a.y - b.y));
-
-  return found.map(({ x, y, w, h }) => ({ x, y, w, h }));
+  return sortSlots(found.map(({ x, y, w, h }) => ({ x, y, w, h })));
 }
 
 /** True bila gambar memiliki setidaknya satu piksel transparan. */
