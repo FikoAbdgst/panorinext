@@ -7,18 +7,30 @@ import { PaymentFlow } from "@/components/public/frame/payment-flow";
 
 function CatalogFallback() {
   return (
-    <div id="frames-loading-overlay" className="relative">
-      <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 rounded-2xl" />
-      <div className="relative z-20 text-center py-32 bg-[#FEF3E2]">
-        <div className="flex justify-center mb-6">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200" />
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#BF3131] border-t-transparent absolute top-0 left-0" />
+    <div className="pb-4" aria-busy="true">
+      <div className="flex flex-wrap gap-2">
+        {[0, 1, 2].map((item) => (
+          <div
+            key={item}
+            className="h-10 w-24 animate-pulse border border-[#BF3131]/10 bg-[#BF3131]/5"
+          />
+        ))}
+      </div>
+
+      <div className="mt-5 flex items-center justify-between gap-4 border-b border-[#BF3131]/15 pb-3">
+        <div className="h-11 w-24 animate-pulse border border-[#BF3131]/10 bg-[#BF3131]/5" />
+        <div className="h-4 w-20 animate-pulse bg-[#BF3131]/10" />
+      </div>
+
+      <div className="mt-7 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {[0, 1, 2, 3].map((item) => (
+          <div key={item}>
+            <div className="aspect-[4/5] animate-pulse bg-[#BF3131]/10" />
+            <div className="mt-3 h-5 w-2/3 animate-pulse bg-[#BF3131]/10" />
+            <div className="mt-2 h-3 w-1/2 animate-pulse bg-[#BF3131]/10" />
+            <div className="mt-3 h-11 w-full animate-pulse bg-[#BF3131]/10" />
           </div>
-        </div>
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold text-gray-800">Memuat frame...</h3>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -26,38 +38,68 @@ function CatalogFallback() {
 
 export default function FramePage({ searchParams }: PageProps<"/frame">) {
   return (
-    <div className="page-frame">
-      <div className="py-16 bg-[#FEF3E2] content_section pt-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2
-              className="text-3xl font-bold text-gray-900 inline-block relative"
-              data-aos="fade-up" suppressHydrationWarning
-              data-aos-delay="100"
+    <div className="page-frame min-h-screen bg-[#FEF3E2] font-['Poppins']">
+      <section className="relative overflow-hidden pt-28 sm:pt-32">
+        <div aria-hidden="true" className="lab-paper absolute inset-0 opacity-60" />
+
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="border-b border-[#BF3131]/25 pb-8 sm:pb-10">
+            <div className="max-w-3xl">
+              <h1
+                suppressHydrationWarning
+                data-aos="lab-sweep"
+                data-aos-duration="1100"
+                className="text-balance text-[2.9rem] font-extrabold leading-[0.93] tracking-[-0.055em] text-[#2A0A0A] sm:text-6xl lg:text-[4.5rem]"
+              >
+                Pilih frame.
+                <br />
+                <span className="text-[#BF3131]">Mulai pose.</span>
+              </h1>
+
+              <p
+                suppressHydrationWarning
+                data-aos="lab-focus"
+                data-aos-duration="1000"
+                data-aos-delay="140"
+                className="mt-5 max-w-xl text-pretty text-sm leading-relaxed text-[#5B3A32] sm:text-base"
+              >
+                Preview frame langsung di kamera sebelum mulai sesi. Pilih yang
+                gratis atau premium, lalu mulai foto.
+              </p>
+            </div>
+
+            <div
+              suppressHydrationWarning
+              data-aos="lab-focus"
+              data-aos-duration="900"
+              data-aos-delay="220"
+              className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#7A5A50] sm:mt-8"
             >
-              <span className="bg-clip-text text-transparent bg-[#BF3131]">Pilih Frame Terbaikmu</span>
-              <div
-                className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-[#BF3131] rounded-full"
-                data-aos="fade-right" suppressHydrationWarning
-                data-aos-delay="300"
-              />
-            </h2>
-            <p className="mt-4 text-gray-600 max-w-2xl mx-auto" data-aos="fade-up" suppressHydrationWarning data-aos-delay="200">
-              Temukan koleksi frame eksklusif untuk menciptakan kenangan yang tak terlupakan
-            </p>
+              <span>Browser</span>
+              <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#BF3131]/50" />
+              <span>PNG / GIF</span>
+              <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#BF3131]/50" />
+              <span>Gratis & premium</span>
+              <a
+                href="#custom-frame"
+                className="inline-flex min-h-10 items-center border border-[#BF3131]/30 px-2.5 text-[#BF3131] transition hover:border-[#BF3131] hover:bg-[#BF3131] hover:text-[#FEF3E2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2] sm:ml-auto"
+              >
+                Butuh frame custom
+              </a>
+            </div>
           </div>
 
-          <Suspense fallback={<CatalogFallback />}>
-            <FrameCatalog searchParams={searchParams} />
-            <AosRefresh />
-          </Suspense>
+          <div id="frame-catalog" className="scroll-mt-28 py-8 sm:py-10">
+            <Suspense fallback={<CatalogFallback />}>
+              <FrameCatalog searchParams={searchParams} />
+              <AosRefresh />
+            </Suspense>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <Suspense fallback={null}>
-        <CustomFrameSection />
-        <AosRefresh />
-      </Suspense>
+      <CustomFrameSection />
+      <AosRefresh />
 
       <PaymentFlow />
       <AosRefresh />

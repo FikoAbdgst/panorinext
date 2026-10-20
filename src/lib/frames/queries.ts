@@ -5,7 +5,6 @@ import { connection } from "next/server";
 import type {
   CatalogFilters,
   CatalogFrame,
-  CustomFrameRow,
   FrameSlot,
 } from "@/lib/frames/types";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -238,73 +237,64 @@ export async function listCatalogFrames(
     query = query.eq("price", 0);
   }
 
-  const [framesResult, categories, ratingsResult] = await Promise.all([
+  const [framesResult, categories] = await Promise.all([
     query,
     listCategories(),
-    supabase.from("testimonials").select("frame_id, rating"),
   ]);
   if (framesResult.error) {
     throw new Error(`Gagal memuat frame: ${framesResult.error.message}`);
   }
 
-  const ratingAgg = new Map<number, { sum: number; count: number }>();
-  for (const row of ratingsResult.data ?? []) {
-    if (row.frame_id === null) continue;
-    const current = ratingAgg.get(row.frame_id) ?? { sum: 0, count: 0 };
-    current.sum += row.rating;
-    current.count += 1;
-    ratingAgg.set(row.frame_id, current);
-  }
-
   const categoryMap = new Map(categories.map((item) => [item.id, item]));
-  const rows: (CatalogFrameQueryRow & { avg_rating: number | null })[] = (
-    framesResult.data ?? []
-  ).map((frame) => {
-    const aggregate = ratingAgg.get(frame.id);
-    return {
-      ...frame,
-      avg_rating: aggregate && aggregate.count > 0 ? aggregate.sum / aggregate.count : null,
-    };
-  });
+  const rows: CatalogFrameQueryRow[] = framesResult.data ?? [];
 
-  const direction = (value: "asc" | "desc") => (value === "asc" ? 1 : -1);
-
-  if (filters.sortRating) {
-    const dir = direction(filters.sortRating);
-    rows.sort((a, b) => {
-      if (a.avg_rating === null && b.avg_rating === null) return 0;
-      if (a.avg_rating === null) return 1;
-      if (b.avg_rating === null) return -1;
-      return (a.avg_rating - b.avg_rating) * dir;
-    });
-  } else if (filters.sortPopular) {
-    const dir = direction(filters.sortPopular);
-    rows.sort((a, b) => (a.used - b.used) * dir);
+  if (filters.sortPopular) {
+    rows.sort((a, b) => b.used - a.used);
   } else {
     rows.sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
   }
 
-  return rows.map((frame) => {
-    const category =
-      frame.category_id !== null ? categoryMap.get(frame.category_id) : undefined;
-    return {
-      id: frame.id,
-      name: frame.name,
-      image_path: frame.image_path,
-      price: frame.price,
-      used: frame.used,
-      width: frame.width,
-      height: frame.height,
-      slots: frame.slots ?? [],
-      category_icon: category?.icon ?? null,
-      category_name: category?.name ?? null,
-      avg_rating: frame.avg_rating,
-    };
-  }).filter((frame) =>
-    filters.slots ? frame.slots.length === filters.slots : true,
-  );
+  return rows
+    .map((frame) => {
+      const category =
+        frame.category_id !== null ? categoryMap.get(frame.category_id) : undefined;
+      return {
+        id: frame.id,
+        name: frame.name,
+        image_path: frame.image_path,
+        price: frame.price,
+        used: frame.used,
+        width: frame.width,
+        height: frame.height,
+        slots: frame.slots ?? [],
+        category_icon: category?.icon ?? null,
+        category_name: category?.name ?? null,
+      };
+    })
+    .filter((frame) =>
+      filters.slots ? frame.slots.length === filters.slots : true,
+    );
+}
+
+/** ID kategori yang benar-benar dipakai oleh minimal satu frame. */
+export async function listFrameCategoryIds(): Promise<number[]> {
+  await connection();
+  if (!isSupabaseAdminConfigured()) {
+    warnSupabaseNotConfigured();
+    return [];
+  }
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.from("frames").select("category_id");
+  if (error) {
+    throw new Error(`Gagal memuat kategori frame: ${error.message}`);
+  }
+  const ids = new Set<number>();
+  for (const row of data ?? []) {
+    if (row.category_id !== null) ids.add(row.category_id);
+  }
+  return [...ids];
 }
 
 /** Daftar jumlah slot unik yang ada di seluruh frame, urut menaik. */
@@ -324,31 +314,4 @@ export async function listFrameSlotCounts(): Promise<number[]> {
     counts.add((row.slots ?? []).length);
   }
   return [...counts].sort((a, b) => a - b);
-}
-
-export async function listCustomFrames(limit = 4): Promise<CustomFrameRow[]> {
-  await connection();
-  if (!isSupabaseAdminConfigured()) {
-    warnSupabaseNotConfigured();
-    return [];
-  }
-  const supabase = createAdminClient();
-  const { data: category } = await supabase
-    .from("categories")
-    .select("id")
-    .ilike("name", "custom")
-    .maybeSingle();
-  if (!category) {
-    return [];
-  }
-  const { data, error } = await supabase
-    .from("frames")
-    .select("id, name, image_path")
-    .eq("category_id", category.id)
-    .order("id", { ascending: true })
-    .limit(limit);
-  if (error) {
-    throw new Error(`Gagal memuat frame custom: ${error.message}`);
-  }
-  return data ?? [];
 }

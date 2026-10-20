@@ -20,11 +20,10 @@ import { useEffect } from "react";
  * dieksekusi saat SSR.
  */
 const AOS_OPTIONS = {
-  duration: 800,
-  easing: "ease-in-out",
-  once: false,
-  mirror: true,
-  offset: 120,
+  duration: 1000,
+  easing: "ease-out-cubic",
+  once: true,
+  offset: 90,
   disableMutationObserver: true,
 } as const;
 

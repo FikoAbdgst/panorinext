@@ -28,9 +28,6 @@ const CAPTURE_OUTPUT_WIDTH = 1200;
 const COUNTDOWN_STEPS = 3;
 const CAPTURE_INTERVAL_MS = 500;
 
-const CAMERA_TOGGLE_ICON_PATH =
-  "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15";
-
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     window.setTimeout(resolve, ms);
@@ -276,7 +273,7 @@ export function FramePreviewModal({
         await sleep(1000);
       }
       if (abortRef.current) break;
-      setCountdown("Snap!");
+      setCountdown("Jepret!");
       const snapshot = await captureFrame(index);
       setFlash(true);
       window.setTimeout(() => setFlash(false), 250);
@@ -297,19 +294,20 @@ export function FramePreviewModal({
 
   const captureLabel =
     cameraError !== null
-      ? "Kamera Tidak Tersedia"
+      ? "Kamera tidak tersedia"
       : sessionState === "running"
         ? "Sedang mengambil foto..."
         : sessionState === "done"
-          ? "Selesai! Klik untuk ulang"
+          ? "Selesai. Klik untuk ulang"
           : isCameraReady
-            ? "📷 Start Session"
+            ? "Mulai sesi"
             : "Menyiapkan kamera...";
 
   return createPortal(
     <div
       id="previewCameraModal"
-      className="preview-modal fixed inset-0 z-50 flex items-end justify-center overflow-hidden bg-black/50 backdrop-blur-sm md:items-center"
+      data-lenis-prevent
+      className="preview-modal fixed inset-0 z-50 flex items-end justify-center overflow-hidden bg-[#2A0A0A]/75 md:items-center"
       role="dialog"
       aria-modal="true"
       aria-label="Frame Preview"
@@ -328,17 +326,20 @@ export function FramePreviewModal({
         </>
       ) : null}
 
-      <div className="preview-modal-panel relative max-h-[90vh] w-full overflow-y-auto rounded-t-xl bg-white shadow-xl md:mx-4 md:max-h-none md:max-w-4xl md:overflow-visible md:rounded-xl md:p-6">
-        <div className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-200 bg-white px-4 py-3 md:static md:border-none md:py-0 md:pb-4">
-          <h2 className="text-xl font-semibold">
-            Frame Preview
-            <span className="ml-3 rounded-full bg-[#FEF3E2] px-3 py-1 align-middle text-xs font-semibold text-[#BF3131]">
-              {slots.length} Slot Foto
+      <div
+        data-lenis-prevent
+        className="preview-modal-panel relative max-h-[90vh] w-full overflow-y-auto border border-[#BF3131]/30 bg-[#FEF3E2] shadow-[10px_10px_0_rgba(42,10,10,0.35)] md:mx-4 md:max-h-none md:max-w-4xl md:overflow-visible md:p-6"
+      >
+        <div className="sticky top-0 z-10 flex items-center justify-center border-b border-[#BF3131]/25 bg-[#FEF3E2] px-4 py-3 md:static md:border-none md:py-0 md:pb-4">
+          <h2 className="flex items-center gap-3 text-lg font-extrabold tracking-[-0.02em] text-[#2A0A0A]">
+            Preview frame
+            <span className="border border-[#BF3131]/30 bg-[#FFFBF3] px-2.5 py-1 align-middle text-[9px] font-bold uppercase tracking-[0.16em] text-[#BF3131]">
+              {slots.length} slot
             </span>
           </h2>
           <button
             type="button"
-            className="absolute top-3 right-4 cursor-pointer text-2xl text-gray-500 hover:text-black"
+            className="absolute right-3 top-2 flex h-11 w-11 cursor-pointer items-center justify-center border border-[#BF3131]/30 text-xl text-[#BF3131] transition hover:bg-[#BF3131] hover:text-[#FEF3E2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
             onClick={onClose}
             aria-label="Tutup"
           >
@@ -349,7 +350,7 @@ export function FramePreviewModal({
         <div className="flex flex-col gap-6 p-4 md:flex-row md:items-center md:justify-center md:p-0">
           <div className="w-full md:w-3/5">
             <div
-              className="relative w-full overflow-hidden rounded-lg bg-white"
+              className="relative w-full overflow-hidden border border-[#BF3131]/25 bg-[#FFFBF3]"
               style={{ aspectRatio: "4 / 3" }}
             >
               <video
@@ -363,21 +364,11 @@ export function FramePreviewModal({
                 style={{ transform: isMirrored ? "scaleX(-1)" : "none" }}
               />
               {cameraError ? (
-                <div className="flex h-full w-full flex-col items-center justify-center p-4 text-center text-red-500">
-                  <svg
-                    className="mb-4 h-12 w-12"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                  <p>{cameraError}</p>
+                <div className="flex h-full w-full flex-col items-center justify-center gap-3 border border-[#BF3131]/15 bg-[#FFFBF3] p-6 text-center">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#BF3131]">
+                    Kamera tidak tersedia
+                  </p>
+                  <p className="max-w-xs text-sm leading-relaxed text-[#5B3A32]">{cameraError}</p>
                 </div>
               ) : null}
               {frame.isFree ? null : (
@@ -396,7 +387,7 @@ export function FramePreviewModal({
               </div>
               <button
                 type="button"
-                className="absolute top-4 right-4 z-20 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm transition-all duration-300 hover:bg-black/70 md:hidden"
+                className="absolute right-3 top-3 z-20 border border-[#FEF3E2]/40 bg-[#2A0A0A]/75 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#FEF3E2] transition hover:bg-[#2A0A0A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FEF3E2] focus-visible:ring-offset-2 focus-visible:ring-offset-[#2A0A0A] md:hidden"
                 onClick={() => {
                   setIsCameraReady(false);
                   setCameraError(null);
@@ -406,25 +397,13 @@ export function FramePreviewModal({
                 }}
                 aria-label="Ganti kamera"
               >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d={CAMERA_TOGGLE_ICON_PATH}
-                  />
-                </svg>
+                Balik
               </button>
             </div>
 
             <button
               type="button"
-              className="mt-4 w-full rounded-lg bg-red-500 py-3 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-3 w-full min-h-11 border border-[#BF3131] bg-[#BF3131] py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#FEF3E2] shadow-[4px_4px_0_#7A1C1C] transition hover:bg-[#A02828] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2] disabled:cursor-not-allowed disabled:opacity-70"
               onClick={() => {
                 void runSession();
               }}
@@ -436,14 +415,14 @@ export function FramePreviewModal({
 
           <div className="flex w-full justify-center md:w-auto">
             <div className="relative" style={{ width: panelWidth, height: panelHeight }}>
-              <div className="relative h-full w-full overflow-hidden bg-transparent shadow-md">
+              <div className="relative h-full w-full overflow-hidden border border-[#BF3131]/20 bg-[#FFFBF3]">
                 {slots.map((slot, index) => {
                   const photo = photos[index];
                   return (
                     <div
                       key={`preview-slot-${index}`}
                       className={`preview-slot absolute overflow-hidden ${
-                        photo ? "" : "bg-gray-100"
+                        photo ? "" : "bg-[#F3D8C8]"
                       }`}
                       style={{
                         left: slot.x * scale,
@@ -469,8 +448,8 @@ export function FramePreviewModal({
                     alt=""
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                    <p className="p-4 text-center text-gray-400">
+                  <div className="absolute inset-0 flex items-center justify-center bg-[#F3D8C8]">
+                    <p className="p-4 text-center text-[9px] font-bold uppercase tracking-[0.16em] text-[#BF3131]/70">
                       Frame akan muncul di sini
                     </p>
                   </div>

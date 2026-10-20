@@ -28,20 +28,12 @@ export type CatalogFrame = {
   slots: FrameSlot[];
   category_icon: string | null;
   category_name: string | null;
-  avg_rating: number | null;
-};
-
-export type CustomFrameRow = {
-  id: number;
-  name: string;
-  image_path: string | null;
 };
 
 export type CatalogFilters = {
   categoryId?: number | null;
   freeOnly?: boolean;
-  sortRating?: "asc" | "desc" | null;
-  sortPopular?: "asc" | "desc" | null;
+  sortPopular?: "desc" | null;
   /** Filter jumlah slot foto pada frame. `null`/absen = semua. */
   slots?: number | null;
 };

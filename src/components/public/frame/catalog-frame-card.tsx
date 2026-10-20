@@ -1,11 +1,19 @@
 import Link from "next/link";
-import type { CSSProperties } from "react";
 
 import type { CatalogFrame } from "@/lib/frames/types";
 import { getFramePublicUrl } from "@/lib/frames/url";
 
 import { FramePreviewButton } from "./frame-preview-button";
 import { PremiumFrameButton } from "./premium-frame-button";
+
+const SAMPLE_PHOTOS = [
+  "/images/m1.jpeg",
+  "/images/k2.jpeg",
+  "/images/m3.jpeg",
+  "/images/k1.jpeg",
+  "/images/m2.jpeg",
+  "/images/k3.jpeg",
+] as const;
 
 function formatPrice(price: number): string {
   return new Intl.NumberFormat("id-ID").format(price);
@@ -21,166 +29,105 @@ export function CatalogFrameCard({
   className?: string;
 }) {
   const isFree = frame.price <= 0;
+  const imageUrl = frame.image_path ? getFramePublicUrl(frame.image_path) : null;
+  const frameWidth = frame.width > 0 ? frame.width : 4;
+  const frameHeight = frame.height > 0 ? frame.height : 5;
+  const isPortrait = frameHeight >= frameWidth;
 
   return (
-    <div
-      className={`group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 frame-card relative ${className}`}
+    <article
+      className={`group relative ${className}`}
       data-frame-id={frame.id}
-      data-aos="frame-fade-up" suppressHydrationWarning
-      data-aos-delay={(index % 4) * 100}
-      style={{ "--aos-order": index % 4 } as CSSProperties}
+      data-aos="lab-develop"
+      suppressHydrationWarning
+      data-aos-duration="1000"
+      data-aos-delay={(index % 3) * 90}
     >
-      <div className="absolute top-3 left-3 z-10">
-        <span className="flex items-center gap-1 rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-xs font-semibold text-gray-800 shadow-md">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-3 w-3 text-[#BF3131]"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M4 6a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm9 0a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2h-3a2 2 0 01-2-2V6z"
-            />
-          </svg>
-          {frame.slots.length} Slot
+      <FramePreviewButton
+        frame={frame}
+        className="relative block w-full overflow-hidden border border-[#BF3131]/20 bg-[#F6E6D8] text-left transition duration-300 hover:border-[#BF3131]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
+      >
+        <span className="relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden p-4 sm:p-5">
+          {imageUrl ? (
+            <span
+              className="relative block max-h-full max-w-full bg-[#FFFBF3]"
+              style={{
+                aspectRatio: `${frameWidth} / ${frameHeight}`,
+                ...(isPortrait ? { height: "100%" } : { width: "100%" }),
+              }}
+            >
+              {frame.slots.map((slot, slotIndex) => (
+                <span
+                  key={`${frame.id}-slot-${slotIndex}`}
+                  className="absolute overflow-hidden"
+                  style={{
+                    left: `${(slot.x / frameWidth) * 100}%`,
+                    top: `${(slot.y / frameHeight) * 100}%`,
+                    width: `${(slot.w / frameWidth) * 100}%`,
+                    height: `${(slot.h / frameHeight) * 100}%`,
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={SAMPLE_PHOTOS[slotIndex % SAMPLE_PHOTOS.length]}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                </span>
+              ))}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageUrl}
+                alt={frame.name}
+                loading="lazy"
+                className="absolute inset-0 z-10 h-full w-full object-contain transition duration-500 group-hover:scale-[1.02]"
+              />
+            </span>
+          ) : (
+            <span className="relative z-10 border border-dashed border-[#BF3131]/35 bg-[#FFFBF3]/80 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#BF3131]">
+              Tanpa gambar
+            </span>
+          )}
+        </span>
+
+        <span className="pointer-events-none absolute bottom-3 left-3 z-20 bg-[#2A0A0A]/80 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-[#FEF3E2]">
+          Preview
+        </span>
+      </FramePreviewButton>
+
+      <div className="mt-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-base font-bold leading-tight text-[#2A0A0A] transition-colors group-hover:text-[#BF3131]">
+            {frame.name}
+          </h3>
+          <p className="mt-1 text-[11px] leading-relaxed text-[#7A5A50]">
+            {frame.slots.length} slot
+            {frame.category_name ? ` · ${frame.category_name}` : ""}
+          </p>
+        </div>
+        <span
+          className={`shrink-0 pt-0.5 text-[11px] font-bold uppercase tracking-[0.12em] ${
+            isFree ? "text-[#BF3131]" : "text-[#2A0A0A]"
+          }`}
+        >
+          {isFree ? "Gratis" : `Rp${formatPrice(frame.price)}`}
         </span>
       </div>
 
-      <div className="absolute top-3 right-3 z-10">
+      <div className="mt-3">
         {isFree ? (
-          <span className="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-3 w-3 mr-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-            </svg>
-            GRATIS
-          </span>
+          <Link
+            href={`/booth?frame_id=${frame.id}`}
+            className="inline-flex min-h-11 w-full items-center justify-between gap-3 border border-[#BF3131] px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#BF3131] transition hover:bg-[#BF3131] hover:text-[#FEF3E2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
+          >
+            Pakai frame ini
+            <span aria-hidden="true" className="h-px w-5 bg-current" />
+          </Link>
         ) : (
-          <span className="bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-3 w-3 mr-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
-            {formatPrice(frame.price)} IDR
-          </span>
+          <PremiumFrameButton frame={frame} />
         )}
       </div>
-
-      <div className="relative h-60 bg-gradient-to-br from-gray-100 to-red-50 overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center p-4 transition-transform duration-500 group-hover:scale-105">
-          {frame.image_path ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={getFramePublicUrl(frame.image_path)}
-              alt={frame.name}
-              className="max-h-full max-w-full object-contain"
-            />
-          ) : (
-            <div className="text-gray-400 text-5xl">🖼️</div>
-          )}
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm">
-          <FramePreviewButton frame={frame} />
-        </div>
-      </div>
-
-      <div className="p-5 bg-white">
-        <div className="space-y-3">
-          <div className="flex justify-between items-start">
-            <h3 className="text-lg font-semibold text-gray-900 group-hover:text-[#BF3131] transition-colors">
-              {frame.name}
-            </h3>
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-red-50 rounded-full">
-              <span className="text-base">{frame.category_icon}</span>
-              <span className="text-xs text-gray-700">{frame.category_name}</span>
-            </div>
-          </div>
-
-          {frame.avg_rating !== null ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-50 to-orange-50 px-3 py-1.5 rounded-lg border border-yellow-200">
-                <div className="flex items-center">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <svg
-                      key={i}
-                      className={`w-4 h-4 fill-current ${
-                        i <= Math.round(frame.avg_rating ?? 0)
-                          ? "text-yellow-400 drop-shadow-sm"
-                          : "text-gray-300"
-                      }`}
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                    </svg>
-                  ))}
-                </div>
-                <span className="text-sm font-semibold text-gray-800">
-                  {frame.avg_rating.toFixed(1)}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 bg-gradient-to-r from-gray-50 to-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
-              <div className="flex items-center">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <svg key={i} className="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 20 20">
-                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                  </svg>
-                ))}
-              </div>
-              <span className="text-sm text-gray-500 font-medium">Belum ada rating</span>
-            </div>
-          )}
-
-          <div className="border-t border-gray-100" />
-
-          {isFree ? (
-            <Link
-              href={`/booth?frame_id=${frame.id}`}
-              className="mt-2 inline-flex items-center justify-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-full text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 w-full transition-all duration-300 shadow-sm hover:shadow-md"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
-                />
-              </svg>
-              Gunakan Frame
-            </Link>
-          ) : (
-            <PremiumFrameButton frame={frame} />
-          )}
-        </div>
-      </div>
-
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-red-500/20 to-amber-500/20 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300" />
-    </div>
+    </article>
   );
 }

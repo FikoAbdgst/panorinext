@@ -25,7 +25,7 @@ export function AdminNav({ adminName }: { adminName: string }) {
       const supabase = createClient();
       await supabase.auth.signOut();
     } finally {
-      router.push("/admin/login");
+      router.replace("/");
       router.refresh();
     }
   };

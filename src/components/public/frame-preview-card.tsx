@@ -24,6 +24,15 @@ export type FeaturedFrameCardData = {
   slots: FrameSlot[];
 };
 
+const SAMPLE_PHOTOS = [
+  "/images/m1.jpeg",
+  "/images/k2.jpeg",
+  "/images/m3.jpeg",
+  "/images/k1.jpeg",
+  "/images/m2.jpeg",
+  "/images/k3.jpeg",
+] as const;
+
 function formatPrice(price: number): string {
   return new Intl.NumberFormat("id-ID").format(price);
 }
@@ -40,6 +49,9 @@ export function FeaturedFrameCard({
 
   const isFree = frame.price <= 0;
   const imageUrl = frame.imagePath ? getFramePublicUrl(frame.imagePath) : null;
+  const frameWidth = frame.width > 0 ? frame.width : 4;
+  const frameHeight = frame.height > 0 ? frame.height : 5;
+  const isPortrait = frameHeight >= frameWidth;
 
   const previewFrame: PreviewFrame = {
     id: frame.id,
@@ -53,113 +65,100 @@ export function FeaturedFrameCard({
 
   return (
     <>
-      <div
-        className="frame-card group relative"
-        data-frame-id={frame.id}
-        data-aos="fade-up" suppressHydrationWarning
-        data-aos-delay={index * 100}
-      >
-        <div className={`badge ${isFree ? "badge-free" : "badge-premium"}`}>
-          {isFree ? (
-            <>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-3 w-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-              </svg>
-              GRATIS
-            </>
-          ) : (
-            <>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-3 w-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-              {formatPrice(frame.price)} IDR
-            </>
-          )}
-        </div>
-
-        <div className="absolute top-3 left-3 z-10">
-          <span className="flex items-center gap-1 rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-xs font-semibold text-gray-800 shadow-md">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-3 w-3 text-[#BF3131]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4 6a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm9 0a2 2 0 012-2h3a2 2 0 012 2v3a2 2 0 01-2 2h-3a2 2 0 01-2-2V6z"
-              />
-            </svg>
-            {frame.slots.length} Slot
-          </span>
-        </div>
-
-        <div className="frame-image-container">
-          <div className="absolute inset-0 flex items-center justify-center p-4 transition-transform duration-500 group-hover:scale-105">
-            {imageUrl ? (
-              <img src={imageUrl} alt={frame.name} className="frame-image" />
-            ) : (
-              <div className="text-gray-400 text-5xl">🖼️</div>
-            )}
+      <article className="group relative">
+        <div className="relative border border-[#BF3131]/25 bg-[#FFFBF3] p-3 shadow-[8px_8px_0_rgba(191,49,49,0.08)] transition duration-300 group-hover:-translate-y-1 group-hover:border-[#BF3131]/55 group-hover:shadow-[10px_10px_0_rgba(191,49,49,0.14)]">
+          <div className="flex items-center justify-between border-b border-dashed border-[#BF3131]/25 pb-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[#BF3131]/70">
+            <span>No. {String(index + 1).padStart(2, "0")}</span>
+            <span>{frame.slots.length} slot</span>
+            <span>{isFree ? "Gratis" : `Rp${formatPrice(frame.price)}`}</span>
           </div>
 
-          <div className="frame-overlay">
-            <button
-              type="button"
-              className="preview-button cursor-pointer"
-              onClick={() => setIsPreviewOpen(true)}
-            >
-              Preview
-            </button>
-          </div>
-        </div>
+          <button
+            type="button"
+            onClick={() => setIsPreviewOpen(true)}
+            aria-label={`Preview frame ${frame.name}`}
+            suppressHydrationWarning
+            data-aos="lab-frame"
+            data-aos-duration="1100"
+            data-aos-delay={240 + index * 120}
+            className="relative mt-3 block w-full overflow-hidden bg-[#F3D8C8] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFFBF3]"
+          >
+            <span aria-hidden="true" className="lab-dots absolute inset-0 opacity-70" />
+            <span className="relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden p-4">
+              {imageUrl ? (
+                <span
+                  className="relative block max-h-full max-w-full bg-[#FFFBF3]"
+                  style={{
+                    aspectRatio: `${frameWidth} / ${frameHeight}`,
+                    ...(isPortrait ? { height: "100%" } : { width: "100%" }),
+                  }}
+                >
+                  {frame.slots.map((slot, slotIndex) => (
+                    <span
+                      key={`${frame.id}-slot-${slotIndex}`}
+                      className="absolute overflow-hidden"
+                      style={{
+                        left: `${(slot.x / frameWidth) * 100}%`,
+                        top: `${(slot.y / frameHeight) * 100}%`,
+                        width: `${(slot.w / frameWidth) * 100}%`,
+                        height: `${(slot.h / frameHeight) * 100}%`,
+                      }}
+                    >
+                      <img
+                        src={SAMPLE_PHOTOS[slotIndex % SAMPLE_PHOTOS.length]}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                    </span>
+                  ))}
+                  <img
+                    src={imageUrl}
+                    alt={frame.name}
+                    loading="lazy"
+                    className="absolute inset-0 z-10 h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]"
+                  />
+                </span>
+              ) : (
+                <span className="absolute inset-0 flex items-center justify-center text-5xl text-[#BF3131]/30">
+                  +
+                </span>
+              )}
+            </span>
 
-        <div className="card-content">
-          <div className="flex justify-between items-start">
-            <h3 className="frame-title">{frame.name}</h3>
-            <div className="category">
-              <span>{frame.categoryIcon}</span>
-              <span>{frame.categoryName}</span>
+            <span className="absolute inset-x-3 bottom-3 z-20 flex items-center justify-between gap-2">
+              <span className="bg-[#BF3131] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.22em] text-[#FEF3E2] shadow-[3px_3px_0_rgba(122,28,28,0.7)]">
+                Preview
+              </span>
+              <span className="border border-[#BF3131]/20 bg-[#FFFBF3]/90 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#BF3131]">
+                #{frame.id}
+              </span>
+            </span>
+          </button>
+
+          <div className="mt-3 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="truncate text-lg font-bold leading-tight text-[#2A0A0A] transition-colors group-hover:text-[#BF3131]">
+                {frame.name}
+              </h3>
+              <p className="mt-1 flex items-center gap-1.5 text-xs text-[#7A5A50]">
+                {frame.categoryIcon ? (
+                  <span aria-hidden="true">{frame.categoryIcon}</span>
+                ) : null}
+                <span className="truncate">{frame.categoryName ?? "Frame"}</span>
+              </p>
             </div>
-          </div>
-          <div className="border-t border-gray-100 mt-2" />
-          <div className="frame-details absolute top-1 bg-red-600 py-2 px-3 rounded-xl">
-            <div className="usage-count text-white">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="white"
-                viewBox="0 0 576 512"
-              >
-                <path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3z" />
-              </svg>
-              <p className="text-white"> {frame.used}</p>
+            <div className="shrink-0 text-right">
+              <p className="text-[8px] font-bold uppercase tracking-[0.18em] text-[#BF3131]/55">
+                {frame.used > 0 ? "Dipakai" : "Status"}
+              </p>
+              <p className="text-sm font-bold text-[#BF3131]">
+                {frame.used > 0 ? `${frame.used}x` : "Baru"}
+              </p>
             </div>
           </div>
         </div>
-
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-red-500/20 to-amber-500/20 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300" />
-      </div>
+      </article>
 
       {isPreviewOpen ? (
         <FramePreviewModal frame={previewFrame} onClose={handleClose} />

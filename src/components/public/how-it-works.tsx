@@ -1,156 +1,258 @@
-export function HowItWorks() {
+const STEPS = [
+  {
+    title: "Pilih frame",
+    body: "Mulai dari frame lucu yang sudah tersedia, atau ajukan frame custom buat acaramu.",
+    label: "Frame rack",
+  },
+  {
+    title: "Ambil foto",
+    body: "Atur pose, pakai timer, dan ulangi sampai dapat shot yang paling pas.",
+    label: "Capture",
+  },
+  {
+    title: "Bawa pulang",
+    body: "Download photostrip PNG atau GIF, lalu kirim ke email kalau mau simpan versi digitalnya.",
+    label: "Print / export",
+  },
+] as const
+
+const STEP_CAPTIONS = ["Pilih satu", "3 · 2 · 1", "PNG / GIF / email"] as const
+
+function CropMarks() {
   return (
-    <div className="py-16 font-['Poppins'] content_section relative" data-aos="fade-up" suppressHydrationWarning>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
-        <div className="text-center mb-16" data-aos="fade-up" suppressHydrationWarning>
-          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Cara Kerja</h2>
-          <div className="mt-2 w-24 h-1 bg-[#BF3131] mx-auto rounded-full" data-aos="fade-up" suppressHydrationWarning data-aos-delay="100" />
-          <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-600" data-aos="fade-up" suppressHydrationWarning data-aos-delay="150">
-            Tiga langkah mudah untuk membuat kenangan berharga
+    <>
+      <span
+        aria-hidden="true"
+        className="absolute left-3 top-3 h-4 w-4 border-l border-t border-[#BF3131]/40"
+      />
+      <span
+        aria-hidden="true"
+        className="absolute right-3 top-3 h-4 w-4 border-r border-t border-[#BF3131]/40"
+      />
+      <span
+        aria-hidden="true"
+        className="absolute bottom-3 left-3 h-4 w-4 border-b border-l border-[#BF3131]/40"
+      />
+      <span
+        aria-hidden="true"
+        className="absolute bottom-3 right-3 h-4 w-4 border-b border-r border-[#BF3131]/40"
+      />
+    </>
+  )
+}
+
+function StepVisual({ step }: { step: number }) {
+  if (step === 1) {
+    return (
+      <div className="flex items-end gap-3">
+        {[0, 1, 2].map((item) => (
+          <div
+            key={item}
+            className={`relative w-[58px] ${item === 1 ? "-translate-y-2" : ""}`}
+          >
+            <div
+              className={`border-2 p-1.5 ${
+                item === 1
+                  ? "border-[#BF3131] bg-[#BF3131] shadow-[3px_3px_0_rgba(122,28,28,0.35)]"
+                  : "border-[#BF3131]/25 bg-[#FFFBF3]"
+              }`}
+            >
+              <div className="space-y-1">
+                {[0, 1, 2].map((slot) => (
+                  <div
+                    key={slot}
+                    className={`h-5 w-full ${
+                      item === 1 ? "bg-[#FEF3E2]/80" : "bg-[#BF3131]/10"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+            {item === 1 ? (
+              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#BF3131] text-[10px] font-bold text-[#FEF3E2] shadow">
+                ✓
+              </span>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (step === 2) {
+    return (
+      <div className="relative flex h-[128px] w-[172px] items-center justify-center border-2 border-[#BF3131]/55 bg-[#FFFBF3] shadow-[4px_4px_0_rgba(191,49,49,0.12)]">
+        <span className="absolute left-2 top-2 h-4 w-4 border-l-2 border-t-2 border-[#BF3131]" />
+        <span className="absolute right-2 top-2 h-4 w-4 border-r-2 border-t-2 border-[#BF3131]" />
+        <span className="absolute bottom-2 left-2 h-4 w-4 border-b-2 border-l-2 border-[#BF3131]" />
+        <span className="absolute bottom-2 right-2 h-4 w-4 border-b-2 border-r-2 border-[#BF3131]" />
+        <div className="text-center">
+          <p className="text-5xl font-extrabold leading-none text-[#BF3131]">
+            3
+          </p>
+          <p className="mt-1 text-[8px] font-bold uppercase tracking-[0.2em] text-[#BF3131]/60">
+            Timer
           </p>
         </div>
+        <span className="absolute -right-2 -top-2 h-3 w-3 rounded-full bg-[#BF3131]" />
+      </div>
+    )
+  }
 
-        <div className="grid md:grid-cols-3 gap-8 relative">
-          <div
-            className="hidden md:block absolute top-32 left-0 right-0 h-1 border-t-4 border-dashed border-[#F16767] z-10"
-            data-aos="fade-in" suppressHydrationWarning
-            data-aos-delay="300"
-          />
-
-          <div
-            className="bg-white rounded-xl shadow-lg p-6 relative z-20 transform transition duration-300 hover:scale-105"
-            data-aos="fade-up" suppressHydrationWarning
-            data-aos-delay="200"
-          >
-            <div
-              className="w-16 h-16 bg-[#BF3131] rounded-full flex items-center justify-center mx-auto -mt-12 shadow-md border-4 border-white"
-              data-aos="zoom-in" suppressHydrationWarning
-              data-aos-delay="250"
-            >
-              <span className="text-white text-2xl font-bold">1</span>
-            </div>
-            <div className="text-center mt-4">
-              <h3 className="text-xl font-bold text-gray-900" data-aos="fade-up" suppressHydrationWarning data-aos-delay="300">
-                Pilih Frame
-              </h3>
-              <div className="mt-2 w-12 h-1 bg-[#F16767] mx-auto rounded-full" data-aos="fade-up" suppressHydrationWarning data-aos-delay="350" />
-              <p className="mt-3 text-gray-600" data-aos="fade-up" suppressHydrationWarning data-aos-delay="400">
-                Pilih dari berbagai pilihan frame foto lucu dan menarik yang cocok dengan momen spesial Anda
-              </p>
-            </div>
-            <div className="mt-6 flex justify-center" data-aos="zoom-in" suppressHydrationWarning data-aos-delay="450">
-              <div className="w-32 h-32 bg-[#FEF3E2] rounded-lg border-2 border-[#BF3131] overflow-hidden relative p-2">
-                <div className="absolute inset-0 bg-[url('/api/placeholder/120/120')] bg-center bg-cover opacity-30" />
-                <svg
-                  className="w-16 h-16 mx-auto mt-6 text-[#BF3131]"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-            </div>
+  return (
+    <div className="flex items-end gap-5">
+      <div className="w-[86px] -rotate-6 bg-[#FFFBF3] p-1.5 shadow-[4px_4px_0_rgba(191,49,49,0.12)] ring-1 ring-[#BF3131]/25">
+        <div className="border border-[#BF3131]/35 p-1">
+          <div className="space-y-1">
+            {[0, 1, 2].map((slot) => (
+              <div key={slot} className="h-6 w-full bg-[#BF3131]/15" />
+            ))}
           </div>
+          <p className="mt-1 text-center text-[6px] font-bold uppercase tracking-[0.12em] text-[#BF3131]/60">
+            Panoricam
+          </p>
+        </div>
+      </div>
 
-          <div
-            className="bg-white rounded-xl shadow-lg p-6 relative z-20 transform transition duration-300 hover:scale-105"
-            data-aos="fade-up" suppressHydrationWarning
-            data-aos-delay="300"
+      <div className="flex flex-col items-center gap-2 pb-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#BF3131] text-[#FEF3E2] shadow-[3px_3px_0_rgba(122,28,28,0.4)]">
+          <svg
+            aria-hidden="true"
+            className="h-5 w-5"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <div
-              className="w-16 h-16 bg-[#BF3131] rounded-full flex items-center justify-center mx-auto -mt-12 shadow-md border-4 border-white"
-              data-aos="zoom-in" suppressHydrationWarning
-              data-aos-delay="350"
-            >
-              <span className="text-white text-2xl font-bold">2</span>
-            </div>
-            <div className="text-center mt-4">
-              <h3 className="text-xl font-bold text-gray-900" data-aos="fade-up" suppressHydrationWarning data-aos-delay="400">
-                Ambil Foto
-              </h3>
-              <div className="mt-2 w-12 h-1 bg-[#F16767] mx-auto rounded-full" data-aos="fade-up" suppressHydrationWarning data-aos-delay="450" />
-              <p className="mt-3 text-gray-600" data-aos="fade-up" suppressHydrationWarning data-aos-delay="500">
-                Tunjukkan ekspresi terbaik Anda! Gunakan timer atau klik langsung untuk mengambil foto
-              </p>
-            </div>
-            <div className="mt-6 flex justify-center" data-aos="zoom-in" suppressHydrationWarning data-aos-delay="550">
-              <div className="w-32 h-32 rounded-lg border-2 border-[#BF3131] overflow-hidden relative bg-gray-100">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <svg
-                    className="w-16 h-16 text-[#BF3131]"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <div className="absolute bottom-2 right-2">
-                  <div className="w-6 h-6 bg-red-500 rounded-full animate-pulse" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="bg-white rounded-xl shadow-lg p-6 relative z-20 transform transition duration-300 hover:scale-105"
-            data-aos="fade-up" suppressHydrationWarning
-            data-aos-delay="400"
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 3v12m0 0l4-4m-4 4l-4-4M5 21h14"
+            />
+          </svg>
+        </div>
+        <div className="flex h-8 w-12 items-center justify-center border border-[#BF3131]/30 bg-[#FFFBF3]">
+          <svg
+            aria-hidden="true"
+            className="h-4 w-4 text-[#BF3131]"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <div
-              className="w-16 h-16 bg-[#BF3131] rounded-full flex items-center justify-center mx-auto -mt-12 shadow-md border-4 border-white"
-              data-aos="zoom-in" suppressHydrationWarning
-              data-aos-delay="450"
-            >
-              <span className="text-white text-2xl font-bold">3</span>
-            </div>
-            <div className="text-center mt-4">
-              <h3 className="text-xl font-bold text-gray-900" data-aos="fade-up" suppressHydrationWarning data-aos-delay="500">
-                Bagikan
-              </h3>
-              <div className="mt-2 w-12 h-1 bg-[#F16767] mx-auto rounded-full" data-aos="fade-up" suppressHydrationWarning data-aos-delay="550" />
-              <p className="mt-3 text-gray-600" data-aos="fade-up" suppressHydrationWarning data-aos-delay="600">
-                Simpan foto atau bagikan secara langsung ke media sosial dengan teman dan keluarga
-              </p>
-            </div>
-            <div className="mt-6 flex justify-center" data-aos="zoom-in" suppressHydrationWarning data-aos-delay="650">
-              <div className="w-32 h-32 bg-white rounded-lg border-2 border-[#BF3131] p-3 relative">
-                <div className="w-full h-full bg-[url('/api/placeholder/110/110')] bg-center bg-cover rounded" />
-                <div className="absolute -bottom-3 -right-3 flex space-x-1">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center shadow-md">
-                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M18.77 7.46H14.5v-1.9c0-.9.6-1.1 1-1.1h3V.5h-4.33C10.24.5 9.5 3.44 9.5 5.32v2.15h-3v4h3v12h5v-12h3.85l.42-4z" />
-                    </svg>
-                  </div>
-                  <div className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center shadow-md">
-                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-                    </svg>
-                  </div>
-                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-md">
-                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.8"
+              d="M4 6h16v12H4zM4 7l8 6 8-6"
+            />
+          </svg>
         </div>
       </div>
     </div>
-  );
+  )
+}
+
+function Sprockets({ position }: { position: "top" | "bottom" }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={`pointer-events-none absolute inset-x-2 flex h-2 items-center justify-around ${
+        position === "top" ? "top-2" : "bottom-2"
+      }`}
+    >
+      {Array.from({ length: 24 }).map((_, index) => (
+        <span
+          key={index}
+          className="h-1.5 w-3 shrink-0 rounded-[1px] bg-[#FEF3E2]/80"
+        />
+      ))}
+    </div>
+  )
+}
+
+export function HowItWorks() {
+  return (
+    <section
+      id="cara-kerja"
+      className="relative scroll-mt-28 overflow-hidden bg-[#BF3131] py-16 font-['Poppins'] sm:py-20"
+    >
+      <div
+        aria-hidden="true"
+        className="lab-dots-cream absolute inset-0 opacity-50"
+      />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2
+              suppressHydrationWarning data-aos="lab-sweep"
+              data-aos-duration="1100"
+              className="max-w-2xl text-balance text-3xl font-extrabold leading-[0.98] tracking-[-0.045em] text-[#FEF3E2] sm:text-5xl"
+            >
+              Dari frame ke print, tiga langkah.
+            </h2>
+            <p
+              suppressHydrationWarning data-aos="lab-focus"
+              data-aos-duration="1000"
+              data-aos-delay="140"
+              className="mt-4 max-w-xl text-sm leading-relaxed text-[#FEF3E2]/80 sm:text-base"
+            >
+              Nggak perlu install aplikasi. Semua prosesnya jalan di browser,
+              dari pilih frame sampai hasil siap diunduh.
+            </p>
+          </div>
+        </div>
+
+        <div className="relative mt-12 border-y-[10px] border-[#7A1C1C] bg-[#7A1C1C] px-3 py-8 sm:px-6">
+          <Sprockets position="top" />
+
+          <div className="relative grid gap-5 md:grid-cols-3">
+            {STEPS.map((step, index) => (
+              <article
+                key={step.title}
+                suppressHydrationWarning data-aos="lab-develop"
+                data-aos-duration="1200"
+                data-aos-delay={140 + index * 140}
+                className="relative border border-[#FEF3E2]/20 bg-[#FEF3E2] p-4 text-[#2A0A0A] shadow-[6px_6px_0_rgba(42,10,10,0.22)]"
+              >
+                <div className="flex items-start justify-between border-b border-dashed border-[#BF3131]/30 pb-3">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#BF3131]">
+                    {step.label}
+                  </span>
+                  <span className="text-5xl font-extrabold leading-none text-[#BF3131]/15">
+                    0{index + 1}
+                  </span>
+                </div>
+
+                <div
+                  aria-hidden="true"
+                  className="relative mt-4 flex aspect-[4/3] items-center justify-center overflow-hidden border border-[#BF3131]/15 bg-[#FEF3E2] p-5"
+                >
+                  <span className="lab-dots absolute inset-0 opacity-60" />
+                  <CropMarks />
+                  <div className="relative z-10">
+                    <StepVisual step={index + 1} />
+                  </div>
+                  <span className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-[8px] font-bold uppercase tracking-[0.2em] text-[#BF3131]/60">
+                    {STEP_CAPTIONS[index]}
+                  </span>
+                </div>
+
+                <h3 className="mt-4 text-xl font-bold leading-tight text-[#2A0A0A]">
+                  {step.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-[#6B4A40]">
+                  {step.body}
+                </p>
+              </article>
+            ))}
+          </div>
+
+          <Sprockets position="bottom" />
+        </div>
+      </div>
+    </section>
+  )
 }

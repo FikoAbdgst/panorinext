@@ -2246,3 +2246,199 @@ body.modal-open {
     margin: 0;
   }
 }
+
+.lab-paper {
+  background-image: radial-gradient(rgba(191, 49, 49, 0.09) 0.65px, transparent 0.65px);
+  background-size: 18px 18px;
+}
+
+.lab-dots {
+  background-image: radial-gradient(rgba(191, 49, 49, 0.16) 0.8px, transparent 0.8px);
+  background-size: 16px 16px;
+}
+
+.lab-dots-cream {
+  background-image: radial-gradient(rgba(254, 243, 226, 0.2) 0.8px, transparent 0.8px);
+  background-size: 16px 16px;
+}
+
+@keyframes lab-marquee-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.lab-marquee-track {
+  animation: lab-marquee-scroll 60s linear infinite;
+  will-change: transform;
+}
+
+.lab-marquee:hover .lab-marquee-track,
+.lab-marquee:focus-within .lab-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-marquee {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .lab-marquee-track {
+    animation: none;
+  }
+}
+
+html {
+  scroll-padding-top: 6.5rem;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe,
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* Print exposing: konten muncul seperti kertas foto yang turun dari bak cuci. */
+[data-aos="lab-develop"] {
+  opacity: 0;
+  clip-path: inset(0 0 100% 0);
+  transform: translate3d(0, 22px, 0) scale(1.02) rotate(-0.5deg);
+  transform-origin: 50% 70%;
+  transition-property: clip-path, transform, opacity;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-aos="lab-develop"].aos-animate {
+  opacity: 1;
+  clip-path: inset(-32px -32px -32px -32px);
+  transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+}
+
+/* Focus pull: teks datang dari blur, seperti lensa yang mencari fokus. */
+[data-aos="lab-focus"] {
+  opacity: 0;
+  filter: blur(7px);
+  transform: scale(1.02);
+  transition-property: filter, transform, opacity;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-aos="lab-focus"].aos-animate {
+  opacity: 1;
+  filter: blur(0);
+  transform: scale(1);
+}
+
+/* Sweep: judul tersingkap dari kiri seperti lengan mesin cetak. */
+[data-aos="lab-sweep"] {
+  opacity: 0;
+  clip-path: inset(0 100% 0 0);
+  transform: translate3d(-18px, 0, 0);
+  transition-property: clip-path, transform, opacity;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-aos="lab-sweep"].aos-animate {
+  opacity: 1;
+  clip-path: inset(-12px -16px -16px -16px);
+  transform: translate3d(0, 0, 0);
+}
+
+/* Frame lift: frame naik dari bawah seperti print yang diangkat dari bak cuci. */
+[data-aos="lab-frame"] {
+  opacity: 0;
+  clip-path: inset(100% 0 0 0);
+  transform: translate3d(0, -10px, 0) scale(1.035) rotate(-0.5deg);
+  transition-property: clip-path, transform, opacity;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-aos="lab-frame"].aos-animate {
+  opacity: 1;
+  clip-path: inset(-4px -4px -4px -4px);
+  transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+}
+
+/* Hang: print turun dari atas lalu mendarat di rak dengan sedikit putaran. */
+[data-aos="lab-hang"] {
+  opacity: 0;
+  transform: translate3d(0, -40px, 0) rotate(-2.4deg);
+  transform-origin: 50% 0;
+  transition-property: transform, opacity;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-aos="lab-hang"].aos-animate {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) rotate(0deg);
+}
+
+/* Swing: print yang baru digantung jatuh lebih jauh dan mengayun ke tempatnya. */
+[data-aos="lab-swing"] {
+  opacity: 0;
+  transform: translate3d(0, -56px, 0) rotate(4deg);
+  transform-origin: 50% 0;
+  transition-property: transform, opacity;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-aos="lab-swing"].aos-animate {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) rotate(0deg);
+}
+
+/* Pop: tombol dan slip mendarat dengan putaran kecil, seperti cap. */
+[data-aos="lab-pop"] {
+  opacity: 0;
+  transform: scale(0.9) rotate(-2deg);
+  transition-property: transform, opacity;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-aos="lab-pop"].aos-animate {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-aos="lab-develop"],
+  [data-aos="lab-develop"].aos-animate,
+  [data-aos="lab-focus"],
+  [data-aos="lab-focus"].aos-animate,
+  [data-aos="lab-sweep"],
+  [data-aos="lab-sweep"].aos-animate,
+  [data-aos="lab-frame"],
+  [data-aos="lab-frame"].aos-animate,
+  [data-aos="lab-hang"],
+  [data-aos="lab-hang"].aos-animate,
+  [data-aos="lab-swing"],
+  [data-aos="lab-swing"].aos-animate,
+  [data-aos="lab-pop"],
+  [data-aos="lab-pop"].aos-animate {
+    opacity: 1;
+    clip-path: none;
+    filter: none;
+    transform: none;
+    transition: none;
+  }
+}

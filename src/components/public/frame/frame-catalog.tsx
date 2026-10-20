@@ -1,10 +1,13 @@
+import Link from "next/link";
+
 import {
   listCatalogFrames,
   listCategories,
+  listFrameCategoryIds,
   listFrameSlotCounts,
 } from "@/lib/frames/queries";
 
-import { CategorySelector } from "./category-selector";
+import { CategorySelector, type CategoryFilterOption } from "./category-selector";
 import { FilterControls, type CatalogFilterState } from "./filter-controls";
 import { ShowMoreGrid } from "./show-more-grid";
 
@@ -18,11 +21,14 @@ export async function FrameCatalog({ searchParams }: { searchParams: Promise<Raw
   const raw = await searchParams;
   const categoryParam = first(raw.category);
   const freeParam = first(raw.free);
-  const ratingParam = first(raw.sort_rating);
   const popularParam = first(raw.sort_popular);
   const slotParam = first(raw.slot);
 
-  const categories = await listCategories("idDesc");
+  const [categories, usedCategoryIds, slotCounts] = await Promise.all([
+    listCategories("idDesc"),
+    listFrameCategoryIds(),
+    listFrameSlotCounts(),
+  ]);
 
   const requestedCategoryId = categoryParam ? Number(categoryParam) : NaN;
   const selected =
@@ -30,32 +36,31 @@ export async function FrameCatalog({ searchParams }: { searchParams: Promise<Raw
       ? categories.find((item) => item.id === requestedCategoryId) ?? null
       : null;
 
-  const sortRating = ratingParam === "asc" || ratingParam === "desc" ? ratingParam : null;
-  const sortPopular =
-    popularParam === "asc" || popularParam === "desc" ? popularParam : null;
+  const visibleCategories = categories.filter((category) =>
+    usedCategoryIds.includes(category.id),
+  );
+  const selectedIsVisible =
+    selected !== null && visibleCategories.some((category) => category.id === selected.id);
+
+  const sortPopular = popularParam === "desc" ? "desc" : null;
   const freeOnly = freeParam === "true";
 
   const requestedSlots = slotParam ? Number(slotParam) : NaN;
   const selectedSlots =
     Number.isInteger(requestedSlots) && requestedSlots > 0 ? requestedSlots : null;
 
-  const [frames, slotCounts] = await Promise.all([
-    listCatalogFrames({
-      categoryId: selected?.id ?? null,
-      freeOnly,
-      sortRating,
-      sortPopular,
-      slots: selectedSlots,
-    }),
-    listFrameSlotCounts(),
-  ]);
+  const frames = await listCatalogFrames({
+    categoryId: selected?.id ?? null,
+    freeOnly,
+    sortPopular,
+    slots: selectedSlots,
+  });
 
   const href = (overrides: Record<string, string | null>): string => {
     const search = new URLSearchParams();
     if (selected) search.set("category", String(selected.id));
     if (freeOnly) search.set("free", "true");
     if (selectedSlots) search.set("slot", String(selectedSlots));
-    if (sortRating) search.set("sort_rating", sortRating);
     if (sortPopular) search.set("sort_popular", sortPopular);
     for (const [key, value] of Object.entries(overrides)) {
       if (value === null) search.delete(key);
@@ -65,64 +70,113 @@ export async function FrameCatalog({ searchParams }: { searchParams: Promise<Raw
     return qs ? `/frame?${qs}` : "/frame";
   };
 
+  const resetHref = href({
+    category: null,
+    free: null,
+    slot: null,
+    sort_popular: null,
+  });
+
+  const categoryOptions: CategoryFilterOption[] = [
+    {
+      label: "Semua frame",
+      href: href({ category: null }),
+      active: selected === null,
+    },
+    ...visibleCategories.map((category) => ({
+      label: category.name,
+      href: href({ category: String(category.id) }),
+      active: selected?.id === category.id,
+    })),
+    ...(selected && !selectedIsVisible
+      ? [
+          {
+            label: selected.name,
+            href: href({ category: String(selected.id) }),
+            active: true,
+          },
+        ]
+      : []),
+  ];
+
   const filters: CatalogFilterState = {
-    activeSort: Boolean(sortRating || sortPopular),
-    ratingHref: href({ sort_rating: sortRating === "desc" ? "asc" : "desc" }),
-    ratingLabel:
-      sortRating === "desc"
-        ? "Tinggi ke Rendah"
-        : sortRating === "asc"
-          ? "Rendah ke Tinggi"
-          : "",
-    ratingActive: Boolean(sortRating),
-    ratingIconPath: sortRating === "desc" ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7",
-    popularHref: href({ sort_popular: sortPopular === "desc" ? "asc" : "desc" }),
-    popularLabel:
-      sortPopular === "desc"
-        ? "Tinggi ke Rendah"
-        : sortPopular === "asc"
-          ? "Rendah ke Tinggi"
-          : "",
-    popularActive: Boolean(sortPopular),
-    popularIconPath:
-      sortPopular === "desc"
-        ? "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-        : "M13 17h8m0 0V9m0 8l-8-8-4 4-6-6",
-    defaultHref: href({ sort_rating: null, sort_popular: null }),
-    defaultActive: !sortRating && !sortPopular,
+    sortOptions: [
+      {
+        label: "Terbaru",
+        href: href({ sort_popular: null }),
+        active: sortPopular === null,
+      },
+      {
+        label: "Terpopuler",
+        href: href({ sort_popular: "desc" }),
+        active: sortPopular === "desc",
+      },
+    ],
     freeHref: href({ free: freeOnly ? null : "true" }),
     freeActive: freeOnly,
-    slotActive: selectedSlots !== null,
     slotOptions: [
       { value: null, label: "Semua", href: href({ slot: null }), active: selectedSlots === null },
       ...slotCounts.map((count) => ({
         value: count,
-        label: `${count} Slot`,
+        label: String(count),
         href: href({ slot: String(count) }),
         active: selectedSlots === count,
       })),
     ],
-    frameCount: frames.length,
+    activeCount: [freeOnly, Boolean(selectedSlots), Boolean(sortPopular)].filter(Boolean)
+      .length,
   };
 
-  return (
-    <>
-      <CategorySelector categories={categories} selectedCategoryId={selected?.id ?? null} />
-      <FilterControls filters={filters} />
+  const hasActiveFilters = Boolean(
+    selected || freeOnly || selectedSlots || sortPopular,
+  );
 
-      <div className="mt-12">
+  return (
+    <div className="min-w-0">
+      <CategorySelector options={categoryOptions} />
+
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-b border-[#BF3131]/25 pb-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <FilterControls filters={filters} />
+          {hasActiveFilters ? (
+            <Link
+              href={resetHref}
+              className="inline-flex min-h-11 items-center text-[10px] font-bold uppercase tracking-[0.16em] text-[#7A5A50] underline-offset-4 transition hover:text-[#BF3131] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
+            >
+              Reset
+            </Link>
+          ) : null}
+        </div>
+
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#7A5A50]">
+          <span className="mr-1 text-sm tabular-nums text-[#BF3131]">
+            {frames.length}
+          </span>
+          frame
+        </p>
+      </div>
+
+      <section aria-label="Daftar frame" className="mt-7">
         {frames.length > 0 ? (
           <ShowMoreGrid frames={frames} />
         ) : (
-          <div className="text-center py-20 bg-[#FEF3E2]">
-            <div className="inline-block text-7xl mb-6">😥</div>
-            <p className="text-xl text-gray-600 font-light">
-              Tidak ada frame yang tersedia untuk kategori {selected ? `"${selected.name}"` : "ini"}.
+          <div className="border border-dashed border-[#BF3131]/35 bg-[#FFFBF3] px-6 py-16 text-center sm:py-20">
+            <h3 className="text-xl font-bold text-[#2A0A0A]">
+              Belum ada frame di filter ini.
+            </h3>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[#6B4A40]">
+              Coba pilih kategori lain atau tampilkan semua frame yang tersedia.
             </p>
-            <p className="mt-3 text-gray-500">Silakan pilih kategori lain atau kembali lagi nanti.</p>
+            <Link
+              href={resetHref}
+              className="mt-6 inline-flex min-h-11 items-center gap-3 border border-[#BF3131] px-4 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-[#BF3131] transition hover:bg-[#BF3131] hover:text-[#FEF3E2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFFBF3]"
+            >
+              Tampilkan semua frame
+              <span aria-hidden="true" className="h-px w-5 bg-current" />
+            </Link>
           </div>
         )}
-      </div>
-    </>
+      </section>
+    </div>
   );
 }
