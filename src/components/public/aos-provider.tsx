@@ -1,7 +1,8 @@
 "use client";
 
 import AOS from "aos";
-import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 /**
  * Konfigurasi mengikuti `layouts/app.blade.php` (init terakhir di DOMContentLoaded,
@@ -68,10 +69,56 @@ export function refreshAos() {
   scheduleRefresh();
 }
 
+export function resetAos() {
+  if (typeof document === "undefined") return;
+
+  document.querySelectorAll<HTMLElement>("[data-aos]").forEach((element) => {
+    element.classList.remove("aos-init", "aos-animate");
+  });
+
+  scheduleRefresh();
+}
+
 export function AosProvider() {
+  const pathname = usePathname();
+  const firstRoute = useRef(true);
+
   useEffect(() => {
     scheduleRefresh();
+
+    if (typeof MutationObserver === "undefined") return;
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type !== "childList") continue;
+
+        for (const node of mutation.addedNodes) {
+          if (!(node instanceof Element)) continue;
+
+          if (
+            node.matches("[data-aos]") ||
+            node.querySelector("[data-aos]")
+          ) {
+            scheduleRefresh();
+            return;
+          }
+        }
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (firstRoute.current) {
+      firstRoute.current = false;
+      return;
+    }
+
+    resetAos();
+  }, [pathname]);
 
   return null;
 }
