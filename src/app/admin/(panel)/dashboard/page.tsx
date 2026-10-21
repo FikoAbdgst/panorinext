@@ -184,7 +184,7 @@ function TransactionList({
           <tr>
             <th className="px-4 py-3">Order ID</th>
             <th className="px-4 py-3">Pemesan</th>
-            <th className="px-4 py-3">Frame</th>
+            <th className="px-4 py-3">Paket / Frame</th>
             <th className="px-4 py-3">Jumlah</th>
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3">Tanggal</th>

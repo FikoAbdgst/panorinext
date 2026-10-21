@@ -1,5 +1,9 @@
-const WHATSAPP_URL =
-  "https://wa.me/62882001330851?text=Halo%2C%20saya%20ingin%20konsultasi%20custom%20frame%20photo%20booth";
+import {
+  buildAdminWhatsappUrl,
+  WHATSAPP_TEMPLATES,
+} from "@/lib/whatsapp";
+
+const WHATSAPP_URL = buildAdminWhatsappUrl(WHATSAPP_TEMPLATES.customFrame);
 
 const OCCASIONS = ["Wedding", "Ulang tahun", "Korporat", "Komunitas"] as const;
 

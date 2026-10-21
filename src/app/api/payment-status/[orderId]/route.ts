@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
-  isSupabaseConfigured,
+  isSupabaseAdminConfigured,
   warnSupabaseNotConfigured,
 } from "@/lib/supabase/config";
 
@@ -19,7 +19,7 @@ export async function GET(
     );
   }
 
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseAdminConfigured()) {
     warnSupabaseNotConfigured();
     return NextResponse.json(
       { success: false, message: "Transaksi tidak ditemukan." },
@@ -28,25 +28,47 @@ export async function GET(
   }
 
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.rpc("get_transaction_status", {
-      p_order_id: orderId,
+    const supabase = createAdminClient();
+    const { data: transaction, error } = await supabase
+      .from("transactions")
+      .select("id, status, pack_id")
+      .eq("order_id", orderId)
+      .maybeSingle();
+
+    if (error || !transaction) {
+      return NextResponse.json(
+        { success: false, message: "Transaksi tidak ditemukan." },
+        { status: 404 },
+      );
+    }
+
+    let roomCode: string | null = null;
+    let packName: string | null = null;
+
+    if (transaction.status === "approved" && transaction.pack_id !== null) {
+      const [{ data: access }, { data: pack }] = await Promise.all([
+        supabase
+          .from("premium_access")
+          .select("code")
+          .eq("transaction_id", transaction.id)
+          .maybeSingle(),
+        supabase
+          .from("packs")
+          .select("name")
+          .eq("id", transaction.pack_id)
+          .maybeSingle(),
+      ]);
+      roomCode = access?.code ?? null;
+      packName = pack?.name ?? null;
+    }
+
+    return NextResponse.json({
+      success: true,
+      status: transaction.status,
+      room_code: roomCode,
+      pack_id: transaction.pack_id,
+      pack_name: packName,
     });
-
-    if (error) {
-      return NextResponse.json(
-        { success: false, message: "Transaksi tidak ditemukan." },
-        { status: 404 },
-      );
-    }
-    if (!data) {
-      return NextResponse.json(
-        { success: false, message: "Transaksi tidak ditemukan." },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({ success: true, status: data });
   } catch {
     return NextResponse.json(
       { success: false, message: "Transaksi tidak ditemukan." },

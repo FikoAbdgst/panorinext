@@ -20,16 +20,19 @@ A browser-based photobooth built around custom, playful frames and immediate dig
 
 ## Operating Context
 
-Used on phones and desktops at events and in casual settings. Users browse frames, select a free or paid frame, take a photo session, then download PNG or GIF results and optionally send them by email. Event organizers can request custom frames through WhatsApp.
+Used on phones and desktops at events and in casual settings. Users browse free frames directly, or buy a premium pack and redeem one code to open a private room containing that pack's frames. They take a photo session, then download PNG or GIF results and optionally send them by email. Event organizers can request custom packs through WhatsApp.
 
 ## Capabilities and Constraints
 
-- Frame catalog with categories, slots, free and paid frames.
+- Free frame catalog with categories and slots.
+- Premium packs: one transaction buys one pack, one code opens all frames in that pack.
+- Premium room access starts on first code redemption and lasts for the pack duration.
+- Pack contents are snapshotted at checkout; later pack edits do not change the frames available to existing buyers.
 - In-browser photo capture, PNG photostrip export, and GIF creation.
 - Email delivery for photo and GIF results.
-- QRIS and bank-transfer payment flows for paid frames.
-- Custom frame requests by WhatsApp.
-- Admin tools exist for frames, categories, transactions, and testimonials.
+- QRIS and bank-transfer payment flows for packs.
+- Custom pack requests by WhatsApp.
+- Admin tools exist for frames, packs, premium rooms, categories, transactions, and testimonials.
 - Do not present unverified customer counts, ratings, or commercial claims.
 
 ## Brand Commitments

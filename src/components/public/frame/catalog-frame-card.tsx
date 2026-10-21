@@ -4,7 +4,6 @@ import type { CatalogFrame } from "@/lib/frames/types";
 import { getFramePublicUrl } from "@/lib/frames/url";
 
 import { FramePreviewButton } from "./frame-preview-button";
-import { PremiumFrameButton } from "./premium-frame-button";
 
 const SAMPLE_PHOTOS = [
   "/images/m1.jpeg",
@@ -15,10 +14,6 @@ const SAMPLE_PHOTOS = [
   "/images/k3.jpeg",
 ] as const;
 
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat("id-ID").format(price);
-}
-
 export function CatalogFrameCard({
   frame,
   index,
@@ -28,7 +23,6 @@ export function CatalogFrameCard({
   index: number;
   className?: string;
 }) {
-  const isFree = frame.price <= 0;
   const imageUrl = frame.image_path ? getFramePublicUrl(frame.image_path) : null;
   const frameWidth = frame.width > 0 ? frame.width : 4;
   const frameHeight = frame.height > 0 ? frame.height : 5;
@@ -106,27 +100,19 @@ export function CatalogFrameCard({
             {frame.category_name ? ` · ${frame.category_name}` : ""}
           </p>
         </div>
-        <span
-          className={`shrink-0 pt-0.5 text-[11px] font-bold uppercase tracking-[0.12em] ${
-            isFree ? "text-[#BF3131]" : "text-[#2A0A0A]"
-          }`}
-        >
-          {isFree ? "Gratis" : `Rp${formatPrice(frame.price)}`}
+        <span className="shrink-0 pt-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#BF3131]">
+          Gratis
         </span>
       </div>
 
       <div className="mt-3">
-        {isFree ? (
-          <Link
-            href={`/booth?frame_id=${frame.id}`}
-            className="inline-flex min-h-11 w-full items-center justify-between gap-3 border border-[#BF3131] px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#BF3131] transition hover:bg-[#BF3131] hover:text-[#FEF3E2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
-          >
-            Pakai frame ini
-            <span aria-hidden="true" className="h-px w-5 bg-current" />
-          </Link>
-        ) : (
-          <PremiumFrameButton frame={frame} />
-        )}
+        <Link
+          href={`/booth?frame_id=${frame.id}`}
+          className="inline-flex min-h-11 w-full items-center justify-between gap-3 border border-[#BF3131] px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#BF3131] transition hover:bg-[#BF3131] hover:text-[#FEF3E2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
+        >
+          Pakai frame ini
+          <span aria-hidden="true" className="h-px w-5 bg-current" />
+        </Link>
       </div>
     </article>
   );

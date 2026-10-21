@@ -2,6 +2,7 @@ import { Suspense } from "react";
 
 import { FrameAdminList } from "@/components/admin/frames/FrameAdminList";
 import { listCategories, listFrames } from "@/lib/frames/queries";
+import { listFramePackMemberships } from "@/lib/packs/queries";
 
 export default function AdminFramesPage() {
   return (
@@ -9,7 +10,8 @@ export default function AdminFramesPage() {
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-neutral-900">Kelola Frame</h1>
         <p className="text-sm text-neutral-500">
-          Kelola overlay PNG dan slot foto setiap frame.
+          Kelola overlay PNG dan slot foto setiap frame. Frame premium bisa
+          dimasukkan ke satu atau beberapa paket.
         </p>
       </header>
 
@@ -21,6 +23,16 @@ export default function AdminFramesPage() {
 }
 
 async function FrameList() {
-  const [frames, categories] = await Promise.all([listFrames(), listCategories()]);
-  return <FrameAdminList frames={frames} categories={categories} />;
+  const [frames, categories, memberships] = await Promise.all([
+    listFrames(),
+    listCategories(),
+    listFramePackMemberships(),
+  ]);
+  return (
+    <FrameAdminList
+      frames={frames}
+      categories={categories}
+      memberships={memberships}
+    />
+  );
 }

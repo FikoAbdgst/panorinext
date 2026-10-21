@@ -36,7 +36,7 @@ type FrameFormFrame = {
   id: number;
   name: string;
   slug: string;
-  price: number;
+  access_type: "free" | "premium";
   category_id: number | null;
   width: number;
   height: number;
@@ -76,7 +76,9 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
       ? String(frame.category_id)
       : "",
   );
-  const [price, setPrice] = useState(String(frame?.price ?? 0));
+  const [accessType, setAccessType] = useState<"free" | "premium">(
+    frame?.access_type ?? "free",
+  );
 
   const [dimensions, setDimensions] = useState({
     width: frame?.width ?? FRAME_STANDARD_SIZE.width,
@@ -340,15 +342,21 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-neutral-700">Harga (Rp)</span>
-          <input
-            name="price"
-            type="number"
-            min={0}
-            value={price}
-            onChange={(event) => setPrice(event.target.value)}
+          <span className="font-medium text-neutral-700">Tipe Akses</span>
+          <select
+            name="access_type"
+            value={accessType}
+            onChange={(event) =>
+              setAccessType(event.target.value as "free" | "premium")
+            }
             className="rounded-lg border border-neutral-300 px-3 py-2"
-          />
+          >
+            <option value="free">Gratis</option>
+            <option value="premium">Premium (masuk paket)</option>
+          </select>
+          <span className="text-xs text-neutral-500">
+            Frame premium hanya bisa dipakai lewat paket dan kode ruang.
+          </span>
         </label>
       </div>
 

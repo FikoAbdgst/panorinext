@@ -1,5 +1,12 @@
 import Link from "next/link"
 
+import { PREMIUM_PUBLIC_ENABLED } from "@/lib/premium/availability"
+import {
+  ADMIN_WHATSAPP_DISPLAY,
+  buildAdminWhatsappUrl,
+  WHATSAPP_TEMPLATES,
+} from "@/lib/whatsapp"
+
 /* eslint-disable @next/next/no-img-element */
 
 export function Footer() {
@@ -55,12 +62,14 @@ export function Footer() {
                   />
                 </svg>
               </Link>
-              <Link
-                href="/about"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[2px] border border-[#FEF3E2]/40 px-6 py-3.5 text-sm font-semibold text-[#FEF3E2] transition duration-300 hover:bg-[#FEF3E2]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FEF3E2] focus-visible:ring-offset-2 focus-visible:ring-offset-[#BF3131]"
-              >
-                Tentang PanoriCam
-              </Link>
+              {PREMIUM_PUBLIC_ENABLED ? (
+                <Link
+                  href="/premium"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[2px] border border-[#FEF3E2]/40 px-6 py-3.5 text-sm font-semibold text-[#FEF3E2] transition duration-300 hover:bg-[#FEF3E2]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FEF3E2] focus-visible:ring-offset-2 focus-visible:ring-offset-[#BF3131]"
+                >
+                  Ruang Premium
+                </Link>
+              ) : null}
             </div>
           </div>
         </div>
@@ -108,14 +117,16 @@ export function Footer() {
                   Frame
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/about"
-                  className="transition hover:text-[#BF3131] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
-                >
-                  Tentang
-                </Link>
-              </li>
+              {PREMIUM_PUBLIC_ENABLED ? (
+                <li>
+                  <Link
+                    href="/premium"
+                    className="transition hover:text-[#BF3131] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
+                  >
+                    Ruang Premium
+                  </Link>
+                </li>
+              ) : null}
             </ul>
           </div>
 
@@ -141,12 +152,12 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="https://wa.me/62882001330851"
+                  href={buildAdminWhatsappUrl(WHATSAPP_TEMPLATES.footer)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition hover:text-[#BF3131] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
                 >
-                  +62 882-0013-30851
+                  {ADMIN_WHATSAPP_DISPLAY}
                 </a>
               </li>
               <li>

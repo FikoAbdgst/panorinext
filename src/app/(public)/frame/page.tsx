@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { Suspense } from "react";
 
 import { AosRefresh } from "@/components/public/aos-refresh";
 import { CustomFrameSection } from "@/components/public/custom-frame-section";
 import { FrameCatalog } from "@/components/public/frame/frame-catalog";
-import { PaymentFlow } from "@/components/public/frame/payment-flow";
+import { PREMIUM_PUBLIC_ENABLED } from "@/lib/premium/availability";
 
 function CatalogFallback() {
   return (
@@ -63,8 +64,8 @@ export default function FramePage({ searchParams }: PageProps<"/frame">) {
                 data-aos-delay="140"
                 className="mt-5 max-w-xl text-pretty text-sm leading-relaxed text-[#5B3A32] sm:text-base"
               >
-                Preview frame langsung di kamera sebelum mulai sesi. Pilih yang
-                gratis atau premium, lalu mulai foto.
+                Preview frame langsung di kamera sebelum mulai sesi. Semua
+                frame di katalog ini gratis dipakai.
               </p>
             </div>
 
@@ -79,13 +80,15 @@ export default function FramePage({ searchParams }: PageProps<"/frame">) {
               <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#BF3131]/50" />
               <span>PNG / GIF</span>
               <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#BF3131]/50" />
-              <span>Gratis & premium</span>
-              <a
-                href="#custom-frame"
-                className="inline-flex min-h-10 items-center border border-[#BF3131]/30 px-2.5 text-[#BF3131] transition hover:border-[#BF3131] hover:bg-[#BF3131] hover:text-[#FEF3E2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2] sm:ml-auto"
-              >
-                Butuh frame custom
-              </a>
+              <span>Katalog gratis</span>
+              {PREMIUM_PUBLIC_ENABLED ? (
+                <Link
+                  href="/premium"
+                  className="inline-flex min-h-10 items-center border border-[#BF3131]/30 px-2.5 text-[#BF3131] transition hover:border-[#BF3131] hover:bg-[#BF3131] hover:text-[#FEF3E2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2] sm:ml-auto"
+                >
+                  Lihat paket premium
+                </Link>
+              ) : null}
             </div>
           </div>
 
@@ -99,9 +102,6 @@ export default function FramePage({ searchParams }: PageProps<"/frame">) {
       </section>
 
       <CustomFrameSection />
-      <AosRefresh />
-
-      <PaymentFlow />
       <AosRefresh />
     </div>
   );

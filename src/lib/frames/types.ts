@@ -1,3 +1,5 @@
+export type FrameAccessType = "free" | "premium";
+
 export type FrameSlot = {
   x: number;
   y: number;
@@ -22,6 +24,7 @@ export type CatalogFrame = {
   name: string;
   image_path: string | null;
   price: number;
+  access_type: FrameAccessType;
   used: number;
   width: number;
   height: number;

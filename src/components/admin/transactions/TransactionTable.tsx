@@ -7,8 +7,15 @@ import type {
   AdminTransactionRow,
   TransactionStatus,
 } from "@/lib/transactions/queries";
+import {
+  buildTransactionStatusMessage,
+  buildWhatsappUrl,
+} from "@/lib/whatsapp";
 
-import { TransactionActions } from "./TransactionActions";
+import {
+  PremiumAccessHandoff,
+  TransactionActions,
+} from "./TransactionActions";
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   bank_transfer: "E-Wallet",
@@ -32,10 +39,24 @@ export function formatDate(value: string): string {
   }).format(new Date(value));
 }
 
-export function formatWhatsapp(raw: string): { label: string; href: string } {
-  const digits = raw.replace(/\D/g, "");
-  const normalized = digits.startsWith("0") ? `62${digits.slice(1)}` : digits;
-  return { label: raw, href: `https://wa.me/${normalized}` };
+function getWhatsappLink(
+  trx: AdminTransactionRow,
+): { label: string; href: string } | null {
+  if (!trx.whatsapp_number) return null;
+
+  return {
+    label: trx.whatsapp_number,
+    href: buildWhatsappUrl(
+      trx.whatsapp_number,
+      buildTransactionStatusMessage({
+        status: trx.status,
+        customerName: trx.customer_name,
+        packName: trx.pack_name ?? trx.frame_name,
+        orderId: trx.order_id,
+        roomCode: trx.room_code,
+      }),
+    ),
+  };
 }
 
 export function TransactionTable({ transactions }: { transactions: AdminTransactionRow[] }) {
@@ -56,7 +77,7 @@ export function TransactionTable({ transactions }: { transactions: AdminTransact
           <thead className="bg-neutral-50 text-left text-xs uppercase text-neutral-500">
             <tr>
               <th className="px-4 py-3">Order ID</th>
-              <th className="px-4 py-3">Frame</th>
+              <th className="px-4 py-3">Paket / Frame</th>
               <th className="px-4 py-3">Pemesan</th>
               <th className="px-4 py-3">Metode</th>
               <th className="px-4 py-3">Jumlah</th>
@@ -69,13 +90,22 @@ export function TransactionTable({ transactions }: { transactions: AdminTransact
           <tbody className="divide-y divide-neutral-100">
             {transactions.map((trx) => {
               const badge = STATUS_BADGE[trx.status];
-              const wa = trx.whatsapp_number ? formatWhatsapp(trx.whatsapp_number) : null;
+              const wa = getWhatsappLink(trx);
               return (
                 <tr key={trx.id} className="align-middle">
                   <td className="px-4 py-3 font-mono text-xs text-neutral-700">
                     {trx.order_id}
                   </td>
-                  <td className="px-4 py-3 text-neutral-700">{trx.frame_name ?? "—"}</td>
+                  <td className="px-4 py-3 text-neutral-700">
+                    <div>{trx.pack_name ?? trx.frame_name ?? "—"}</div>
+                    {trx.room_code ? (
+                      <span className="font-mono text-xs text-[#BF3131]">
+                        {trx.room_code}
+                      </span>
+                    ) : trx.pack_name ? (
+                      <span className="text-xs text-neutral-400">Paket</span>
+                    ) : null}
+                  </td>
                   <td className="px-4 py-3 text-neutral-700">
                     <div>{trx.customer_name}</div>
                     {wa ? (
@@ -124,7 +154,15 @@ export function TransactionTable({ transactions }: { transactions: AdminTransact
                       >
                         Detail
                       </button>
-                      {trx.status === "pending" ? <TransactionActions id={trx.id} /> : null}
+                      {trx.status === "pending" ? (
+                        <TransactionActions
+                          id={trx.id}
+                          customerName={trx.customer_name}
+                          whatsappNumber={trx.whatsapp_number}
+                          packName={trx.pack_name}
+                          showHandoff={false}
+                        />
+                      ) : null}
                     </div>
                   </td>
                 </tr>
@@ -159,7 +197,7 @@ function TransactionDetail({
   onDone: () => void;
 }) {
   const badge = STATUS_BADGE[trx.status];
-  const wa = trx.whatsapp_number ? formatWhatsapp(trx.whatsapp_number) : null;
+  const wa = getWhatsappLink(trx);
 
   return (
     <div className="space-y-5">
@@ -173,7 +211,11 @@ function TransactionDetail({
       </div>
 
       <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-        <DetailItem label="Frame" value={trx.frame_name ?? "—"} />
+        {trx.pack_name ? (
+          <DetailItem label="Paket" value={trx.pack_name} />
+        ) : (
+          <DetailItem label="Frame" value={trx.frame_name ?? "—"} />
+        )}
         <DetailItem
           label="Metode Pembayaran"
           value={PAYMENT_METHOD_LABEL[trx.payment_method] ?? trx.payment_method}
@@ -221,7 +263,30 @@ function TransactionDetail({
         )}
       </div>
 
-      {trx.status === "approved" && trx.frame_id !== null ? (
+      {trx.status === "approved" && trx.room_code ? (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase text-neutral-500">
+            Akses Ruang Premium
+          </p>
+          <PremiumAccessHandoff
+            customerName={trx.customer_name}
+            whatsappNumber={trx.whatsapp_number}
+            packName={trx.pack_name}
+            code={trx.room_code}
+          />
+          {trx.room_expires_at ? (
+            <p className="mt-2 text-xs text-neutral-500">
+              Berakhir: {formatDate(trx.room_expires_at)}
+            </p>
+          ) : (
+            <p className="mt-2 text-xs text-neutral-500">
+              Masa aktif dimulai saat kode pertama kali dipakai.
+            </p>
+          )}
+        </div>
+      ) : null}
+
+      {trx.status === "approved" && !trx.room_code && trx.frame_id !== null ? (
         <div>
           <p className="mb-2 text-xs font-semibold uppercase text-neutral-500">
             Akses Booth
@@ -240,7 +305,13 @@ function TransactionDetail({
       {trx.status === "pending" ? (
         <div className="border-t border-neutral-200 pt-4">
           <p className="mb-2 text-xs font-semibold uppercase text-neutral-500">Aksi</p>
-          <TransactionActions id={trx.id} onDone={onDone} />
+          <TransactionActions
+            id={trx.id}
+            customerName={trx.customer_name}
+            whatsappNumber={trx.whatsapp_number}
+            packName={trx.pack_name}
+            onDone={onDone}
+          />
         </div>
       ) : null}
     </div>

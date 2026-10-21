@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { getFramePublicUrl } from "@/lib/frames/url";
+import type { FramePackMembership } from "@/lib/packs/queries";
 
 import { FrameCreateModal } from "./FrameCreateModal";
 import { RemoveFrameButton } from "./RemoveFrameButton";
@@ -13,7 +14,7 @@ export type FrameAdminRow = {
   name: string;
   slug: string;
   image_path: string | null;
-  price: number;
+  access_type: "free" | "premium";
   used: number;
   slots: unknown[];
   category_id: number | null;
@@ -28,13 +29,15 @@ type CategoryOption = {
 export function FrameAdminList({
   frames,
   categories,
+  memberships,
 }: {
   frames: FrameAdminRow[];
   categories: CategoryOption[];
+  memberships: FramePackMembership[];
 }) {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [priceFilter, setPriceFilter] = useState("all");
+  const [accessFilter, setAccessFilter] = useState("all");
   const [slotFilter, setSlotFilter] = useState("all");
 
   const slotCounts = useMemo(() => {
@@ -44,6 +47,19 @@ export function FrameAdminList({
     }
     return [...set].sort((a, b) => a - b);
   }, [frames]);
+
+  const packsByFrame = useMemo(() => {
+    const map = new Map<number, FramePackMembership[]>();
+    for (const membership of memberships) {
+      const current = map.get(membership.frame_id);
+      if (current) {
+        current.push(membership);
+      } else {
+        map.set(membership.frame_id, [membership]);
+      }
+    }
+    return map;
+  }, [memberships]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -60,10 +76,7 @@ export function FrameAdminList({
           return false;
         }
       }
-      if (priceFilter === "gratis" && frame.price !== 0) {
-        return false;
-      }
-      if (priceFilter === "berbayar" && frame.price === 0) {
+      if (accessFilter !== "all" && frame.access_type !== accessFilter) {
         return false;
       }
       if (slotFilter !== "all" && String(frame.slots.length) !== slotFilter) {
@@ -71,12 +84,12 @@ export function FrameAdminList({
       }
       return true;
     });
-  }, [frames, search, categoryFilter, priceFilter, slotFilter]);
+  }, [frames, search, categoryFilter, accessFilter, slotFilter]);
 
   const hasFilters =
     search.trim() !== "" ||
     categoryFilter !== "all" ||
-    priceFilter !== "all" ||
+    accessFilter !== "all" ||
     slotFilter !== "all";
 
   return (
@@ -103,13 +116,13 @@ export function FrameAdminList({
             ))}
           </select>
           <select
-            value={priceFilter}
-            onChange={(event) => setPriceFilter(event.target.value)}
+            value={accessFilter}
+            onChange={(event) => setAccessFilter(event.target.value)}
             className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
           >
-            <option value="all">Semua Harga</option>
-            <option value="gratis">Gratis</option>
-            <option value="berbayar">Berbayar</option>
+            <option value="all">Semua Akses</option>
+            <option value="free">Gratis</option>
+            <option value="premium">Premium</option>
           </select>
           {slotCounts.length > 1 ? (
             <select
@@ -145,7 +158,8 @@ export function FrameAdminList({
                 <th className="px-4 py-3">Overlay</th>
                 <th className="px-4 py-3">Nama</th>
                 <th className="px-4 py-3">Kategori</th>
-                <th className="px-4 py-3">Harga</th>
+                <th className="px-4 py-3">Akses</th>
+                <th className="px-4 py-3">Paket</th>
                 <th className="px-4 py-3">Slot</th>
                 <th className="px-4 py-3">Dipakai</th>
                 <th className="px-4 py-3 text-right">Aksi</th>
@@ -173,10 +187,33 @@ export function FrameAdminList({
                   <td className="px-4 py-3 text-neutral-600">
                     {frame.category_name ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-neutral-600">
-                    {frame.price === 0
-                      ? "Gratis"
-                      : `Rp ${frame.price.toLocaleString("id-ID")}`}
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        frame.access_type === "premium"
+                          ? "bg-[#FEF3E2] text-[#BF3131]"
+                          : "bg-green-100 text-green-800"
+                      }`}
+                    >
+                      {frame.access_type === "premium" ? "Premium" : "Gratis"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {packsByFrame.get(frame.id)?.length ? (
+                      <div className="flex max-w-48 flex-wrap gap-1">
+                        {packsByFrame.get(frame.id)?.map((pack) => (
+                          <span
+                            key={pack.pack_id}
+                            className="inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700"
+                            title={`Masuk paket ${pack.pack_name}`}
+                          >
+                            {pack.pack_name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-neutral-400">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center rounded-full bg-[#FEF3E2] px-2.5 py-1 text-xs font-semibold text-[#BF3131]">

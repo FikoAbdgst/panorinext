@@ -34,7 +34,7 @@ export function FramePreviewButton({
     width: frame.width,
     height: frame.height,
     slots: frame.slots,
-    isFree: frame.price <= 0,
+    isFree: frame.access_type === "free",
   };
 
   return (

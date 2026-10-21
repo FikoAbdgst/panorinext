@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import type {
   CatalogFilters,
   CatalogFrame,
+  FrameAccessType,
   FrameSlot,
 } from "@/lib/frames/types";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -25,6 +26,7 @@ export type FrameRow = {
   slug: string;
   image_path: string | null;
   price: number;
+  access_type: FrameAccessType;
   used: number;
   width: number;
   height: number;
@@ -41,6 +43,7 @@ export type TopFrameRow = {
   name: string;
   image_path: string | null;
   price: number;
+  access_type: FrameAccessType;
   used: number;
   width: number;
   height: number;
@@ -50,7 +53,7 @@ export type TopFrameRow = {
 };
 
 const FRAME_COLUMNS =
-  "id, name, slug, image_path, price, used, width, height, slots, category_id";
+  "id, name, slug, image_path, price, access_type, used, width, height, slots, category_id";
 
 export async function listCategories(
   orderBy: "name" | "idDesc" = "name",
@@ -131,10 +134,13 @@ export async function listTopFrames(limit = 3): Promise<TopFrameRow[]> {
   const supabase = createAdminClient();
   const [framesResult, categories] = await Promise.all([
     supabase
-      .from("frames")
-      .select("id, name, image_path, price, used, width, height, slots, category_id")
-      .order("used", { ascending: false })
-      .limit(limit),
+        .from("frames")
+        .select(
+          "id, name, image_path, price, access_type, used, width, height, slots, category_id",
+        )
+        .eq("access_type", "free")
+        .order("used", { ascending: false })
+        .limit(limit),
     listCategories(),
   ]);
   if (framesResult.error) {
@@ -149,6 +155,7 @@ export async function listTopFrames(limit = 3): Promise<TopFrameRow[]> {
       name: frame.name,
       image_path: frame.image_path,
       price: frame.price,
+      access_type: frame.access_type,
       used: frame.used,
       width: frame.width,
       height: frame.height,
@@ -209,6 +216,7 @@ type CatalogFrameQueryRow = {
   name: string;
   image_path: string | null;
   price: number;
+  access_type: FrameAccessType;
   used: number;
   width: number;
   height: number;
@@ -229,12 +237,15 @@ export async function listCatalogFrames(
 
   let query = supabase
     .from("frames")
-    .select("id, name, image_path, price, used, width, height, slots, category_id, created_at");
+    .select(
+      "id, name, image_path, price, access_type, used, width, height, slots, category_id, created_at",
+    )
+    .eq("access_type", "free");
   if (filters.categoryId) {
     query = query.eq("category_id", filters.categoryId);
   }
   if (filters.freeOnly) {
-    query = query.eq("price", 0);
+    query = query.eq("access_type", "free");
   }
 
   const [framesResult, categories] = await Promise.all([
@@ -265,6 +276,7 @@ export async function listCatalogFrames(
         name: frame.name,
         image_path: frame.image_path,
         price: frame.price,
+        access_type: frame.access_type,
         used: frame.used,
         width: frame.width,
         height: frame.height,
@@ -286,7 +298,10 @@ export async function listFrameCategoryIds(): Promise<number[]> {
     return [];
   }
   const supabase = createAdminClient();
-  const { data, error } = await supabase.from("frames").select("category_id");
+  const { data, error } = await supabase
+    .from("frames")
+    .select("category_id")
+    .eq("access_type", "free");
   if (error) {
     throw new Error(`Gagal memuat kategori frame: ${error.message}`);
   }
@@ -305,7 +320,10 @@ export async function listFrameSlotCounts(): Promise<number[]> {
     return [];
   }
   const supabase = createAdminClient();
-  const { data, error } = await supabase.from("frames").select("id, slots");
+  const { data, error } = await supabase
+    .from("frames")
+    .select("id, slots")
+    .eq("access_type", "free");
   if (error) {
     throw new Error(`Gagal memuat jumlah slot: ${error.message}`);
   }

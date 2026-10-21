@@ -13,8 +13,11 @@ export function RemoveFrameButton({ id, name }: { id: number; name: string }) {
     }
     const formData = new FormData();
     formData.set("id", String(id));
-    startTransition(() => {
-      deleteFrameAction(formData);
+    startTransition(async () => {
+      const result = await deleteFrameAction(formData);
+      if (!result.success) {
+        window.alert(result.message);
+      }
     });
   };
 

@@ -4,11 +4,17 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 
+import { PREMIUM_PUBLIC_ENABLED } from "@/lib/premium/availability"
+
 const LINKS = [
   { href: "/", label: "Home" },
   { href: "/frame", label: "Frame" },
-  { href: "/about", label: "Tentang" },
+  { href: "/premium", label: "Premium" },
 ] as const
+
+const VISIBLE_LINKS = LINKS.filter(
+  (link) => link.href !== "/premium" || PREMIUM_PUBLIC_ENABLED,
+)
 
 export function Navbar() {
   const pathname = usePathname()
@@ -49,7 +55,7 @@ export function Navbar() {
           </Link>
 
           <div className="ml-auto flex items-center gap-0.5 sm:gap-1 md:absolute md:left-1/2 md:top-1/2 md:ml-0 md:-translate-x-1/2 md:-translate-y-1/2">
-            {LINKS.map((link) => {
+            {VISIBLE_LINKS.map((link) => {
               const active =
                 link.href === "/"
                   ? pathname === "/"

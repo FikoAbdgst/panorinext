@@ -8,6 +8,8 @@ import {
 import { FRAME_STANDARD_SIZE } from "@/lib/constants";
 import { getApprovedTransaction, getFrameById } from "@/lib/frames/queries";
 import { getFramePublicUrl } from "@/lib/frames/url";
+import { getPremiumAccessExpiryForFrame } from "@/lib/premium/queries";
+import { getPremiumAccessToken } from "@/lib/premium/session";
 
 export const metadata: Metadata = {
   title: "Photo Strip Booth",
@@ -38,15 +40,23 @@ export default async function BoothPage({ searchParams }: PageProps<"/booth">) {
     notFound();
   }
 
-  const isFree = frame.price === 0;
+  const isFree = frame.access_type === "free";
+  let accessExpiresAt: string | null = null;
+
   if (!isFree) {
-    if (!orderIdParam) {
-      redirect("/frame");
+    const token = await getPremiumAccessToken();
+    const packExpiresAt = token
+      ? await getPremiumAccessExpiryForFrame(token, frameId)
+      : null;
+    const hasLegacyAccess = orderIdParam
+      ? Boolean(await getApprovedTransaction(orderIdParam, frameId))
+      : false;
+
+    if (!packExpiresAt && !hasLegacyAccess) {
+      redirect("/premium");
     }
-    const transaction = await getApprovedTransaction(orderIdParam, frameId);
-    if (!transaction) {
-      redirect("/frame");
-    }
+
+    accessExpiresAt = hasLegacyAccess ? null : packExpiresAt;
   }
 
   const boothFrame: BoothFrame = {
@@ -59,5 +69,11 @@ export default async function BoothPage({ searchParams }: PageProps<"/booth">) {
     isFree,
   };
 
-  return <BoothClient frame={boothFrame} orderId={isFree ? null : (orderIdParam ?? null)} />;
+  return (
+    <BoothClient
+      frame={boothFrame}
+      orderId={isFree ? null : (orderIdParam ?? null)}
+      accessExpiresAt={accessExpiresAt}
+    />
+  );
 }

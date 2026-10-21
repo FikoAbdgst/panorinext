@@ -38,14 +38,14 @@ export async function POST(request: Request) {
     return fail("Data tidak valid", 400);
   }
 
-  const frameId = Number(asString(form.get("frame_id")));
+  const packId = Number(asString(form.get("pack_id")));
   const customerName = asString(form.get("customer_name"));
   const whatsappNumber = asString(form.get("whatsapp_number"));
   const paymentMethod = asString(form.get("payment_method"));
   const proof = form.get("payment_proof");
 
-  if (!Number.isInteger(frameId) || frameId <= 0) {
-    return fail("Validation failed: frame_id wajib diisi", 422);
+  if (!Number.isInteger(packId) || packId <= 0) {
+    return fail("Validation failed: paket wajib dipilih", 422);
   }
   if (customerName.length === 0) {
     return fail("Validation failed: nama wajib diisi", 422);
@@ -77,16 +77,24 @@ export async function POST(request: Request) {
   try {
     const supabase = createAdminClient();
 
-    const { data: frame, error: frameError } = await supabase
-      .from("frames")
-      .select("id, price")
-      .eq("id", frameId)
+    const { data: pack, error: packError } = await supabase
+      .from("packs")
+      .select("id, name, price, is_active")
+      .eq("id", packId)
       .maybeSingle();
-    if (frameError) {
-      return fail(`Terjadi kesalahan: ${frameError.message}`, 500);
+    if (packError) {
+      return fail(`Terjadi kesalahan: ${packError.message}`, 500);
     }
-    if (!frame) {
-      return fail("Validation failed: frame tidak ditemukan", 422);
+    if (!pack || !pack.is_active) {
+      return fail("Validation failed: paket tidak ditemukan atau tidak aktif", 422);
+    }
+
+    const { count: frameCount } = await supabase
+      .from("pack_frames")
+      .select("pack_id", { count: "exact", head: true })
+      .eq("pack_id", pack.id);
+    if (!frameCount) {
+      return fail("Validation failed: paket belum memiliki frame", 422);
     }
 
     const proofPath = `${crypto.randomUUID()}.${extension}`;
@@ -100,7 +108,8 @@ export async function POST(request: Request) {
     const { data: transaction, error: insertError } = await supabase
       .from("transactions")
       .insert({
-        frame_id: frame.id,
+        frame_id: null,
+        pack_id: pack.id,
         customer_name: customerName,
         whatsapp_number: whatsappNumber.length > 0 ? whatsappNumber : null,
         payment_method: method,
@@ -126,6 +135,8 @@ export async function POST(request: Request) {
       order_id: transaction.order_id,
       payment_method: methodLabel,
       customer_name: customerName,
+      pack_id: pack.id,
+      pack_name: pack.name,
     });
   } catch (error) {
     return fail(

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { STORAGE_BUCKETS } from "@/lib/constants";
-import type { FrameSlot } from "@/lib/frames/types";
+import type { FrameAccessType, FrameSlot } from "@/lib/frames/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth";
 import { slugify } from "@/lib/utils/slug";
@@ -82,7 +82,7 @@ function readFrameFields(formData: FormData):
       name: string;
       slug: string;
       categoryId: number | null;
-      price: number;
+      accessType: FrameAccessType;
       width: number;
       height: number;
       slots: FrameSlot[];
@@ -107,10 +107,11 @@ function readFrameFields(formData: FormData):
     categoryId = parsed;
   }
 
-  const price = parseNonNegativeInt(formData.get("price"));
-  if (price === null) {
-    return { error: "Harga tidak valid." };
+  const accessTypeRaw = String(formData.get("access_type") ?? "free");
+  if (accessTypeRaw !== "free" && accessTypeRaw !== "premium") {
+    return { error: "Tipe akses frame tidak valid." };
   }
+  const accessType = accessTypeRaw as FrameAccessType;
 
   const width = parsePositiveInt(formData.get("width"));
   const height = parsePositiveInt(formData.get("height"));
@@ -123,7 +124,7 @@ function readFrameFields(formData: FormData):
     return { error: "Data slot tidak valid." };
   }
 
-  return { name, slug, categoryId, price, width, height, slots };
+  return { name, slug, categoryId, accessType, width, height, slots };
 }
 
 const IMAGE_PATH_PATTERN = /^[a-z0-9][a-z0-9._-]*\.png$/;
@@ -189,7 +190,8 @@ export async function createFrameAction(
     name: fields.name,
     slug: fields.slug,
     category_id: fields.categoryId,
-    price: fields.price,
+    price: 0,
+    access_type: fields.accessType,
     width: fields.width,
     height: fields.height,
     slots: fields.slots,
@@ -224,11 +226,33 @@ export async function updateFrameAction(
   const supabase = createAdminClient();
   const { data: existing, error: fetchError } = await supabase
     .from("frames")
-    .select("image_path")
+    .select("image_path, access_type")
     .eq("id", frameId)
     .maybeSingle();
   if (fetchError || !existing) {
     return { status: "error", message: "Frame tidak ditemukan." };
+  }
+
+  if (fields.accessType === "free") {
+    const { count: packCount, error: packError } = await supabase
+      .from("pack_frames")
+      .select("frame_id", { count: "exact", head: true })
+      .eq("frame_id", frameId);
+
+    if (packError) {
+      return {
+        status: "error",
+        message: `Gagal memeriksa paket frame: ${packError.message}`,
+      };
+    }
+
+    if ((packCount ?? 0) > 0) {
+      return {
+        status: "error",
+        message:
+          "Frame ini masih menjadi isi paket. Keluarkan dari paket terlebih dahulu sebelum mengubahnya menjadi gratis.",
+      };
+    }
   }
 
   let imagePath = existing.image_path;
@@ -249,7 +273,7 @@ export async function updateFrameAction(
       name: fields.name,
       slug: fields.slug,
       category_id: fields.categoryId,
-      price: fields.price,
+      access_type: fields.accessType,
       width: fields.width,
       height: fields.height,
       slots: fields.slots,
@@ -272,25 +296,58 @@ export async function updateFrameAction(
   redirect("/admin/frames");
 }
 
-export async function deleteFrameAction(formData: FormData): Promise<void> {
+export async function deleteFrameAction(
+  formData: FormData,
+): Promise<{ success: boolean; message: string }> {
   await requireAdmin();
   const id = Number(String(formData.get("id") ?? "").trim());
   if (!Number.isInteger(id)) {
-    return;
+    return { success: false, message: "ID frame tidak valid." };
   }
 
   const supabase = createAdminClient();
+  const { count: packCount, error: packError } = await supabase
+    .from("pack_frames")
+    .select("frame_id", { count: "exact", head: true })
+    .eq("frame_id", id);
+
+  if (packError) {
+    return {
+      success: false,
+      message: `Gagal memeriksa paket frame: ${packError.message}`,
+    };
+  }
+  if ((packCount ?? 0) > 0) {
+    return {
+      success: false,
+      message:
+        "Frame ini masih menjadi isi paket. Keluarkan dari paket terlebih dahulu sebelum menghapusnya.",
+    };
+  }
+
   const { data: existing } = await supabase
     .from("frames")
     .select("image_path")
     .eq("id", id)
     .maybeSingle();
 
-  await supabase.from("frames").delete().eq("id", id);
+  const { error: deleteError } = await supabase
+    .from("frames")
+    .delete()
+    .eq("id", id);
+  if (deleteError) {
+    return {
+      success: false,
+      message: `Gagal menghapus frame: ${deleteError.message}`,
+    };
+  }
 
   if (existing?.image_path) {
     await supabase.storage.from(STORAGE_BUCKETS.frames).remove([existing.image_path]);
   }
 
   revalidatePath("/admin/frames");
+  revalidatePath("/frame");
+  revalidatePath("/");
+  return { success: true, message: "Frame berhasil dihapus." };
 }

@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import { FeaturedFrameCard } from "@/components/public/frame-preview-card"
 import { listTopFrames } from "@/lib/frames/queries"
+import { PREMIUM_PUBLIC_ENABLED } from "@/lib/premium/availability"
 
 function FilmEdge() {
   return (
@@ -45,33 +46,45 @@ export async function FeaturedFrames() {
               data-aos-delay="140"
               className="mt-4 max-w-xl text-sm leading-relaxed text-[#5B3A32] sm:text-base"
             >
-              Frame pilihan yang bisa langsung dicoba. Ada yang gratis, ada yang
-              premium. Semua bisa dipakai dari browser.
+              Frame pilihan yang bisa langsung dicoba tanpa biaya.
+              {PREMIUM_PUBLIC_ENABLED
+                ? " Untuk koleksi premium, buka paket dan masuk dengan satu kode."
+                : null}
             </p>
           </div>
 
           <div className="flex items-center gap-5">
-            <Link
-              href="/frame"
-              className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap text-sm font-bold text-[#BF3131] underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
-            >
-              Lihat semua frame
-              <svg
-                aria-hidden="true"
-                className="h-4 w-4"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            <div className="flex flex-wrap items-center gap-5">
+              {PREMIUM_PUBLIC_ENABLED ? (
+                <Link
+                  href="/premium"
+                  className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap text-sm font-bold text-[#BF3131] underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
+                >
+                  Paket premium
+                </Link>
+              ) : null}
+              <Link
+                href="/frame"
+                className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap text-sm font-bold text-[#7A5A50] underline-offset-4 transition hover:text-[#BF3131] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M14 5l7 7m0 0l-7 7m7-7H3"
-                />
-              </svg>
-            </Link>
+                Lihat semua frame
+                <svg
+                  aria-hidden="true"
+                  className="h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
+                </svg>
+              </Link>
+            </div>
           </div>
         </div>
 

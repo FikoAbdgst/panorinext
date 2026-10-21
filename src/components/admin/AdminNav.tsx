@@ -9,6 +9,8 @@ import { createClient } from "@/lib/supabase/client";
 const LINKS = [
   { href: "/admin/dashboard", label: "Dashboard" },
   { href: "/admin/frames", label: "Frame" },
+  { href: "/admin/packs", label: "Paket" },
+  { href: "/admin/rooms", label: "Ruang Premium" },
   { href: "/admin/categories", label: "Kategori" },
   { href: "/admin/transactions", label: "Transaksi" },
   { href: "/admin/testimoni", label: "Testimoni" },

@@ -90,7 +90,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   const [transactionResult, testimonialResult] = await Promise.all([
     supabase
       .from("transactions")
-      .select("id, order_id, customer_name, frame_id, amount, status, created_at")
+      .select("id, order_id, customer_name, frame_id, pack_id, amount, status, created_at")
       .order("created_at", { ascending: false }),
     supabase
       .from("testimonials")
@@ -119,6 +119,21 @@ export async function getDashboardData(): Promise<DashboardData> {
     }
   }
 
+  const packIds = new Set<number>();
+  for (const row of transactions) {
+    if (row.pack_id !== null) packIds.add(row.pack_id);
+  }
+  const packMap = new Map<number, string>();
+  if (packIds.size > 0) {
+    const { data: packs } = await supabase
+      .from("packs")
+      .select("id, name")
+      .in("id", Array.from(packIds));
+    for (const pack of packs ?? []) {
+      packMap.set(pack.id, pack.name);
+    }
+  }
+
   const now = Date.now();
   const todayStart = startOfToday();
   const dayAgo = now - 24 * 60 * 60 * 1000;
@@ -138,7 +153,12 @@ export async function getDashboardData(): Promise<DashboardData> {
     id: row.id,
     order_id: row.order_id,
     customer_name: row.customer_name,
-    frame_name: row.frame_id !== null ? frameMap.get(row.frame_id) ?? null : null,
+    frame_name:
+      row.pack_id !== null
+        ? packMap.get(row.pack_id) ?? null
+        : row.frame_id !== null
+          ? frameMap.get(row.frame_id) ?? null
+          : null,
     amount: Number(row.amount),
     status: row.status,
     created_at: row.created_at,

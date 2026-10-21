@@ -17,8 +17,12 @@ const OCCASIONS = [
   },
 ] as const
 
-const WHATSAPP_URL =
-  "https://wa.me/62882001330851?text=Halo%2C%20saya%20ingin%20konsultasi%20custom%20frame%20pack%20untuk%20acara"
+import {
+  buildAdminWhatsappUrl,
+  WHATSAPP_TEMPLATES,
+} from "@/lib/whatsapp";
+
+const WHATSAPP_URL = buildAdminWhatsappUrl(WHATSAPP_TEMPLATES.customPack);
 
 export function CustomPacks() {
   return (

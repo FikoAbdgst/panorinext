@@ -133,9 +133,11 @@ function fileToDataUrl(blob: Blob): Promise<string> {
 export function BoothClient({
   frame,
   orderId,
+  accessExpiresAt,
 }: {
   frame: BoothFrame;
   orderId: string | null;
+  accessExpiresAt: string | null;
 }) {
   const slots = frame.slots;
   const totalSlots = slots.length;
@@ -190,9 +192,6 @@ export function BoothClient({
   const [isUploadSlotOpen, setIsUploadSlotOpen] = useState(false);
   const [crop, setCrop] = useState<CropRequest | null>(null);
   const [isAutoCaptureEnabled, setIsAutoCaptureEnabled] = useState(false);
-  const [hasDownloaded, setHasDownloaded] = useState(false);
-  const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
-  const [isSessionEndOpen, setIsSessionEndOpen] = useState(false);
   const [sessionAlert, setSessionAlert] = useState<null | "takeover">(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -207,7 +206,6 @@ export function BoothClient({
   const isAutoCapturingRef = useRef(false);
 
   const router = useRouter();
-  const downloadedKey = `boothDownloaded_${orderId ?? `frame_${frame.id}`}`;
 
   useEffect(() => {
     photosRef.current = photos;
@@ -226,23 +224,38 @@ export function BoothClient({
 
   useEffect(() => {
     const startTimer = window.setTimeout(() => {
-      let downloaded = false;
-      if (!frame.isFree) {
-        try {
-          downloaded = window.localStorage.getItem(downloadedKey) === "1";
-        } catch {
-          downloaded = false;
-        }
-      }
-      if (downloaded) {
-        setHasDownloaded(true);
-        setIsSessionEndOpen(true);
-      } else {
-        setIsWelcomeOpen(true);
-      }
+      setIsWelcomeOpen(true);
     }, 500);
     return () => window.clearTimeout(startTimer);
-  }, [downloadedKey, frame.isFree]);
+  }, []);
+
+  useEffect(() => {
+    if (!accessExpiresAt) return;
+
+    const expiresAt = new Date(accessExpiresAt).getTime();
+    if (!Number.isFinite(expiresAt)) return;
+
+    let timer: number | null = null;
+
+    const scheduleExpiryCheck = () => {
+      const remaining = expiresAt - Date.now();
+      if (remaining <= 0) {
+        router.replace("/premium");
+        return;
+      }
+
+      timer = window.setTimeout(
+        scheduleExpiryCheck,
+        Math.min(remaining, 60_000),
+      );
+    };
+
+    scheduleExpiryCheck();
+
+    return () => {
+      if (timer !== null) window.clearTimeout(timer);
+    };
+  }, [accessExpiresAt, router]);
 
   const showToast = useCallback(
     (message: string, type: ToastType = "info", duration = 4000) => {
@@ -771,14 +784,6 @@ export function BoothClient({
       }
       setPreviewImage(image);
       triggerDownload(image, "Panoricam💫.png");
-      if (!frame.isFree) {
-        setHasDownloaded(true);
-        try {
-          window.localStorage.setItem(downloadedKey, "1");
-        } catch {
-          /* localStorage bisa diblokir; tidak fatal */
-        }
-      }
       showToast("Download berhasil!", "success", 2000);
       if (!hasShownTestimoniRef.current) {
         window.setTimeout(() => showTestimoniModal(), 1000);
@@ -791,10 +796,6 @@ export function BoothClient({
   }
 
   function handleClosePreview() {
-    if (!frame.isFree && hasDownloaded) {
-      setIsExitConfirmOpen(true);
-      return;
-    }
     setIsPreviewOpen(false);
   }
 
@@ -1193,8 +1194,8 @@ export function BoothClient({
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium">
-                    Frame Premium - Tolong gunakan frame hingga selesai di download,
-                    agar session foto tidak hilang
+                    Frame Premium - Akses berlaku sesuai masa aktif paket. Kamu bisa
+                    foto dan download sebanyak yang kamu mau selama masih aktif.
                   </p>
                 </div>
               </div>
@@ -2011,67 +2012,6 @@ export function BoothClient({
       ) : null}
 
       {crop ? <CropModal request={crop} onClose={() => setCrop(null)} /> : null}
-
-      {isExitConfirmOpen ? (
-        <div
-          id="exitConfirmationModal"
-          className="fixed top-0 left-0 z-50 flex h-full w-full items-center justify-center overflow-auto bg-black/70"
-        >
-          <div className="relative mx-auto flex w-11/12 max-w-[450px] flex-col items-center rounded-3xl bg-[#FEF3E2] p-6 shadow-xl sm:p-8">
-            <h2 className="mb-3 text-center text-2xl font-semibold text-gray-800 sm:text-3xl">
-              Konfirmasi Keluar
-            </h2>
-            <p className="mb-6 px-2 text-center text-base text-gray-600 sm:text-lg">
-              Anda telah mendownload foto. Apakah Anda yakin ingin kembali ke menu
-              utama?
-            </p>
-            <div className="flex w-full justify-center gap-4">
-              <button
-                type="button"
-                className="cursor-pointer rounded-xl border-none bg-gray-600 px-6 py-3 text-sm font-medium text-white shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:bg-gray-700 hover:shadow-lg"
-                onClick={() => setIsExitConfirmOpen(false)}
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer rounded-xl border-none bg-[#BF3131] px-6 py-3 text-sm font-medium text-white shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:bg-[#F16767] hover:shadow-lg"
-                onClick={() => {
-                  setIsExitConfirmOpen(false);
-                  goToMainMenu();
-                }}
-              >
-                Kembali ke Menu
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {isSessionEndOpen ? (
-        <div
-          id="sessionEndModal"
-          className="fixed top-0 left-0 z-50 flex h-full w-full items-center justify-center overflow-auto bg-black/70"
-        >
-          <div className="relative mx-auto flex w-11/12 max-w-[450px] flex-col items-center rounded-3xl bg-[#FEF3E2] p-6 shadow-xl sm:p-8">
-            <h2 className="mb-3 text-center text-2xl font-semibold text-gray-800 sm:text-3xl">
-              Sesi Selesai
-            </h2>
-            <p className="mb-6 px-2 text-center text-base text-gray-600 sm:text-lg">
-              Sesi Anda telah selesai karena foto sudah didownload.
-            </p>
-            <div className="flex w-full justify-center gap-4">
-              <button
-                type="button"
-                className="cursor-pointer rounded-xl border-none bg-[#BF3131] px-6 py-3 text-sm font-medium text-white shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:bg-[#F16767] hover:shadow-lg"
-                onClick={goToMainMenu}
-              >
-                Kembali ke Menu
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {blocked ? (
         <div

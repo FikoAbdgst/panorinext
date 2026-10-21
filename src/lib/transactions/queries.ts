@@ -24,6 +24,13 @@ export type AdminTransactionRow = {
   frame_id: number | null;
   frame_name: string | null;
   frame_slug: string | null;
+  pack_id: number | null;
+  pack_name: string | null;
+  pack_slug: string | null;
+  room_code: string | null;
+  room_first_used_at: string | null;
+  room_expires_at: string | null;
+  room_revoked_at: string | null;
   payment_proof_url: string | null;
 };
 
@@ -35,7 +42,7 @@ export type TransactionCounts = {
 };
 
 const SELECT_COLUMNS =
-  "id, order_id, frame_id, customer_name, whatsapp_number, payment_method, amount, status, approved_at, created_at, payment_proof";
+  "id, order_id, frame_id, pack_id, customer_name, whatsapp_number, payment_method, amount, status, approved_at, created_at, payment_proof";
 
 /**
  * Daftar transaksi untuk panel admin (memakai service role, jadi tidak terhalang RLS).
@@ -79,6 +86,47 @@ export async function listTransactions(
     }
   }
 
+  const packIds = Array.from(
+    new Set(rows.map((row) => row.pack_id).filter((id): id is number => id !== null)),
+  );
+  const packMap = new Map<number, { name: string; slug: string }>();
+  if (packIds.length > 0) {
+    const { data: packs } = await supabase
+      .from("packs")
+      .select("id, name, slug")
+      .in("id", packIds);
+    for (const pack of packs ?? []) {
+      packMap.set(pack.id, { name: pack.name, slug: pack.slug });
+    }
+  }
+
+  const transactionIds = rows.map((row) => row.id);
+  const accessMap = new Map<
+    number,
+    {
+      code: string;
+      first_used_at: string | null;
+      expires_at: string | null;
+      revoked_at: string | null;
+    }
+  >();
+  if (transactionIds.length > 0) {
+    const { data: accesses } = await supabase
+      .from("premium_access")
+      .select("transaction_id, code, first_used_at, expires_at, revoked_at")
+      .in("transaction_id", transactionIds);
+    for (const access of accesses ?? []) {
+      if (access.transaction_id !== null) {
+        accessMap.set(access.transaction_id, {
+          code: access.code,
+          first_used_at: access.first_used_at,
+          expires_at: access.expires_at,
+          revoked_at: access.revoked_at,
+        });
+      }
+    }
+  }
+
   const proofPaths = rows
     .map((row) => row.payment_proof)
     .filter((path): path is string => Boolean(path));
@@ -96,6 +144,8 @@ export async function listTransactions(
 
   return rows.map((row) => {
     const frame = row.frame_id !== null ? frameMap.get(row.frame_id) : undefined;
+    const pack = row.pack_id !== null ? packMap.get(row.pack_id) : undefined;
+    const access = accessMap.get(row.id);
     return {
       id: row.id,
       order_id: row.order_id,
@@ -109,6 +159,13 @@ export async function listTransactions(
       frame_id: row.frame_id,
       frame_name: frame?.name ?? null,
       frame_slug: frame?.slug ?? null,
+      pack_id: row.pack_id,
+      pack_name: pack?.name ?? null,
+      pack_slug: pack?.slug ?? null,
+      room_code: access?.code ?? null,
+      room_first_used_at: access?.first_used_at ?? null,
+      room_expires_at: access?.expires_at ?? null,
+      room_revoked_at: access?.revoked_at ?? null,
       payment_proof_url: row.payment_proof
         ? proofUrlMap.get(row.payment_proof) ?? null
         : null,
