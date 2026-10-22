@@ -168,7 +168,9 @@ export function Footer() {
                   panoricam5@gmail.com
                 </a>
               </li>
-              <li className="font-normal text-[#7A5A50]">Banjar, Jawa Barat</li>
+              <li className="font-normal text-[#7A5A50]">
+                Bandung, Jawa Barat
+              </li>
             </ul>
           </div>
         </div>

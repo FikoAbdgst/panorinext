@@ -1,162 +1,139 @@
-import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { NextResponse } from "next/server"
+import nodemailer from "nodemailer"
 
-import { STORAGE_BUCKETS } from "@/lib/constants";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { STORAGE_BUCKETS } from "@/lib/constants"
+import { createAdminClient } from "@/lib/supabase/admin"
 import {
   isSupabaseAdminConfigured,
   warnSupabaseNotConfigured,
-} from "@/lib/supabase/config";
+} from "@/lib/supabase/config"
 
-const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const MAX_FILE_BYTES = 10 * 1024 * 1024
 
-const EMAIL_SUBJECT = "🎉 Kenangan Indah Anda Siap Disimpan! - PanoriCam";
+const EMAIL_SUBJECT = "Foto dan GIF kamu dari PanoriCam sudah siap 📸"
 
-/**
- * Body email plain text, disalin apa adanya dari
- * `App\Http\Controllers\DriveController::getEmailTemplateText()`.
- */
 const EMAIL_TEXT = `
-╔══════════════════════════════════════════╗
-║   🎊 KENANGAN INDAH ANDA TELAH SIAP! 🎊   ║
-╚══════════════════════════════════════════╝
-
 Hai!
 
-Yeay! Momen spesial Anda telah berhasil kami proses dengan sempurna!
-Foto berkualitas tinggi dan GIF animasi Anda sudah siap untuk disimpan
-dan dibagikan kepada orang-orang terkasih. ✨
+Terima kasih sudah mampir ke PanoriCam. Foto HD dan GIF animasi kamu
+sudah kami lampirkan di email ini, tinggal diunduh dan disimpan.
 
+Beberapa ide supaya hasilnya makin berkesan:
 
+• Cetak fotonya. Hasil cetak selalu terasa beda dari sekadar di layar.
+• Pakai GIF-nya untuk Instagram Story atau status WhatsApp.
+• Kirim ke teman atau keluarga yang ikut di momen itu.
+• Simpan cadangannya di Google Drive atau iCloud supaya aman.
 
-🌟 REKOMENDASI DARI KAMI:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Kalau kamu share hasilnya di media sosial, tag kami di @panoricam.
+Kami senang sekali bisa lihat momen kamu.
 
-• Cetak foto untuk hasil maksimal dengan kualitas premium
-• Upload GIF ke Instagram Story dengan musik favorit
-• Kirim ke keluarga & teman sebagai kejutan manis
-• Backup file ke Google Drive atau iCloud
-• Tag kami saat share di social media!📱(@panoricam && @csa_stimikmi)
+Sampai jumpa di sesi foto berikutnya!
 
+Salam hangat,
+Tim PanoriCam
 
-Terima kasih sudah mempercayai PanoriCam untuk mengabadikan
-momen berharga Anda. Kami senang bisa menjadi bagian dari
-kenangan indah Anda! 💖
-
-💡 PanoriCam merupakan salah satu project
-dari anggota UKM Creative Student Association (CSA)
-Follow Instagram: @csa_stmikmi
-
-
-Sampai jumpa di momen spesial berikutnya!
-
-
-Dengan cinta,
-Tim PanoriCam 📷✨
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Email ini dikirim otomatis. Mohon tidak membalas.
-Butuh bantuan? Hubungi kami di panoricamofficial.com
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`;
+—
+Email ini dikirim otomatis, jadi mohon tidak dibalas.
+Butuh bantuan? Kunjungi panoricamofficial.com
+`
 
 /** Path yang dibuat oleh `/api/send-email/upload-urls`. */
 const PHOTO_PATH_PATTERN =
-  /^photo-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png$/;
+  /^photo-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png$/
 const GIF_PATH_PATTERN =
-  /^gif-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.gif$/;
+  /^gif-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.gif$/
 
 type SendEmailPayload = {
-  email?: unknown;
-  frame_id?: unknown;
-  photo_path?: unknown;
-  gif_path?: unknown;
-};
+  email?: unknown
+  frame_id?: unknown
+  photo_path?: unknown
+  gif_path?: unknown
+}
 
 function fail(message: string, status: number) {
-  return NextResponse.json({ success: false, message }, { status });
+  return NextResponse.json({ success: false, message }, { status })
 }
 
 function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 function readPath(value: unknown, pattern: RegExp): string | null {
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
+  if (typeof value !== "string") return null
+  const trimmed = value.trim()
   if (trimmed.length === 0 || trimmed.length > 200 || trimmed.includes("..")) {
-    return null;
+    return null
   }
-  return pattern.test(trimmed) ? trimmed : null;
+  return pattern.test(trimmed) ? trimmed : null
 }
 
 export async function POST(request: Request) {
-  let payload: SendEmailPayload;
+  let payload: SendEmailPayload
   try {
-    payload = (await request.json()) as SendEmailPayload;
+    payload = (await request.json()) as SendEmailPayload
   } catch {
-    return fail("Gagal mengirim email: data tidak valid", 400);
+    return fail("Gagal mengirim email: data tidak valid", 400)
   }
 
-  const email = typeof payload.email === "string" ? payload.email.trim() : "";
-  const frameId = Number(payload.frame_id);
-  const photoPath = readPath(payload.photo_path, PHOTO_PATH_PATTERN);
-  const gifPath = readPath(payload.gif_path, GIF_PATH_PATTERN);
+  const email = typeof payload.email === "string" ? payload.email.trim() : ""
+  const frameId = Number(payload.frame_id)
+  const photoPath = readPath(payload.photo_path, PHOTO_PATH_PATTERN)
+  const gifPath = readPath(payload.gif_path, GIF_PATH_PATTERN)
 
   if (!isValidEmail(email)) {
-    return fail("Gagal mengirim email: format email tidak valid", 400);
+    return fail("Gagal mengirim email: format email tidak valid", 400)
   }
 
   if (!Number.isInteger(frameId) || frameId <= 0) {
-    return fail("Gagal mengirim email: frame tidak valid", 400);
+    return fail("Gagal mengirim email: frame tidak valid", 400)
   }
 
   if (!photoPath || !gifPath) {
-    return fail("Gagal mengirim email: berkas tidak valid", 400);
+    return fail("Gagal mengirim email: berkas tidak valid", 400)
   }
 
-  const gmailUser = process.env.GMAIL_USER?.trim();
-  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, "");
+  const gmailUser = process.env.GMAIL_USER?.trim()
+  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, "")
   if (!gmailUser || !gmailAppPassword) {
     return fail(
       "Gagal mengirim email: Masalah konfigurasi email server. Silakan hubungi admin.",
       500,
-    );
+    )
   }
 
   if (!isSupabaseAdminConfigured()) {
-    warnSupabaseNotConfigured();
-    return fail("Gagal mengirim email: penyimpanan belum dikonfigurasi.", 503);
+    warnSupabaseNotConfigured()
+    return fail("Gagal mengirim email: penyimpanan belum dikonfigurasi.", 503)
   }
 
-  const supabase = createAdminClient();
-  const bucket = supabase.storage.from(STORAGE_BUCKETS.photoResults);
+  const supabase = createAdminClient()
+  const bucket = supabase.storage.from(STORAGE_BUCKETS.photoResults)
 
   try {
     const [photoDownload, gifDownload] = await Promise.all([
       bucket.download(photoPath),
       bucket.download(gifPath),
-    ]);
+    ])
 
     if (photoDownload.error || !photoDownload.data) {
-      return fail("Gagal mengirim email: foto tidak ditemukan.", 400);
+      return fail("Gagal mengirim email: foto tidak ditemukan.", 400)
     }
     if (gifDownload.error || !gifDownload.data) {
-      return fail("Gagal mengirim email: GIF tidak ditemukan.", 400);
+      return fail("Gagal mengirim email: GIF tidak ditemukan.", 400)
     }
 
     if (
       photoDownload.data.size > MAX_FILE_BYTES ||
       gifDownload.data.size > MAX_FILE_BYTES
     ) {
-      return fail("Gagal mengirim email: ukuran file melebihi 10MB", 400);
+      return fail("Gagal mengirim email: ukuran file melebihi 10MB", 400)
     }
 
     const [photoBuffer, gifBuffer] = await Promise.all([
       photoDownload.data.arrayBuffer(),
       gifDownload.data.arrayBuffer(),
-    ]);
+    ])
 
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
@@ -166,9 +143,9 @@ export async function POST(request: Request) {
       connectionTimeout: 10000,
       greetingTimeout: 10000,
       socketTimeout: 20000,
-    });
+    })
 
-    const from = process.env.EMAIL_FROM?.trim() || `PanoriCam <${gmailUser}>`;
+    const from = process.env.EMAIL_FROM?.trim() || `PanoriCam <${gmailUser}>`
 
     await transporter.sendMail({
       from,
@@ -187,21 +164,21 @@ export async function POST(request: Request) {
           contentType: "image/gif",
         },
       ],
-    });
+    })
 
     return NextResponse.json({
       success: true,
       message: `Foto HD dan GIF animasi berhasil dikirim ke email ${email}`,
-    });
+    })
   } catch (error) {
     return fail(
       `Gagal mengirim email: ${
         error instanceof Error ? error.message : "kesalahan tidak diketahui"
       }`,
       500,
-    );
+    )
   } finally {
     // photo-results hanya berfungsi sebagai perantara sementara untuk email.
-    await bucket.remove([photoPath, gifPath]);
+    await bucket.remove([photoPath, gifPath])
   }
 }

@@ -13,14 +13,6 @@ const nextConfig: NextConfig = {
     turbopackGc: true,
     turbopackMemoryEviction: "auto",
   },
-  turbopack: {
-    rules: {
-      "*.css": {
-        loaders: ["@tailwindcss/turbopack"],
-        as: "*.css",
-      },
-    },
-  },
 };
 
 export default nextConfig;
