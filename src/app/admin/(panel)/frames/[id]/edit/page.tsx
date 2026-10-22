@@ -1,26 +1,27 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FrameForm } from "@/components/admin/frames/FrameForm";
+import { AdminLoading } from "@/components/admin/ui";
 import { getFrameById, listCategories } from "@/lib/frames/queries";
 
 import { updateFrameAction } from "../../actions";
 
 export default function EditFramePage(props: PageProps<"/admin/frames/[id]/edit">) {
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-6">
-        <Link href="/admin/frames" className="text-sm text-neutral-500 underline">
-          ← Kembali ke daftar frame
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-neutral-900">Edit Frame</h1>
-      </div>
+    <>
+      <AdminPageHeader
+        title="Edit frame"
+        description="Perbarui overlay, slot foto, dan status premium frame ini."
+        backHref="/admin/frames"
+        backLabel="Daftar frame"
+      />
 
-      <Suspense fallback={<p className="text-sm text-neutral-500">Memuat form...</p>}>
+      <Suspense fallback={<AdminLoading label="Memuat form..." />}>
         <EditFrameContent params={props.params} />
       </Suspense>
-    </main>
+    </>
   );
 }
 

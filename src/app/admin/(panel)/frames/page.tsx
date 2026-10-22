@@ -1,24 +1,23 @@
 import { Suspense } from "react";
 
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FrameAdminList } from "@/components/admin/frames/FrameAdminList";
+import { AdminLoading } from "@/components/admin/ui";
 import { listCategories, listFrames } from "@/lib/frames/queries";
 import { listFramePackMemberships } from "@/lib/packs/queries";
 
 export default function AdminFramesPage() {
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">Kelola Frame</h1>
-        <p className="text-sm text-neutral-500">
-          Kelola overlay PNG dan slot foto setiap frame. Frame premium bisa
-          dimasukkan ke satu atau beberapa paket.
-        </p>
-      </header>
+    <>
+      <AdminPageHeader
+        title="Frame"
+        description="Kelola overlay PNG dan slot foto setiap frame. Frame premium bisa dimasukkan ke satu atau beberapa paket."
+      />
 
-      <Suspense fallback={<p className="text-sm text-neutral-500">Memuat daftar frame...</p>}>
+      <Suspense fallback={<AdminLoading label="Memuat daftar frame..." />}>
         <FrameList />
       </Suspense>
-    </main>
+    </>
   );
 }
 

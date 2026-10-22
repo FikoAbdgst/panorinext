@@ -27,7 +27,6 @@ body {
 [data-aos] {
   transition-property: transform, opacity;
   transition-timing-function: ease-in-out;
-  will-change: transform, opacity;
 }
 
 [data-aos^="fade"][data-aos^="fade"],
@@ -44,6 +43,7 @@ body {
   transform: translate3d(-100%, 0, 0);
   opacity: 0;
 }
+
 [data-aos="slide-right"].aos-animate {
   transform: translate3d(0, 0, 0);
   opacity: 1;
@@ -53,6 +53,7 @@ body {
   transform: translate3d(100%, 0, 0);
   opacity: 0;
 }
+
 [data-aos="slide-left"].aos-animate {
   transform: translate3d(0, 0, 0);
   opacity: 1;
@@ -62,6 +63,7 @@ body {
   transform: translate3d(-100%, 0, 0) scale(0.6);
   opacity: 0;
 }
+
 [data-aos="zoom-in-right-rotated"].aos-animate {
   transform: translate3d(0, 0, 0) scale(1);
   opacity: 1;
@@ -71,6 +73,7 @@ body {
   transform: translate3d(100%, 0, 0) scale(0.6);
   opacity: 0;
 }
+
 [data-aos="zoom-in-left-rotated"].aos-animate {
   transform: translate3d(0, 0, 0) scale(1);
   opacity: 1;
@@ -88,6 +91,7 @@ body {
   transform: translate3d(-100%, 0, 0) scale(0.6) rotate(-12deg);
   opacity: 0;
 }
+
 .frame-left-rotate[data-aos="zoom-in-right-rotated"].aos-animate {
   transform: translate3d(0, 0, 0) scale(1) rotate(-12deg);
   opacity: 1;
@@ -97,6 +101,7 @@ body {
   transform: translate3d(100%, 0, 0) scale(0.6) rotate(12deg);
   opacity: 0;
 }
+
 .frame-right-rotate[data-aos="zoom-in-left-rotated"].aos-animate {
   transform: translate3d(0, 0, 0) scale(1) rotate(12deg);
   opacity: 1;
@@ -106,6 +111,7 @@ body {
   transform: rotateY(90deg);
   opacity: 0;
 }
+
 [data-aos="flip-left"].aos-animate {
   transform: rotateY(0deg);
   opacity: 1;
@@ -115,6 +121,7 @@ body {
   transform: rotateY(90deg);
   opacity: 0;
 }
+
 [data-aos="flip-right"].aos-animate {
   transform: rotateY(0deg);
   opacity: 1;
@@ -140,9 +147,11 @@ body {
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
+
   100% {
     transform: scale(1);
   }
@@ -364,6 +373,7 @@ body {
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -424,6 +434,7 @@ body {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -451,6 +462,7 @@ body {
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-50%);
   }
@@ -494,10 +506,12 @@ body {
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translateY(0px) rotate(0deg);
   }
+
   50% {
     transform: translateY(-20px) rotate(180deg);
   }
@@ -672,9 +686,11 @@ body {
   0% {
     box-shadow: 0 0 0 0 rgba(191, 49, 49, 0.7);
   }
+
   70% {
     box-shadow: 0 0 0 20px rgba(191, 49, 49, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(191, 49, 49, 0);
   }
@@ -753,10 +769,12 @@ body {
 }
 
 @keyframes floating {
+
   0%,
   100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -796,10 +814,12 @@ body {
 }
 
 @keyframes gradient-shift {
+
   0%,
   100% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
@@ -825,6 +845,7 @@ body {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -865,10 +886,12 @@ body {
   0% {
     transform: scale(0.33);
   }
+
   40%,
   50% {
     opacity: 0;
   }
+
   100% {
     opacity: 0;
     transform: scale(1.2);
@@ -1047,7 +1070,7 @@ body {
   color: #bf3131;
 }
 
-.page-frame .category-btn .category-icon.active + .category-label {
+.page-frame .category-btn .category-icon.active+.category-label {
   color: #bf3131;
   font-weight: 600;
   font-size: 15px;
@@ -1243,7 +1266,7 @@ body {
   color: #bf3131;
 }
 
-.page-frame .category-btn-mobile .category-icon-mobile.active + .category-label-mobile {
+.page-frame .category-btn-mobile .category-icon-mobile.active+.category-label-mobile {
   color: #bf3131;
   font-weight: 600;
   font-size: 13px;
@@ -1341,7 +1364,7 @@ body {
     font-size: 12px;
   }
 
-  .page-frame .category-btn-mobile .category-icon-mobile.active + .category-label-mobile {
+  .page-frame .category-btn-mobile .category-icon-mobile.active+.category-label-mobile {
     font-size: 13px;
   }
 }
@@ -1371,7 +1394,7 @@ body {
     font-size: 10px;
   }
 
-  .page-frame .category-btn-mobile .category-icon-mobile.active + .category-label-mobile {
+  .page-frame .category-btn-mobile .category-icon-mobile.active+.category-label-mobile {
     font-size: 11px;
   }
 
@@ -1475,7 +1498,7 @@ body {
 }
 
 .page-booth [data-has-photo="true"]:hover .photo-slot::before {
-  content: "Click to retake photo";
+  content: "Ketuk untuk ganti";
   position: absolute;
   top: -35px;
   left: 50%;
@@ -1560,6 +1583,46 @@ body {
 
 .page-booth #countdown-overlay {
   text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+}
+
+@keyframes booth-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes booth-bar-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-booth .booth-sheet {
+  animation: booth-sheet-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.page-booth .booth-bar {
+  animation: booth-bar-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .page-booth .booth-sheet,
+  .page-booth .booth-bar {
+    animation: none;
+  }
 }
 
 .page-booth #flash-overlay {
@@ -1721,6 +1784,7 @@ body {
 }
 
 @keyframes shake {
+
   0%,
   100% {
     transform: translateX(0);
@@ -1815,6 +1879,7 @@ body {
 }
 
 @media (max-width: 768px) {
+
   .page-booth #retakeModal,
   .page-booth #resetModal {
     align-items: flex-end;
@@ -1839,6 +1904,7 @@ body {
 }
 
 @media (min-width: 769px) {
+
   .page-booth #retakeModalContent,
   .page-booth #resetModalContent {
     animation: boothModalScaleIn 0.4s ease-out;
@@ -1958,6 +2024,7 @@ body {
 }
 
 @media (max-width: 640px) {
+
   .page-booth #filterSelect,
   .page-booth #resetButton,
   .page-booth #finishButton {
@@ -1969,6 +2036,7 @@ body {
 }
 
 @media (min-width: 640px) {
+
   .page-booth #filterSelect,
   .page-booth #resetButton,
   .page-booth #finishButton {
@@ -2266,6 +2334,7 @@ body.modal-open {
   from {
     transform: translate3d(0, 0, 0);
   }
+
   to {
     transform: translate3d(-50%, 0, 0);
   }
@@ -2274,6 +2343,21 @@ body.modal-open {
 .lab-marquee-track {
   animation: lab-marquee-scroll 60s linear infinite;
   will-change: transform;
+}
+
+.lab-marquee {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  -webkit-mask-image: linear-gradient(to right,
+      transparent,
+      #000 5%,
+      #000 95%,
+      transparent);
+  mask-image: linear-gradient(to right,
+      transparent,
+      #000 5%,
+      #000 95%,
+      transparent);
 }
 
 .lab-marquee:hover .lab-marquee-track,
@@ -2421,6 +2505,7 @@ html.lenis body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   [data-aos="lab-develop"],
   [data-aos="lab-develop"].aos-animate,
   [data-aos="lab-focus"],
@@ -2449,6 +2534,7 @@ html.lenis body {
     opacity: 0;
     transform: translate3d(0, 10px, 0);
   }
+
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0);
@@ -2462,5 +2548,721 @@ html.lenis body {
 @media (prefers-reduced-motion: reduce) {
   .route-enter {
     animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Studio console — panel admin                                        */
+/* Satu dunia dengan krim/merah merek, tapi dengan disiplin Operate:   */
+/* struktur gelap, permukaan kertas, radius tajam, tanpa dekorasi.     */
+/* ------------------------------------------------------------------ */
+
+.admin-shell {
+  --admin-ink: #2a0a0a;
+  --admin-ink-2: #3a1512;
+  --admin-cream: #fef3e2;
+  --admin-surface: #fffcf6;
+  --admin-canvas: #f7efe1;
+  --admin-accent: #bf3131;
+  --admin-accent-soft: #f16767;
+  --admin-line: rgba(42, 10, 10, 0.1);
+  --admin-line-strong: rgba(42, 10, 10, 0.18);
+  --admin-muted: #7a5a50;
+  --admin-sidebar-w: 264px;
+  --admin-rail-w: 84px;
+  background-color: var(--admin-canvas);
+  color: var(--admin-ink);
+}
+
+.admin-shell ::selection {
+  background: var(--admin-accent);
+  color: var(--admin-cream);
+}
+
+.admin-shell a {
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.admin-shell :focus-visible {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 2px;
+}
+
+.admin-shell input:focus-visible,
+.admin-shell select:focus-visible,
+.admin-shell textarea:focus-visible {
+  outline: none;
+}
+
+/* --- Sidebar ------------------------------------------------------- */
+
+.admin-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 40;
+  display: flex;
+  width: var(--admin-sidebar-w);
+  flex-direction: column;
+  background-color: var(--admin-ink);
+  background-image: radial-gradient(rgba(254, 243, 226, 0.07) 1px, transparent 1px);
+  background-size: 18px 18px;
+  color: var(--admin-cream);
+  transition:
+    width 220ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 12px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(254, 243, 226, 0.28) transparent;
+}
+
+.admin-sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(254, 243, 226, 0.24);
+  border-radius: 3px;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(254, 243, 226, 0.12);
+}
+
+.admin-brand-mark {
+  display: inline-flex;
+  height: 36px;
+  width: 36px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: var(--admin-cream);
+  color: var(--admin-accent);
+}
+
+.admin-brand-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.admin-brand-sub {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(254, 243, 226, 0.55);
+}
+
+.admin-nav-group {
+  padding-top: 20px;
+}
+
+.admin-nav-group-label {
+  padding: 0 12px 8px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(254, 243, 226, 0.45);
+}
+
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 3px;
+  color: rgba(254, 243, 226, 0.72);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.admin-nav-link:hover {
+  background: rgba(254, 243, 226, 0.08);
+  color: var(--admin-cream);
+}
+
+.admin-nav-link[aria-current="page"] {
+  background: rgba(191, 49, 49, 0.22);
+  color: var(--admin-cream);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(241, 103, 103, 0.45);
+}
+
+.admin-nav-icon {
+  display: inline-flex;
+  height: 20px;
+  width: 20px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  color: rgba(254, 243, 226, 0.6);
+}
+
+.admin-nav-link:hover .admin-nav-icon {
+  color: rgba(254, 243, 226, 0.9);
+}
+
+.admin-nav-link[aria-current="page"] .admin-nav-icon {
+  color: var(--admin-accent-soft);
+}
+
+.admin-nav-count {
+  margin-left: auto;
+  min-width: 20px;
+  border-radius: 999px;
+  background: var(--admin-accent);
+  padding: 1px 6px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-cream);
+}
+
+.admin-sidebar-foot {
+  border-top: 1px solid rgba(254, 243, 226, 0.12);
+  padding: 12px;
+}
+
+.admin-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-avatar {
+  display: inline-flex;
+  height: 34px;
+  width: 34px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: rgba(254, 243, 226, 0.12);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--admin-cream);
+}
+
+.admin-sidebar-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 3px;
+  color: rgba(254, 243, 226, 0.7);
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.admin-sidebar-action:hover {
+  background: rgba(254, 243, 226, 0.08);
+  color: var(--admin-cream);
+}
+
+.admin-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  background: rgba(42, 10, 10, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+/* Tombol ikon sidebar: rail toggle & tombol tutup drawer diatur lewat
+ * utilitas Tailwind penting (w-auto! / hidden! / lg:*!) karena aturan display
+ * di bawah ini tidak bisa ditimpa oleh utilitas biasa. */
+
+/* --- Content shell ------------------------------------------------- */
+
+.admin-content {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  margin-left: var(--admin-sidebar-w);
+  transition: margin-left 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--admin-line);
+  background: rgba(250, 245, 236, 0.88);
+  padding: 0 16px;
+  backdrop-filter: blur(8px);
+}
+
+.admin-workspace {
+  flex: 1;
+  width: 100%;
+  padding: 24px 16px 80px;
+}
+
+.admin-workspace main {
+  margin: 0;
+  max-width: none;
+  padding: 0;
+}
+
+.admin-workspace h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--admin-ink);
+}
+
+.admin-workspace h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--admin-ink);
+}
+
+.admin-workspace h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--admin-ink);
+}
+
+/* --- Surfaces ------------------------------------------------------ */
+
+.admin-card {
+  border: 1px solid var(--admin-line);
+  border-radius: 3px;
+  background: var(--admin-surface);
+  box-shadow:
+    0 1px 2px rgba(42, 10, 10, 0.04),
+    0 24px 46px -42px rgba(42, 10, 10, 0.6);
+}
+
+.admin-empty {
+  border: 1px dashed var(--admin-line-strong);
+  border-radius: 3px;
+  background: rgba(255, 252, 246, 0.6);
+  padding: 28px 20px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--admin-muted);
+}
+
+.admin-skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgba(42, 10, 10, 0.06);
+}
+
+.admin-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.55),
+      transparent);
+  animation: admin-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes admin-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-skeleton::after {
+    animation: none;
+  }
+}
+
+/* --- Tables -------------------------------------------------------- */
+
+.admin-shell .overflow-x-auto {
+  overflow-x: auto;
+  border: 1px solid var(--admin-line);
+  border-radius: 3px;
+  background: var(--admin-surface);
+  box-shadow:
+    0 1px 2px rgba(42, 10, 10, 0.04),
+    0 24px 46px -42px rgba(42, 10, 10, 0.6);
+}
+
+.admin-shell table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+}
+
+.admin-shell thead th {
+  border-bottom: 1px solid var(--admin-line-strong);
+  background: rgba(42, 10, 10, 0.035);
+  padding: 11px 16px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--admin-muted);
+}
+
+.admin-shell tbody td {
+  border-bottom: 1px solid rgba(42, 10, 10, 0.07);
+  padding: 14px 16px;
+  vertical-align: middle;
+  color: var(--admin-ink-2);
+}
+
+.admin-shell tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-shell tbody tr:hover td {
+  background: rgba(191, 49, 49, 0.035);
+}
+
+.admin-shell td.font-mono,
+.admin-shell .font-mono {
+  font-family: "SFMono-Regular", "Cascadia Mono", "Roboto Mono", ui-monospace,
+    monospace;
+}
+
+/* --- Forms --------------------------------------------------------- */
+
+.admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+.admin-shell select,
+.admin-shell textarea {
+  min-height: 44px;
+  width: 100%;
+  border: 1px solid var(--admin-line-strong);
+  border-radius: 3px;
+  background: var(--admin-surface);
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  color: var(--admin-ink);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.admin-shell select {
+  padding-right: 34px;
+}
+
+.admin-shell input::placeholder,
+.admin-shell textarea::placeholder {
+  color: #9a7568;
+}
+
+.admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+.admin-shell select:focus,
+.admin-shell textarea:focus {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px rgba(191, 49, 49, 0.16);
+}
+
+.admin-shell input[type="checkbox"] {
+  height: 18px;
+  width: 18px;
+  accent-color: var(--admin-accent);
+  cursor: pointer;
+}
+
+.admin-shell label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--admin-ink-2);
+}
+
+/* Kontrol di toolbar daftar (filter) tetap selebar isinya. */
+.admin-shell .admin-inline-control {
+  width: auto;
+}
+
+/* --- Buttons ------------------------------------------------------- */
+
+.admin-shell button[class~="bg-[#BF3131]"]:is([class~="px-4"], [class~="px-5"]),
+.admin-shell a[class~="bg-[#BF3131]"]:is([class~="px-4"], [class~="px-5"]) {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--admin-cream);
+  box-shadow: 0 1px 2px rgba(42, 10, 10, 0.12);
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.admin-shell button[class~="bg-[#BF3131]"]:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.admin-shell button[class~="border-neutral-300"]:is([class~="px-4"], [class~="px-5"]),
+.admin-shell a[class~="border-neutral-300"]:is([class~="px-4"], [class~="px-5"]) {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--admin-line-strong);
+  border-radius: 3px;
+  background: var(--admin-surface);
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--admin-ink);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.admin-shell button[class~="border-neutral-300"]:is([class~="px-4"], [class~="px-5"]):hover,
+.admin-shell a[class~="border-neutral-300"]:is([class~="px-4"], [class~="px-5"]):hover {
+  border-color: rgba(42, 10, 10, 0.32);
+  background: rgba(42, 10, 10, 0.04);
+}
+
+/* --- Modal --------------------------------------------------------- */
+
+.admin-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow-y: auto;
+  background: rgba(20, 6, 6, 0.62);
+  backdrop-filter: blur(2px);
+}
+
+.admin-modal {
+  position: relative;
+  display: flex;
+  max-height: 92vh;
+  width: 100%;
+  flex-direction: column;
+  border: 1px solid var(--admin-line);
+  border-radius: 6px 6px 0 0;
+  background: var(--admin-surface);
+  box-shadow: 0 -24px 60px -34px rgba(20, 6, 6, 0.7);
+}
+
+.admin-modal-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--admin-line);
+  background: var(--admin-surface);
+  padding: 14px 18px;
+}
+
+.admin-modal-body {
+  overflow-y: auto;
+  padding: 18px;
+}
+
+.admin-modal-close {
+  display: inline-flex;
+  height: 36px;
+  width: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  color: var(--admin-muted);
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.admin-modal-close:hover {
+  background: rgba(42, 10, 10, 0.06);
+  color: var(--admin-ink);
+}
+
+/* --- Responsive ---------------------------------------------------- */
+
+@media (min-width: 1024px) {
+  .admin-topbar {
+    padding: 0 28px;
+  }
+
+  .admin-workspace {
+    padding: 28px 28px 96px;
+  }
+
+  .admin-shell[data-collapsed="true"] .admin-sidebar {
+    width: var(--admin-rail-w);
+  }
+
+  .admin-shell[data-collapsed="true"] .admin-content {
+    margin-left: var(--admin-rail-w);
+  }
+
+  .admin-shell[data-collapsed="true"] .admin-label,
+  .admin-shell[data-collapsed="true"] .admin-nav-group-label,
+  .admin-shell[data-collapsed="true"] .admin-brand-text,
+  .admin-shell[data-collapsed="true"] .admin-user-text {
+    display: none;
+  }
+
+  .admin-shell[data-collapsed="true"] .admin-brand {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .admin-shell[data-collapsed="true"] .admin-nav-link {
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .admin-shell[data-collapsed="true"] .admin-nav-count {
+    position: absolute;
+    right: 14px;
+    top: 8px;
+    min-width: 16px;
+    padding: 0 4px;
+    font-size: 9px;
+  }
+
+  .admin-shell[data-collapsed="true"] .admin-nav-item {
+    position: relative;
+  }
+
+  .admin-shell[data-collapsed="true"] .admin-nav-group {
+    padding-top: 14px;
+    border-top: 1px solid rgba(254, 243, 226, 0.1);
+    margin-top: 12px;
+  }
+
+  .admin-shell[data-collapsed="true"] .admin-nav-group:first-of-type {
+    border-top: none;
+    margin-top: 0;
+  }
+
+  .admin-shell[data-collapsed="true"] .admin-user {
+    justify-content: center;
+  }
+
+  .admin-shell[data-collapsed="true"] .admin-sidebar-action.admin-label {
+    display: none;
+  }
+
+  .admin-shell[data-collapsed="true"] .admin-sidebar-action {
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .admin-modal {
+    margin: auto;
+    max-width: 42rem;
+    border-radius: 4px;
+    box-shadow: 0 32px 70px -30px rgba(20, 6, 6, 0.6);
+  }
+
+  .admin-overlay {
+    align-items: center;
+    padding: 32px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .admin-sidebar {
+    width: min(86vw, 300px);
+    transform: translateX(-100%);
+    box-shadow: 0 0 60px -10px rgba(0, 0, 0, 0.5);
+  }
+
+  .admin-shell[data-mobile-open="true"] .admin-sidebar {
+    transform: translateX(0);
+  }
+
+  .admin-content {
+    margin-left: 0;
+  }
+}
+
+/* Custom pack: kartu tunggal berganti saat tema dipilih. */
+@keyframes pack-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.pack-card-enter {
+  animation: pack-card-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pack-card-enter {
+    animation: none;
+  }
+}
+
+/* Animasi "tercetak" untuk FeaturedFrameCard */
+[data-aos="frame-print"] {
+  opacity: 0;
+  -webkit-clip-path: inset(-24px -24px 100% -24px);
+  clip-path: inset(-24px -24px 100% -24px);
+  transition-property: clip-path, opacity;
+}
+
+[data-aos="frame-print"].aos-animate {
+  opacity: 1;
+  -webkit-clip-path: inset(-24px -24px -24px -24px);
+  clip-path: inset(-24px -24px -24px -24px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-aos="frame-print"] {
+    opacity: 1;
+    -webkit-clip-path: none;
+    clip-path: none;
+    transition: none;
   }
 }

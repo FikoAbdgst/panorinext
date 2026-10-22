@@ -73,7 +73,7 @@ export function RoomAdminList({
             onChange={(event) =>
               setStatusFilter(event.target.value as "all" | PremiumAccessStatus)
             }
-            className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            className="admin-inline-control rounded-lg border border-neutral-300 px-3 py-2 text-sm"
           >
             <option value="all">Semua Status</option>
             <option value="unused">Belum dipakai</option>
@@ -86,15 +86,15 @@ export function RoomAdminList({
       </div>
 
       {filtered.length === 0 ? (
-        <p className="rounded-lg border border-neutral-200 bg-white px-4 py-6 text-sm text-neutral-500">
+        <p className="admin-empty">
           {rooms.length === 0
             ? "Belum ada ruang premium."
             : "Tidak ada ruang yang cocok."}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-          <table className="min-w-full divide-y divide-neutral-200 text-sm">
-            <thead className="bg-neutral-50 text-left text-xs uppercase text-neutral-500">
+        <div className="overflow-x-auto">
+          <table>
+            <thead>
               <tr>
                 <th className="px-4 py-3">Kode</th>
                 <th className="px-4 py-3">Paket</th>
@@ -105,7 +105,7 @@ export function RoomAdminList({
                 <th className="px-4 py-3 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody>
               {filtered.map((room) => {
                 const status = getPremiumAccessStatus(room);
                 const badge = STATUS_BADGE[status];

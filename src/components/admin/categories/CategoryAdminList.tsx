@@ -9,7 +9,6 @@ import { RemoveCategoryButton } from "./RemoveCategoryButton";
 export type CategoryAdminRow = {
   id: number;
   name: string;
-  icon: string | null;
 };
 
 export function CategoryAdminList({ categories }: { categories: CategoryAdminRow[] }) {
@@ -39,26 +38,24 @@ export function CategoryAdminList({ categories }: { categories: CategoryAdminRow
       </div>
 
       {filtered.length === 0 ? (
-        <p className="rounded-lg border border-neutral-200 bg-white px-4 py-6 text-sm text-neutral-500">
+        <p className="admin-empty">
           {categories.length === 0
             ? "Belum ada kategori. Tambahkan kategori pertama Anda."
             : "Tidak ada kategori yang cocok."}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-          <table className="min-w-full divide-y divide-neutral-200 text-sm">
-            <thead className="bg-neutral-50 text-left text-xs uppercase text-neutral-500">
+        <div className="overflow-x-auto">
+          <table>
+            <thead>
               <tr>
-                <th className="px-4 py-3">Ikon</th>
                 <th className="px-4 py-3">Nama</th>
                 <th className="px-4 py-3">ID</th>
                 <th className="px-4 py-3 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody>
               {filtered.map((category) => (
                 <tr key={category.id} className="align-middle">
-                  <td className="px-4 py-3 text-xl">{category.icon ?? "—"}</td>
                   <td className="px-4 py-3 font-medium text-neutral-800">
                     {category.name}
                   </td>

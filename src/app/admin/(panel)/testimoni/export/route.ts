@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { getAdminOrNull } from "@/lib/supabase/auth";
-import { listAdminTestimonials } from "@/lib/testimonials/queries";
+import {
+  listAdminTestimonials,
+  type TestimonialLandingFilter,
+} from "@/lib/testimonials/queries";
 
 function csvCell(value: string | number | null): string {
   const text = value === null ? "" : String(value);
@@ -27,13 +30,23 @@ export async function GET(request: Request) {
   const ratingRaw = searchParams.get("rating");
   const rating = ratingRaw ? Number(ratingRaw) : undefined;
   const search = searchParams.get("search") ?? undefined;
+  const landingRaw = searchParams.get("landing");
+  const landing: TestimonialLandingFilter | undefined =
+    landingRaw === "featured" ||
+    landingRaw === "unfeatured" ||
+    landingRaw === "no-consent"
+      ? landingRaw
+      : undefined;
 
   const testimonials = await listAdminTestimonials({
     rating: rating && Number.isInteger(rating) ? rating : undefined,
     search: search || undefined,
+    landing,
   });
 
-  const lines = ["\uFEFFNama,Rating,Pesan,Tanggal"];
+  const lines = [
+    "\uFEFFNama,Rating,Pesan,Tanggal,Izin Foto,Tampil di Landing",
+  ];
   for (const item of testimonials) {
     lines.push(
       [
@@ -41,6 +54,8 @@ export async function GET(request: Request) {
         String(item.rating),
         csvCell(item.message),
         csvCell(formatDate(item.created_at)),
+        csvCell(item.photo_consent ? "Ya" : "Tidak"),
+        csvCell(item.is_featured ? "Ya" : "Tidak"),
       ].join(","),
     );
   }

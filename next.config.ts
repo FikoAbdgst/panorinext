@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: {
+    // Buang work yang tak terjangkau dari memori + cache persisten Turbopack
+    // selama sesi dev panjang, supaya server tidak makin berat seiring waktu.
+    turbopackGc: true,
+    turbopackMemoryEviction: "auto",
+  },
   turbopack: {
     rules: {
       "*.css": {

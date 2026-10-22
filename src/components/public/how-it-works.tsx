@@ -1,3 +1,7 @@
+"use client"
+
+import { useState } from "react"
+
 const STEPS = [
   {
     title: "Pilih frame",
@@ -172,11 +176,62 @@ function Sprockets({ position }: { position: "top" | "bottom" }) {
   )
 }
 
+function StepConnector({
+  next,
+  nextLabel,
+  onNext,
+}: {
+  next: number
+  nextLabel: string
+  onNext: () => void
+}) {
+  return (
+    <div className="relative h-16">
+      {/* garis putus-putus, sejajar dengan badge nomor */}
+      <span
+        aria-hidden="true"
+        className="absolute bottom-0 left-9 top-0 border-l-2 border-dashed border-[#FEF3E2]/55 md:left-11"
+      />
+
+      {/* tombol panah */}
+      <button
+        type="button"
+        onClick={onNext}
+        aria-label={`Buka langkah ${next}: ${nextLabel}`}
+        className="group absolute left-9 top-1/2 z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#FEF3E2] text-[#BF3131] shadow-[0_4px_0_rgba(42,10,10,0.35)] ring-4 ring-[#7A1C1C] transition duration-200 hover:bg-white hover:shadow-[0_2px_0_rgba(42,10,10,0.35)] focus-visible:outline-none focus-visible:ring-[#FEF3E2] active:translate-y-[calc(-50%+2px)] md:left-11"
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-4 w-4 transition-transform duration-200 group-hover:translate-y-0.5"
+        >
+          <path d="M12 5v14m-6-6 6 6 6-6" />
+        </svg>
+      </button>
+
+      {/* label */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute left-16 top-1/2 -translate-y-1/2 text-[9px] font-bold uppercase tracking-[0.2em] text-[#FEF3E2]/75 md:left-[4.75rem]"
+      >
+        Lanjut ke 0{next} · {nextLabel}
+      </span>
+    </div>
+  )
+}
+
 export function HowItWorks() {
+  const [open, setOpen] = useState<number | null>(0)
+
   return (
     <section
       id="cara-kerja"
-      className="relative scroll-mt-28 overflow-hidden bg-[#BF3131] py-16 font-['Poppins'] sm:py-20"
+      className="relative scroll-mt-24 overflow-hidden bg-[#BF3131] pb-16 pt-10 font-['Poppins'] sm:pb-20 sm:pt-14"
     >
       <div
         aria-hidden="true"
@@ -184,71 +239,125 @@ export function HowItWorks() {
       />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2
-              suppressHydrationWarning data-aos="lab-sweep"
-              data-aos-duration="1100"
-              className="max-w-2xl text-balance text-3xl font-extrabold leading-[0.98] tracking-[-0.045em] text-[#FEF3E2] sm:text-5xl"
-            >
-              Dari frame ke print, tiga langkah.
-            </h2>
-            <p
-              suppressHydrationWarning data-aos="lab-focus"
-              data-aos-duration="1000"
-              data-aos-delay="140"
-              className="mt-4 max-w-xl text-sm leading-relaxed text-[#FEF3E2]/80 sm:text-base"
-            >
-              Nggak perlu install aplikasi. Semua prosesnya jalan di browser,
-              dari pilih frame sampai hasil siap diunduh.
-            </p>
-          </div>
+        <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+          <h2
+            suppressHydrationWarning
+            data-aos="lab-sweep"
+            data-aos-duration="1100"
+            className="text-balance text-3xl font-extrabold leading-[0.98] tracking-[-0.035em] text-[#FEF3E2] sm:text-5xl"
+          >
+            Dari frame ke print, tiga langkah.
+          </h2>
+          <p
+            suppressHydrationWarning
+            data-aos="lab-focus"
+            data-aos-duration="1000"
+            data-aos-delay="140"
+            className="mt-4 max-w-xl text-sm leading-relaxed text-[#FEF3E2]/80 sm:text-base"
+          >
+            Nggak perlu install aplikasi. Semua prosesnya jalan di browser, dari
+            pilih frame sampai hasil siap diunduh.
+          </p>
         </div>
 
-        <div className="relative mt-12 border-y-[10px] border-[#7A1C1C] bg-[#7A1C1C] px-3 py-8 sm:px-6">
+        <div className="relative mx-auto mt-12 max-w-3xl border-y-[10px] border-[#7A1C1C] bg-[#7A1C1C] px-3 py-8 sm:px-5">
           <Sprockets position="top" />
 
-          <div className="relative grid gap-5 md:grid-cols-3">
-            {STEPS.map((step, index) => (
-              <article
-                key={step.title}
-                suppressHydrationWarning data-aos="lab-develop"
-                data-aos-duration="1200"
-                data-aos-delay={140 + index * 140}
-                className="relative border border-[#FEF3E2]/20 bg-[#FEF3E2] p-4 text-[#2A0A0A] shadow-[6px_6px_0_rgba(42,10,10,0.22)]"
-              >
-                <div className="flex items-start justify-between border-b border-dashed border-[#BF3131]/30 pb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#BF3131]">
-                    {step.label}
-                  </span>
-                  <span className="text-5xl font-extrabold leading-none text-[#BF3131]/15">
-                    0{index + 1}
-                  </span>
-                </div>
+          <ol className="relative m-0 list-none p-0">
+            {STEPS.map((step, index) => {
+              const isOpen = open === index
 
-                <div
-                  aria-hidden="true"
-                  className="relative mt-4 flex aspect-[4/3] items-center justify-center overflow-hidden border border-[#BF3131]/15 bg-[#FEF3E2] p-5"
-                >
-                  <span className="lab-dots absolute inset-0 opacity-60" />
-                  <CropMarks />
-                  <div className="relative z-10">
-                    <StepVisual step={index + 1} />
+              return (
+                <li key={step.title}>
+                  <div className="border border-[#FEF3E2]/20 bg-[#FEF3E2]">
+                    <h3>
+                      <button
+                        type="button"
+                        aria-expanded={isOpen}
+                        aria-controls={`cara-kerja-${index}`}
+                        onClick={() => setOpen(isOpen ? null : index)}
+                        className="flex w-full items-center gap-3 px-4 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#BF3131] md:gap-4 md:px-5"
+                      >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center bg-[#BF3131] text-sm font-extrabold text-[#FEF3E2] md:h-12 md:w-12 md:text-base">
+                          0{index + 1}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[9px] font-bold uppercase tracking-[0.22em] text-[#BF3131]">
+                            {step.label}
+                          </span>
+                          <span className="mt-0.5 block text-lg font-bold leading-tight text-[#2A0A0A] md:text-xl">
+                            {step.title}
+                          </span>
+                        </span>
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center text-[#BF3131] transition-transform duration-300 ${
+                            isOpen ? "rotate-45" : ""
+                          }`}
+                        >
+                          <svg
+                            aria-hidden="true"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            className="h-5 w-5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 5v14M5 12h14"
+                            />
+                          </svg>
+                        </span>
+                      </button>
+                    </h3>
+
+                    <div
+                      id={`cara-kerja-${index}`}
+                      aria-hidden={!isOpen}
+                      className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
+                        isOpen
+                          ? "grid-rows-[1fr] opacity-100"
+                          : "grid-rows-[0fr] opacity-0"
+                      }`}
+                    >
+                      <div className="overflow-hidden">
+                        <div className="grid gap-4 border-t border-dashed border-[#BF3131]/20 px-4 py-4 sm:grid-cols-[1fr_auto] sm:items-start md:px-5">
+                          <div>
+                            <p className="max-w-prose text-sm leading-relaxed text-[#6B4A40]">
+                              {step.body}
+                            </p>
+                            <p className="mt-3 inline-flex border-t border-dashed border-[#BF3131]/25 pt-2 text-[8px] font-bold uppercase tracking-[0.2em] text-[#BF3131]/65">
+                              {STEP_CAPTIONS[index]}
+                            </p>
+                          </div>
+
+                          <div
+                            aria-hidden="true"
+                            className="relative flex aspect-[16/10] w-full items-center justify-center overflow-hidden border border-[#BF3131]/15 bg-[#FEF3E2] p-4 sm:aspect-[4/3] sm:w-56"
+                          >
+                            <span className="lab-dots absolute inset-0 opacity-60" />
+                            <CropMarks />
+                            <div className="relative z-10 scale-90">
+                              <StepVisual step={index + 1} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <span className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-[8px] font-bold uppercase tracking-[0.2em] text-[#BF3131]/60">
-                    {STEP_CAPTIONS[index]}
-                  </span>
-                </div>
 
-                <h3 className="mt-4 text-xl font-bold leading-tight text-[#2A0A0A]">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[#6B4A40]">
-                  {step.body}
-                </p>
-              </article>
-            ))}
-          </div>
+                  {index < STEPS.length - 1 ? (
+                    <StepConnector
+                      next={index + 2}
+                      nextLabel={STEPS[index + 1].title}
+                      onNext={() => setOpen(index + 1)}
+                    />
+                  ) : null}
+                </li>
+              )
+            })}
+          </ol>
 
           <Sprockets position="bottom" />
         </div>

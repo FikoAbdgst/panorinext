@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import {
   bulkDeleteTestimoniAction,
   deleteTestimoniAction,
+  setTestimoniFeaturedAction,
 } from "@/app/admin/(panel)/testimoni/actions";
 import { Modal } from "@/components/admin/Modal";
 
@@ -17,6 +18,9 @@ export type TestimoniRow = {
   message: string | null;
   created_at: string;
   frame_name: string | null;
+  photo_url: string | null;
+  photo_consent: boolean;
+  is_featured: boolean;
 };
 
 function Stars({ rating }: { rating: number }) {
@@ -78,6 +82,17 @@ export function TestimoniTable({ rows }: { rows: TestimoniRow[] }) {
     });
   };
 
+  const handleToggleFeatured = (row: TestimoniRow) => {
+    setMessage(null);
+    startTransition(async () => {
+      const result = await setTestimoniFeaturedAction(row.id, !row.is_featured);
+      setMessage(result.message);
+      if (result.success) {
+        router.refresh();
+      }
+    });
+  };
+
   const handleBulkDelete = () => {
     if (selected.size === 0) {
       return;
@@ -110,9 +125,9 @@ export function TestimoniTable({ rows }: { rows: TestimoniRow[] }) {
         {message ? <span className="text-sm text-neutral-600">{message}</span> : null}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-        <table className="min-w-full divide-y divide-neutral-200 text-sm">
-          <thead className="bg-neutral-50 text-left text-xs uppercase text-neutral-500">
+      <div className="overflow-x-auto">
+        <table>
+          <thead>
             <tr>
               <th className="px-4 py-3">
                 <input
@@ -122,15 +137,17 @@ export function TestimoniTable({ rows }: { rows: TestimoniRow[] }) {
                   aria-label="Pilih semua"
                 />
               </th>
+              <th className="px-4 py-3">Foto</th>
               <th className="px-4 py-3">Rating</th>
               <th className="px-4 py-3">Nama</th>
               <th className="px-4 py-3">Pesan</th>
               <th className="px-4 py-3">Frame</th>
               <th className="px-4 py-3">Tanggal</th>
+              <th className="px-4 py-3">Landing</th>
               <th className="px-4 py-3 text-right">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody>
             {rows.map((row) => (
               <tr key={row.id} className="align-top">
                 <td className="px-4 py-3">
@@ -140,6 +157,26 @@ export function TestimoniTable({ rows }: { rows: TestimoniRow[] }) {
                     onChange={() => toggle(row.id)}
                     aria-label={`Pilih testimoni ${row.id}`}
                   />
+                </td>
+                <td className="px-4 py-3">
+                  {row.photo_url ? (
+                    <button
+                      type="button"
+                      onClick={() => setViewMessage(row)}
+                      aria-label={`Lihat foto testimoni ${row.id}`}
+                      className="block h-16 w-14 overflow-hidden border border-[#2A0A0A]/10 bg-[#F7EFE1]"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={row.photo_url}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
+                  ) : (
+                    <span className="text-xs text-neutral-400">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <div>
@@ -164,6 +201,25 @@ export function TestimoniTable({ rows }: { rows: TestimoniRow[] }) {
                 </td>
                 <td className="px-4 py-3 text-neutral-500">{row.frame_name ?? "—"}</td>
                 <td className="px-4 py-3 text-neutral-500">{formatDate(row.created_at)}</td>
+                <td className="px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeatured(row)}
+                    disabled={isPending}
+                    className={
+                      row.is_featured
+                        ? "rounded-[3px] bg-[#2A0A0A] px-2.5 py-1 text-xs font-semibold text-[#FEF3E2] disabled:opacity-50"
+                        : "rounded-[3px] border border-[#2A0A0A]/15 px-2.5 py-1 text-xs font-semibold text-[#2A0A0A] hover:bg-[#2A0A0A]/5 disabled:opacity-50"
+                    }
+                  >
+                    {row.is_featured ? "Tampil" : "Tampilkan"}
+                  </button>
+                  {row.photo_consent ? null : (
+                    <span className="mt-1 block text-[10px] text-neutral-400">
+                      tanpa foto
+                    </span>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-right">
                   <button
                     type="button"
@@ -197,8 +253,24 @@ export function TestimoniTable({ rows }: { rows: TestimoniRow[] }) {
             {viewMessage.frame_name ? (
               <p className="text-xs text-neutral-500">Frame: {viewMessage.frame_name}</p>
             ) : null}
+            {viewMessage.photo_url ? (
+              <div className="border border-[#2A0A0A]/10 bg-[#FFFCF6] p-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={viewMessage.photo_url}
+                  alt={`Fotostrip ${viewMessage.name ?? "Anonymous"}`}
+                  className="mx-auto max-h-[45vh] w-auto object-contain"
+                />
+              </div>
+            ) : null}
             <p className="whitespace-pre-line text-sm text-neutral-700">
               {viewMessage.message ?? "—"}
+            </p>
+            <p className="text-xs text-neutral-500">
+              {viewMessage.photo_consent
+                ? "Pengguna mengizinkan fotonya tampil di landing page."
+                : "Tanpa foto — hanya teks yang tampil di landing page."}
+              {viewMessage.is_featured ? " Saat ini tampil." : ""}
             </p>
             <p className="text-xs text-neutral-400">{formatDate(viewMessage.created_at)}</p>
           </div>

@@ -64,7 +64,7 @@ export function TransactionTable({ transactions }: { transactions: AdminTransact
 
   if (transactions.length === 0) {
     return (
-      <p className="rounded-lg border border-neutral-200 bg-white px-4 py-6 text-sm text-neutral-500">
+      <p className="admin-empty">
         Tidak ada transaksi.
       </p>
     );
@@ -72,9 +72,9 @@ export function TransactionTable({ transactions }: { transactions: AdminTransact
 
   return (
     <>
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-        <table className="min-w-full divide-y divide-neutral-200 text-sm">
-          <thead className="bg-neutral-50 text-left text-xs uppercase text-neutral-500">
+      <div className="overflow-x-auto">
+        <table>
+          <thead>
             <tr>
               <th className="px-4 py-3">Order ID</th>
               <th className="px-4 py-3">Paket / Frame</th>
@@ -87,7 +87,7 @@ export function TransactionTable({ transactions }: { transactions: AdminTransact
               <th className="px-4 py-3 text-right">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody>
             {transactions.map((trx) => {
               const badge = STATUS_BADGE[trx.status];
               const wa = getWhatsappLink(trx);

@@ -36,6 +36,7 @@ function formatDate(value: string): string {
     day: "numeric",
   })
 }
+const HOVER_SPEED = 0.25 // 1 = normal, makin kecil makin lambat
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -60,6 +61,51 @@ function Stars({ rating }: { rating: number }) {
   )
 }
 
+function TestimonialMeta({ testimonial }: { testimonial: TestimonialItem }) {
+  const name = testimonial.name?.trim() || "Tamu PanoriCam"
+  const initial = name.charAt(0).toUpperCase()
+
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#BF3131] text-sm font-bold text-[#FEF3E2]">
+          {initial}
+        </div>
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-bold text-[#2A0A0A]">{name}</h3>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#9A6B5E]">
+            {formatDate(testimonial.created_at)}
+          </p>
+        </div>
+      </div>
+      <span
+        aria-hidden="true"
+        className="flex h-8 w-8 shrink-0 items-center justify-center border border-[#BF3131]/20 bg-[#FEF3E2] text-base"
+      >
+        {pickEmoji(testimonial.emoji, testimonial.rating)}
+      </span>
+    </div>
+  )
+}
+
+function TestimonialFrameTag({
+  testimonial,
+}: {
+  testimonial: TestimonialItem
+}) {
+  return (
+    <div className="mt-auto pt-3">
+      <div className="flex items-center justify-between gap-3 border-t border-dashed border-[#BF3131]/20 pt-3">
+        <span className="truncate text-[9px] font-bold uppercase tracking-[0.12em] text-[#BF3131]">
+          {testimonial.frame
+            ? `Frame: ${testimonial.frame.name}`
+            : "Photobooth"}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 function TestimonialCard({
   testimonial,
   index,
@@ -72,63 +118,82 @@ function TestimonialCard({
   onOpen: () => void
 }) {
   const name = testimonial.name?.trim() || "Tamu PanoriCam"
-  const initial = name.charAt(0).toUpperCase()
   const rotation = ROTATIONS[index % ROTATIONS.length]
+  const isPhoto = Boolean(testimonial.photo_url)
 
   return (
-    <article className={`relative w-[290px] shrink-0 sm:w-[330px] ${rotation}`}>
+    <article
+      className={`relative shrink-0 ${rotation} ${
+        isPhoto ? "w-[262px] sm:w-[300px]" : "w-[292px] sm:w-[336px]"
+      }`}
+    >
       <button
         type="button"
         onClick={onOpen}
         tabIndex={duplicate ? -1 : undefined}
         aria-label={`Baca testimoni dari ${name}`}
         aria-haspopup="dialog"
-        className="group relative flex min-h-[268px] w-full flex-col border border-[#BF3131]/25 bg-[#FFFBF3] p-5 text-left shadow-[5px_5px_0_rgba(191,49,49,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[#BF3131]/55 hover:shadow-[7px_7px_0_rgba(191,49,49,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
+        className={`group relative flex w-full flex-col border text-left transition duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2] ${
+          isPhoto
+            ? "border-[#BF3131]/25 bg-[#FFFBF3] p-3 shadow-[5px_5px_0_rgba(191,49,49,0.08)] hover:border-[#BF3131]/55 hover:shadow-[7px_7px_0_rgba(191,49,49,0.14)]"
+            : "min-h-[236px] border-[#BF3131]/20 bg-[#FFFBF3] p-6 shadow-[5px_5px_0_rgba(191,49,49,0.06)] hover:border-[#BF3131]/50 hover:shadow-[7px_7px_0_rgba(191,49,49,0.12)]"
+        }`}
       >
         <span
           aria-hidden="true"
           className="absolute -top-2 left-8 h-4 w-16 -rotate-2 bg-[#F16767]/20"
         />
 
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#BF3131] text-sm font-bold text-[#FEF3E2]">
-              {initial}
+        {isPhoto ? (
+          <>
+            <div className="flex h-[330px] items-center justify-center overflow-hidden border border-[#2A0A0A]/10 bg-[#F6E7D0] p-2 sm:h-[380px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={testimonial.photo_url ?? ""}
+                alt={`Fotostrip ${name}`}
+                loading="lazy"
+                className="h-full w-full object-contain"
+              />
             </div>
-            <div className="min-w-0">
-              <h3 className="truncate text-sm font-bold text-[#2A0A0A]">
-                {name}
-              </h3>
-              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#9A6B5E]">
-                {formatDate(testimonial.created_at)}
-              </p>
+
+            <div className="mt-4">
+              <TestimonialMeta testimonial={testimonial} />
             </div>
-          </div>
-          <span
-            aria-hidden="true"
-            className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#BF3131]/20 bg-[#FEF3E2] text-lg"
-          >
-            {pickEmoji(testimonial.emoji, testimonial.rating)}
-          </span>
-        </div>
 
-        <div className="mt-4">
-          <Stars rating={testimonial.rating} />
-        </div>
+            <div className="mt-3">
+              <Stars rating={testimonial.rating} />
+            </div>
 
-        <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-[#4A2A22]">
-          {testimonial.message}
-        </p>
+            <p className="mt-2 line-clamp-2 min-h-[42px] text-sm leading-relaxed text-[#4A2A22]">
+              {testimonial.message}
+            </p>
 
-        <div className="mt-auto pt-4">
-          <div className="flex items-center justify-between gap-3 border-t border-dashed border-[#BF3131]/20 pt-3">
-            <span className="truncate text-[9px] font-bold uppercase tracking-[0.12em] text-[#BF3131]">
-              {testimonial.frame
-                ? `Frame: ${testimonial.frame.name}`
-                : "Photobooth"}
+            <TestimonialFrameTag testimonial={testimonial} />
+          </>
+        ) : (
+          <>
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute right-4 top-1 select-none font-serif text-[88px] leading-none text-[#BF3131]/15"
+            >
+              &rdquo;
             </span>
-          </div>
-        </div>
+
+            <div className="relative">
+              <Stars rating={testimonial.rating} />
+            </div>
+
+            <p className="relative mt-3 line-clamp-4 min-h-[96px] text-[15px] leading-relaxed text-[#3A1B14]">
+              {testimonial.message}
+            </p>
+
+            <div className="relative mt-5">
+              <TestimonialMeta testimonial={testimonial} />
+            </div>
+
+            <TestimonialFrameTag testimonial={testimonial} />
+          </>
+        )}
       </button>
     </article>
   )
@@ -137,6 +202,37 @@ function TestimonialCard({
 export function TestimonialMarquee({ items }: { items: TestimonialItem[] }) {
   const [selected, setSelected] = useState<number | null>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const rateRef = useRef(1)
+  const targetRef = useRef(1)
+  const frameRef = useRef(0)
+
+  const step = useCallback(() => {
+    const animation = trackRef.current?.getAnimations()[0]
+    if (!animation) return
+
+    const diff = targetRef.current - rateRef.current
+    rateRef.current =
+      Math.abs(diff) < 0.005 ? targetRef.current : rateRef.current + diff * 0.1
+    animation.playbackRate = rateRef.current
+
+    if (rateRef.current !== targetRef.current) {
+      frameRef.current = requestAnimationFrame(step)
+    }
+  }, [])
+
+  const setSpeed = useCallback(
+    (target: number) => {
+      targetRef.current = target
+      cancelAnimationFrame(frameRef.current)
+      frameRef.current = requestAnimationFrame(step)
+    },
+    [step],
+  )
+
+  useEffect(() => {
+    return () => cancelAnimationFrame(frameRef.current)
+  }, [])
 
   useEffect(() => {
     if (selected === null) return
@@ -170,36 +266,48 @@ export function TestimonialMarquee({ items }: { items: TestimonialItem[] }) {
 
   return (
     <>
-      <div className="lab-marquee relative mt-12 overflow-hidden border-y-4 border-[#BF3131] bg-[#FFFBF3] py-8">
+      <div
+        className="lab-marquee relative overflow-hidden border-y-4 border-[#BF3131] bg-[#FFFBF3] py-2"
+        onMouseEnter={() => setSpeed(HOVER_SPEED)}
+        onMouseLeave={() => setSpeed(1)}
+      >
         <div
           aria-hidden="true"
-          className="lab-grid absolute inset-0 opacity-40"
+          className="lab-paper absolute inset-0 opacity-40"
         />
-        <div
-          className="lab-marquee-track flex w-max"
-          style={{ animationDuration: `${duration}s` }}
-        >
-          {[0, 1].map((group) => (
-            <div
-              key={group}
-              className="flex shrink-0"
-              aria-hidden={group === 1 ? true : undefined}
-            >
-              {loopItems.map((testimonial, index) => (
-                <div
-                  key={`${group}-${testimonial.id}-${index}`}
-                  className="mx-2"
-                >
-                  <TestimonialCard
-                    testimonial={testimonial}
-                    index={index}
-                    duplicate={group === 1}
-                    onOpen={() => setSelected(index % items.length)}
-                  />
-                </div>
-              ))}
-            </div>
-          ))}
+
+        {/* Wrapper diam: fade tipis kiri-kanan + ruang vertikal agar kartu tidak terpotong */}
+        <div className="relative py-6 [--fade:20px] sm:[--fade:36px] [-webkit-mask-image:linear-gradient(to_right,transparent,#000_var(--fade),#000_calc(100%_-_var(--fade)),transparent)] [mask-image:linear-gradient(to_right,transparent,#000_var(--fade),#000_calc(100%_-_var(--fade)),transparent)]">
+          <div
+            ref={trackRef}
+            className="lab-marquee-track relative flex w-max"
+            style={{
+              animationDuration: `${duration}s`,
+              animationPlayState: "running",
+            }}
+          >
+            {[0, 1].map((group) => (
+              <div
+                key={group}
+                className="flex shrink-0 items-center"
+                aria-hidden={group === 1 ? true : undefined}
+              >
+                {loopItems.map((testimonial, index) => (
+                  <div
+                    key={`${group}-${testimonial.id}-${index}`}
+                    className="mx-2 flex"
+                  >
+                    <TestimonialCard
+                      testimonial={testimonial}
+                      index={index}
+                      duplicate={group === 1}
+                      onOpen={() => setSelected(index % items.length)}
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -246,6 +354,17 @@ export function TestimonialMarquee({ items }: { items: TestimonialItem[] }) {
                     {formatDate(current.created_at)}
                   </span>
                 </div>
+
+                {current.photo_url ? (
+                  <div className="mt-5 border border-[#BF3131]/25 bg-[#FFFBF3] p-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={current.photo_url}
+                      alt={`Fotostrip ${current.name?.trim() || "Tamu PanoriCam"}`}
+                      className="mx-auto max-h-[60vh] w-auto object-contain"
+                    />
+                  </div>
+                ) : null}
 
                 <p className="mt-6 text-base leading-relaxed text-[#4A2A22]">
                   {current.message ?? ""}

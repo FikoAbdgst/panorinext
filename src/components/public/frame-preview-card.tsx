@@ -1,28 +1,28 @@
-"use client";
+"use client"
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useCallback, useState } from "react";
+import { useCallback, useState } from "react"
 
 import {
   FramePreviewModal,
   type PreviewFrame,
-} from "@/components/public/frame-preview-modal";
-import type { FrameSlot } from "@/lib/frames/types";
-import { getFramePublicUrl } from "@/lib/frames/url";
+} from "@/components/public/frame-preview-modal"
+import type { FrameSlot } from "@/lib/frames/types"
+import { getFramePublicUrl } from "@/lib/frames/url"
 
 export type FeaturedFrameCardData = {
-  id: number;
-  name: string;
-  imagePath: string | null;
-  price: number;
-  used: number;
-  categoryIcon: string | null;
-  categoryName: string | null;
-  width: number;
-  height: number;
-  slots: FrameSlot[];
-};
+  id: number
+  name: string
+  imagePath: string | null
+  price: number
+  used: number
+  categoryIcon: string | null
+  categoryName: string | null
+  width: number
+  height: number
+  slots: FrameSlot[]
+}
 
 const SAMPLE_PHOTOS = [
   "/images/m1.jpeg",
@@ -31,27 +31,27 @@ const SAMPLE_PHOTOS = [
   "/images/k1.jpeg",
   "/images/m2.jpeg",
   "/images/k3.jpeg",
-] as const;
+] as const
 
 function formatPrice(price: number): string {
-  return new Intl.NumberFormat("id-ID").format(price);
+  return new Intl.NumberFormat("id-ID").format(price)
 }
 
 export function FeaturedFrameCard({
   frame,
   index,
 }: {
-  frame: FeaturedFrameCardData;
-  index: number;
+  frame: FeaturedFrameCardData
+  index: number
 }) {
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const handleClose = useCallback(() => setIsPreviewOpen(false), []);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const handleClose = useCallback(() => setIsPreviewOpen(false), [])
 
-  const isFree = frame.price <= 0;
-  const imageUrl = frame.imagePath ? getFramePublicUrl(frame.imagePath) : null;
-  const frameWidth = frame.width > 0 ? frame.width : 4;
-  const frameHeight = frame.height > 0 ? frame.height : 5;
-  const isPortrait = frameHeight >= frameWidth;
+  const isFree = frame.price <= 0
+  const imageUrl = frame.imagePath ? getFramePublicUrl(frame.imagePath) : null
+  const frameWidth = frame.width > 0 ? frame.width : 4
+  const frameHeight = frame.height > 0 ? frame.height : 5
+  const isPortrait = frameHeight >= frameWidth
 
   const previewFrame: PreviewFrame = {
     id: frame.id,
@@ -61,18 +61,12 @@ export function FeaturedFrameCard({
     height: frame.height,
     slots: frame.slots,
     isFree,
-  };
+  }
 
   return (
     <>
       <article className="group relative">
         <div className="relative border border-[#BF3131]/25 bg-[#FFFBF3] p-3 shadow-[8px_8px_0_rgba(191,49,49,0.08)] transition duration-300 group-hover:-translate-y-1 group-hover:border-[#BF3131]/55 group-hover:shadow-[10px_10px_0_rgba(191,49,49,0.14)]">
-          <div className="flex items-center justify-between border-b border-dashed border-[#BF3131]/25 pb-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[#BF3131]/70">
-            <span>No. {String(index + 1).padStart(2, "0")}</span>
-            <span>{frame.slots.length} slot</span>
-            <span>{isFree ? "Gratis" : `Rp${formatPrice(frame.price)}`}</span>
-          </div>
-
           <button
             type="button"
             onClick={() => setIsPreviewOpen(true)}
@@ -83,7 +77,10 @@ export function FeaturedFrameCard({
             data-aos-delay={240 + index * 120}
             className="relative mt-3 block w-full overflow-hidden bg-[#F3D8C8] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFFBF3]"
           >
-            <span aria-hidden="true" className="lab-dots absolute inset-0 opacity-70" />
+            <span
+              aria-hidden="true"
+              className="lab-dots absolute inset-0 opacity-70"
+            />
             <span className="relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden p-4">
               {imageUrl ? (
                 <span
@@ -130,9 +127,6 @@ export function FeaturedFrameCard({
               <span className="bg-[#BF3131] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.22em] text-[#FEF3E2] shadow-[3px_3px_0_rgba(122,28,28,0.7)]">
                 Preview
               </span>
-              <span className="border border-[#BF3131]/20 bg-[#FFFBF3]/90 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#BF3131]">
-                #{frame.id}
-              </span>
             </span>
           </button>
 
@@ -145,15 +139,17 @@ export function FeaturedFrameCard({
                 {frame.categoryIcon ? (
                   <span aria-hidden="true">{frame.categoryIcon}</span>
                 ) : null}
-                <span className="truncate">{frame.categoryName ?? "Frame"}</span>
+                <span className="truncate">
+                  {frame.categoryName ?? "Frame"}
+                </span>
               </p>
             </div>
             <div className="shrink-0 text-right">
               <p className="text-[8px] font-bold uppercase tracking-[0.18em] text-[#BF3131]/55">
-                {frame.used > 0 ? "Dipakai" : "Status"}
+                Jumlah
               </p>
               <p className="text-sm font-bold text-[#BF3131]">
-                {frame.used > 0 ? `${frame.used}x` : "Baru"}
+                {frame.slots.length} slot
               </p>
             </div>
           </div>
@@ -164,5 +160,5 @@ export function FeaturedFrameCard({
         <FramePreviewModal frame={previewFrame} onClose={handleClose} />
       ) : null}
     </>
-  );
+  )
 }

@@ -1,23 +1,23 @@
 import { Suspense } from "react";
 
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { RoomAdminList } from "@/components/admin/rooms/RoomAdminList";
+import { AdminLoading } from "@/components/admin/ui";
 import { listPacks } from "@/lib/packs/queries";
 import { listPremiumAccesses } from "@/lib/premium/queries";
 
 export default function AdminRoomsPage() {
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">Ruang Premium</h1>
-        <p className="text-sm text-neutral-500">
-          Kelola kode akses, masa aktif, dan penonaktifan ruang.
-        </p>
-      </header>
+    <>
+      <AdminPageHeader
+        title="Ruang Premium"
+        description="Kelola kode akses, masa aktif, dan penonaktifan ruang."
+      />
 
-      <Suspense fallback={<p className="text-sm text-neutral-500">Memuat ruang...</p>}>
+      <Suspense fallback={<AdminLoading label="Memuat ruang..." />}>
         <RoomsContent />
       </Suspense>
-    </main>
+    </>
   );
 }
 

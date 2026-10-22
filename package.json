@@ -6,13 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "clean": "node -e \"require('node:fs').rmSync('.next',{recursive:true,force:true})\"",
     "lint": "eslint",
     "check:slots": "tsx scripts/check-detect-slots.ts",
     "seed:frames": "tsx scripts/seed-frames.ts",
     "create:admin": "tsx scripts/create-admin.ts"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^7.3.1",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
     "aos": "^2.3.4",

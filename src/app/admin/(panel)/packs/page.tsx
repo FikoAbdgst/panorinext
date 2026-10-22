@@ -1,23 +1,23 @@
 import { Suspense } from "react";
 
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import type { PackFrameOption } from "@/components/admin/packs/PackForm";
 import { PackAdminList } from "@/components/admin/packs/PackAdminList";
+import { AdminLoading } from "@/components/admin/ui";
 import { listPacks, listPremiumFrames } from "@/lib/packs/queries";
 
 export default function AdminPacksPage() {
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">Kelola Paket</h1>
-        <p className="text-sm text-neutral-500">
-          Satu paket berisi beberapa frame premium dan dibuka dengan satu kode.
-        </p>
-      </header>
+    <>
+      <AdminPageHeader
+        title="Paket"
+        description="Satu paket berisi beberapa frame premium dan dibuka dengan satu kode."
+      />
 
-      <Suspense fallback={<p className="text-sm text-neutral-500">Memuat paket...</p>}>
+      <Suspense fallback={<AdminLoading label="Memuat paket..." />}>
         <PackList />
       </Suspense>
-    </main>
+    </>
   );
 }
 

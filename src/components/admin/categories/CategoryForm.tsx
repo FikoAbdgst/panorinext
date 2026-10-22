@@ -1,13 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 
 import type { CategoryFormState } from "@/app/admin/(panel)/categories/actions";
 
 type CategoryFormCategory = {
   id: number;
   name: string;
-  icon: string | null;
 };
 
 type CategoryFormProps = {
@@ -19,11 +18,8 @@ type CategoryFormProps = {
 
 const INITIAL_STATE: CategoryFormState = { status: "idle" };
 
-const ICON_SUGGESTIONS = ["✨", "🎉", "📸", "💖", "🌈", "🎬", "🦖", "🎵", "🌸", "🖤"];
-
 export function CategoryForm({ mode, action, category, onSuccess }: CategoryFormProps) {
   const [state, formAction, isPending] = useActionState(action, INITIAL_STATE);
-  const [icon, setIcon] = useState(category?.icon ?? "");
   const onSuccessRef = useRef(onSuccess);
 
   useEffect(() => {
@@ -55,33 +51,6 @@ export function CategoryForm({ mode, action, category, onSuccess }: CategoryForm
           placeholder="mis. Aesthetic"
         />
       </label>
-
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium text-neutral-700">Ikon (emoji)</span>
-        <input
-          name="icon"
-          value={icon}
-          onChange={(event) => setIcon(event.target.value)}
-          required
-          maxLength={255}
-          className="rounded-lg border border-neutral-300 px-3 py-2"
-          placeholder="✨"
-        />
-      </label>
-
-      <div className="flex flex-wrap gap-2">
-        {ICON_SUGGESTIONS.map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => setIcon(item)}
-            className="rounded-lg border border-neutral-300 px-2.5 py-1 text-lg hover:bg-neutral-100"
-            aria-label={`Pakai ikon ${item}`}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
 
       <button
         type="submit"

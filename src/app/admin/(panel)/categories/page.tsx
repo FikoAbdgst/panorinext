@@ -1,22 +1,22 @@
 import { Suspense } from "react";
 
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { CategoryAdminList } from "@/components/admin/categories/CategoryAdminList";
+import { AdminLoading } from "@/components/admin/ui";
 import { listCategories } from "@/lib/frames/queries";
 
 export default function AdminCategoriesPage() {
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">Kelola Kategori</h1>
-        <p className="text-sm text-neutral-500">
-          Kategori dipakai untuk mengelompokkan frame di katalog.
-        </p>
-      </header>
+    <>
+      <AdminPageHeader
+        title="Kategori"
+        description="Kategori dipakai untuk mengelompokkan frame di katalog."
+      />
 
-      <Suspense fallback={<p className="text-sm text-neutral-500">Memuat kategori...</p>}>
+      <Suspense fallback={<AdminLoading label="Memuat kategori..." />}>
         <CategoryList />
       </Suspense>
-    </main>
+    </>
   );
 }
 

@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { CategoryForm } from "@/components/admin/categories/CategoryForm";
+import { AdminLoading } from "@/components/admin/ui";
 import { getCategoryById } from "@/lib/frames/queries";
 
 import { updateCategoryAction } from "../../actions";
@@ -11,18 +12,18 @@ export default function EditCategoryPage(
   props: PageProps<"/admin/categories/[id]/edit">,
 ) {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6">
-        <Link href="/admin/categories" className="text-sm text-neutral-500 underline">
-          ← Kembali ke daftar kategori
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-neutral-900">Edit Kategori</h1>
-      </div>
+    <>
+      <AdminPageHeader
+        title="Edit kategori"
+        description="Perbarui nama dan slug kategori ini."
+        backHref="/admin/categories"
+        backLabel="Daftar kategori"
+      />
 
-      <Suspense fallback={<p className="text-sm text-neutral-500">Memuat form...</p>}>
+      <Suspense fallback={<AdminLoading label="Memuat form..." />}>
         <EditCategoryContent params={props.params} />
       </Suspense>
-    </main>
+    </>
   );
 }
 
@@ -41,7 +42,7 @@ async function EditCategoryContent({
   }
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6">
+    <div className="admin-card p-6">
       <CategoryForm
         mode="edit"
         category={category}

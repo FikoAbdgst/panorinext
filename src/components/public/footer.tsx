@@ -11,7 +11,7 @@ import {
 
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden border-t-4 border-[#BF3131] bg-[#FEF3E2] font-['Poppins']">
+    <footer className="relative overflow-hidden  bg-[#FEF3E2] font-['Poppins']">
       <div
         aria-hidden="true"
         className="lab-paper absolute inset-0 opacity-60"

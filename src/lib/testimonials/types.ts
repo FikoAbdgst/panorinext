@@ -12,5 +12,8 @@ export type TestimonialItem = {
   name: string | null;
   message: string | null;
   created_at: string;
+  photo_url: string | null;
+  photo_consent: boolean;
+  is_featured: boolean;
   frame: TestimonialFrame | null;
 };

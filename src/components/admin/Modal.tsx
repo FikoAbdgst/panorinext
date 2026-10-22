@@ -11,9 +11,9 @@ type ModalProps = {
 };
 
 const SIZE_CLASS: Record<NonNullable<ModalProps["size"]>, string> = {
-  sm: "max-w-lg",
-  md: "max-w-2xl",
-  lg: "max-w-5xl",
+  sm: "lg:max-w-lg",
+  md: "lg:max-w-2xl",
+  lg: "lg:max-w-5xl",
 };
 
 export function Modal({ open, onClose, title, children, size = "md" }: ModalProps) {
@@ -27,7 +27,12 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
       }
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previous;
+    };
   }, [open, onClose]);
 
   if (!open) {
@@ -35,30 +40,38 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 sm:p-8"
-      onMouseDown={onClose}
-      role="presentation"
-    >
+    <div className="admin-overlay" onMouseDown={onClose} role="presentation">
       <div
-        className={`relative w-full ${SIZE_CLASS[size]} rounded-2xl bg-white shadow-xl`}
+        className={`admin-modal ${SIZE_CLASS[size]}`}
         onMouseDown={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label={title}
       >
-        <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-3">
-          <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
+        <div className="admin-modal-head">
+          <h2 className="text-base font-bold tracking-[-0.01em] text-[#2A0A0A]">
+            {title}
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md px-2 py-1 text-2xl leading-none text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+            className="admin-modal-close"
             aria-label="Tutup"
           >
-            ×
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.7}
+              strokeLinecap="round"
+              className="h-5 w-5"
+              aria-hidden="true"
+            >
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
           </button>
         </div>
-        <div className="px-5 py-5">{children}</div>
+        <div className="admin-modal-body">{children}</div>
       </div>
     </div>
   );

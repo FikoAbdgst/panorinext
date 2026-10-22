@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { TransactionTable } from "@/components/admin/transactions/TransactionTable";
+import { AdminLoading } from "@/components/admin/ui";
 import {
   countTransactions,
   listTransactions,
@@ -26,18 +28,16 @@ export default function AdminTransactionsPage(
   props: PageProps<"/admin/transactions">,
 ) {
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">Kelola Transaksi</h1>
-        <p className="text-sm text-neutral-500">
-          Tinjau bukti pembayaran lalu setujui atau tolak.
-        </p>
-      </header>
+    <>
+      <AdminPageHeader
+        title="Transaksi"
+        description="Tinjau bukti pembayaran lalu setujui atau tolak."
+      />
 
-      <Suspense fallback={<p className="text-sm text-neutral-500">Memuat transaksi...</p>}>
+      <Suspense fallback={<AdminLoading label="Memuat transaksi..." />}>
         <TransactionsContent searchParams={props.searchParams} />
       </Suspense>
-    </main>
+    </>
   );
 }
 

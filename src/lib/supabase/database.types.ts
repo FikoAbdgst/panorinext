@@ -237,6 +237,9 @@ export type Database = {
           name: string | null;
           message: string | null;
           frame_id: number | null;
+          photo_path: string | null;
+          photo_consent: boolean;
+          is_featured: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -247,6 +250,9 @@ export type Database = {
           name?: string | null;
           message?: string | null;
           frame_id?: number | null;
+          photo_path?: string | null;
+          photo_consent?: boolean;
+          is_featured?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -257,6 +263,9 @@ export type Database = {
           name?: string | null;
           message?: string | null;
           frame_id?: number | null;
+          photo_path?: string | null;
+          photo_consent?: boolean;
+          is_featured?: boolean;
           created_at?: string;
           updated_at?: string;
         };

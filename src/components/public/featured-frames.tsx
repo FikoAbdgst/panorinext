@@ -20,6 +20,26 @@ function FilmEdge() {
   )
 }
 
+function ArrowRight() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-4 w-4"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="M14 5l7 7m0 0l-7 7m7-7H3"
+      />
+    </svg>
+  )
+}
+
 export async function FeaturedFrames() {
   const topFrames = await listTopFrames(3)
 
@@ -30,72 +50,45 @@ export async function FeaturedFrames() {
     >
       <FilmEdge />
 
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h2
-              suppressHydrationWarning data-aos="lab-sweep"
-              data-aos-duration="1100"
-              className="max-w-2xl text-balance text-3xl font-extrabold leading-[0.98] tracking-[-0.045em] text-[#2A0A0A] sm:text-5xl"
-            >
-              Frame yang siap <span className="text-[#BF3131]">dipakai.</span>
-            </h2>
-            <p
-              suppressHydrationWarning data-aos="lab-focus"
-              data-aos-duration="1000"
-              data-aos-delay="140"
-              className="mt-4 max-w-xl text-sm leading-relaxed text-[#5B3A32] sm:text-base"
-            >
-              Frame pilihan yang bisa langsung dicoba tanpa biaya.
-              {PREMIUM_PUBLIC_ENABLED
-                ? " Untuk koleksi premium, buka paket dan masuk dengan satu kode."
-                : null}
-            </p>
-          </div>
+      <div className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14 lg:px-8">
+        <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+          <h2
+            suppressHydrationWarning
+            data-aos="lab-focus"
+            data-aos-duration="1000"
+            data-aos-delay="80"
+            className="mt-4 text-balance text-3xl font-extrabold leading-[1.05] tracking-[-0.02em] text-[#2A0A0A] sm:text-4xl lg:text-5xl"
+          >
+            Frame yang siap <span className="text-[#BF3131]">dipakai.</span>
+          </h2>
 
-          <div className="flex items-center gap-5">
-            <div className="flex flex-wrap items-center gap-5">
-              {PREMIUM_PUBLIC_ENABLED ? (
-                <Link
-                  href="/premium"
-                  className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap text-sm font-bold text-[#BF3131] underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
-                >
-                  Paket premium
-                </Link>
-              ) : null}
-              <Link
-                href="/frame"
-                className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap text-sm font-bold text-[#7A5A50] underline-offset-4 transition hover:text-[#BF3131] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
-              >
-                Lihat semua frame
-                <svg
-                  aria-hidden="true"
-                  className="h-4 w-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </Link>
-            </div>
-          </div>
+          <p
+            suppressHydrationWarning
+            data-aos="lab-focus"
+            data-aos-duration="1000"
+            data-aos-delay="140"
+            className="mt-4 max-w-lg text-sm leading-relaxed text-[#5B3A32] sm:text-base"
+          >
+            Frame pilihan yang bisa langsung dicoba tanpa biaya.
+            {PREMIUM_PUBLIC_ENABLED
+              ? " Untuk koleksi premium, buka paket dan masuk dengan satu kode."
+              : null}
+          </p>
+
+          <p className="mt-2 text-xs leading-relaxed text-[#9A6B5E]">
+            Klik frame untuk preview, pilih slot, lalu mulai sesi tanpa install.
+          </p>
         </div>
 
         {topFrames.length > 0 ? (
-          <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:mt-14 lg:grid-cols-3 lg:gap-6">
             {topFrames.map((frame, index) => (
               <div
                 key={frame.id}
-                suppressHydrationWarning data-aos="lab-hang"
-                data-aos-duration="1300"
-                data-aos-delay={120 + index * 140}
+                suppressHydrationWarning
+                data-aos="lab-develop"
+                data-aos-duration="1100"
+                data-aos-delay={120 + index * 120}
               >
                 <FeaturedFrameCard
                   index={index}
@@ -116,7 +109,7 @@ export async function FeaturedFrames() {
             ))}
           </div>
         ) : (
-          <div className="mt-12 border border-dashed border-[#BF3131]/35 bg-[#FFFBF3] px-6 py-16 text-center">
+          <div className="mx-auto mt-12 max-w-xl border border-dashed border-[#BF3131]/35 bg-[#FFFBF3] px-6 py-16 text-center">
             <svg
               aria-hidden="true"
               className="mx-auto h-12 w-12 text-[#BF3131]/40"
@@ -140,6 +133,35 @@ export async function FeaturedFrames() {
             </p>
           </div>
         )}
+
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border border-[#BF3131]/20 bg-[#FFFBF3] px-5 py-4 text-center sm:flex-row sm:px-6 sm:text-left">
+          <div>
+            <p className="text-sm font-bold text-[#2A0A0A]">
+              Masih ada frame lain.
+            </p>
+            <p className="mt-1 text-xs text-[#7A5A50]">
+              Telusuri semuanya, gratis untuk dicoba.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
+            {PREMIUM_PUBLIC_ENABLED ? (
+              <Link
+                href="/premium"
+                className="text-sm font-semibold text-[#BF3131] underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFFBF3]"
+              >
+                Paket premium
+              </Link>
+            ) : null}
+            <Link
+              href="/frame"
+              className="inline-flex min-h-11 items-center gap-2 rounded-[2px] bg-[#BF3131] px-5 py-3 text-sm font-semibold text-[#FEF3E2] shadow-[3px_3px_0_#7A1C1C] transition duration-300 hover:-translate-y-0.5 hover:bg-[#A02828] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFFBF3]"
+            >
+              Lihat semua frame
+              <ArrowRight />
+            </Link>
+          </div>
+        </div>
       </div>
 
       <FilmEdge />

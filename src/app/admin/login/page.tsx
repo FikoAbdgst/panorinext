@@ -39,58 +39,98 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#FEF3E2] px-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold text-[#BF3131]">PanoriCam Admin</h1>
-          <p className="mt-1 text-sm text-neutral-500">Masuk untuk mengelola konten.</p>
+    <main className="flex min-h-screen items-center justify-center bg-[#F7EFE1] px-4 py-10">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center text-center">
+          <span className="grid h-11 w-11 place-items-center rounded-[3px] bg-[#BF3131] text-[#FEF3E2]">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.7}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-5 w-5"
+              aria-hidden="true"
+            >
+              <path d="M4 9a2.5 2.5 0 0 1 2.5-2.5h1L8.7 4.9h6.6l1.2 1.6h1A2.5 2.5 0 0 1 20 9v6.5A2.5 2.5 0 0 1 17.5 18h-11A2.5 2.5 0 0 1 4 15.5z" />
+              <circle cx="12" cy="12" r="3.2" />
+            </svg>
+          </span>
+          <p className="mt-4 text-sm font-bold uppercase tracking-[0.18em] text-[#2A0A0A]">
+            PanoriCam
+          </p>
+          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A6B5E]">
+            Studio console
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium text-neutral-700">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-[#BF3131] focus:ring-2 focus:ring-[#BF3131]/20"
-              placeholder="admin@contoh.com"
-            />
-          </div>
+        <div className="mt-6 rounded-[3px] border border-[#2A0A0A]/12 bg-[#FFFCF6] p-6 shadow-[0_18px_40px_-28px_rgba(42,10,10,0.45)]">
+          <h1 className="text-lg font-bold tracking-[-0.01em] text-[#2A0A0A]">
+            Masuk
+          </h1>
+          <p className="mt-1 text-sm text-[#7A5A50]">
+            Gunakan akun administrator.
+          </p>
 
-          <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-neutral-700">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-[#BF3131] focus:ring-2 focus:ring-[#BF3131]/20"
-              placeholder="••••••••"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+            <div>
+              <label
+                htmlFor="email"
+                className="mb-1.5 block text-xs font-medium text-[#5B3A32]"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="w-full rounded-[3px] border border-[#2A0A0A]/15 bg-white px-3 py-2.5 text-sm text-[#2A0A0A] outline-none transition placeholder:text-[#9A7568] focus:border-[#BF3131] focus:ring-2 focus:ring-[#BF3131]/20"
+                placeholder="admin@contoh.com"
+              />
+            </div>
 
-          {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
-          )}
+            <div>
+              <label
+                htmlFor="password"
+                className="mb-1.5 block text-xs font-medium text-[#5B3A32]"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="w-full rounded-[3px] border border-[#2A0A0A]/15 bg-white px-3 py-2.5 text-sm text-[#2A0A0A] outline-none transition placeholder:text-[#9A7568] focus:border-[#BF3131] focus:ring-2 focus:ring-[#BF3131]/20"
+                placeholder="••••••••"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-lg bg-[#BF3131] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#a52929] disabled:opacity-60"
-          >
-            {isSubmitting ? "Memproses..." : "Masuk"}
-          </button>
-        </form>
+            {error ? (
+              <p className="rounded-[3px] border border-[#BF3131]/20 bg-[#BF3131]/8 px-3 py-2 text-sm text-[#8E2323]">
+                {error}
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-[3px] bg-[#BF3131] px-4 py-2.5 text-sm font-semibold text-[#FEF3E2] transition hover:bg-[#A02828] disabled:opacity-60"
+            >
+              {isSubmitting ? "Memproses..." : "Masuk"}
+            </button>
+          </form>
+        </div>
+
+        <p className="mt-4 text-center text-xs text-[#9A7568]">
+          Akses terbatas untuk administrator.
+        </p>
       </div>
     </main>
   );

@@ -11,9 +11,7 @@ export type CategoryFormState = {
   message?: string;
 };
 
-function readFields(
-  formData: FormData,
-): { error: string } | { name: string; icon: string } {
+function readFields(formData: FormData): { error: string } | { name: string } {
   const name = String(formData.get("name") ?? "").trim();
   if (!name) {
     return { error: "Nama kategori wajib diisi." };
@@ -22,15 +20,7 @@ function readFields(
     return { error: "Nama kategori maksimal 255 karakter." };
   }
 
-  const icon = String(formData.get("icon") ?? "").trim();
-  if (!icon) {
-    return { error: "Ikon kategori wajib diisi." };
-  }
-  if (icon.length > 255) {
-    return { error: "Ikon kategori maksimal 255 karakter." };
-  }
-
-  return { name, icon };
+  return { name };
 }
 
 function revalidateCategories() {
@@ -53,7 +43,7 @@ export async function createCategoryAction(
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("categories")
-    .insert({ name: fields.name, icon: fields.icon });
+    .insert({ name: fields.name });
   if (error) {
     return { status: "error", message: `Gagal menyimpan kategori: ${error.message}` };
   }
@@ -81,7 +71,7 @@ export async function updateCategoryAction(
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("categories")
-    .update({ name: fields.name, icon: fields.icon })
+    .update({ name: fields.name })
     .eq("id", categoryId);
   if (error) {
     return { status: "error", message: `Gagal memperbarui kategori: ${error.message}` };

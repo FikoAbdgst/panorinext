@@ -1,27 +1,28 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import type { PackFrameOption } from "@/components/admin/packs/PackForm";
 import { PackForm } from "@/components/admin/packs/PackForm";
+import { AdminLoading } from "@/components/admin/ui";
 import { getPackById, listPremiumFrames } from "@/lib/packs/queries";
 
 import { updatePackAction } from "../../actions";
 
 export default function EditPackPage(props: PageProps<"/admin/packs/[id]/edit">) {
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-6">
-        <Link href="/admin/packs" className="text-sm text-neutral-500 underline">
-          ← Kembali ke daftar paket
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-neutral-900">Edit Paket</h1>
-      </div>
+    <>
+      <AdminPageHeader
+        title="Edit paket"
+        description="Perbarui harga, deskripsi, dan daftar frame premium paket ini."
+        backHref="/admin/packs"
+        backLabel="Daftar paket"
+      />
 
-      <Suspense fallback={<p className="text-sm text-neutral-500">Memuat form...</p>}>
+      <Suspense fallback={<AdminLoading label="Memuat form..." />}>
         <EditPackContent params={props.params} />
       </Suspense>
-    </main>
+    </>
   );
 }
 
