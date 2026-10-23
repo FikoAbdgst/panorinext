@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
@@ -42,24 +43,14 @@ export default function AdminLoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-[#F7EFE1] px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center text-center">
-          <span className="grid h-11 w-11 place-items-center rounded-[3px] bg-[#BF3131] text-[#FEF3E2]">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.7}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-5 w-5"
-              aria-hidden="true"
-            >
-              <path d="M4 9a2.5 2.5 0 0 1 2.5-2.5h1L8.7 4.9h6.6l1.2 1.6h1A2.5 2.5 0 0 1 20 9v6.5A2.5 2.5 0 0 1 17.5 18h-11A2.5 2.5 0 0 1 4 15.5z" />
-              <circle cx="12" cy="12" r="3.2" />
-            </svg>
-          </span>
-          <p className="mt-4 text-sm font-bold uppercase tracking-[0.18em] text-[#2A0A0A]">
-            PanoriCam
-          </p>
+          <Image
+            src="/logo.png"
+            alt="PanoriCam"
+            width={666}
+            height={375}
+            priority
+            className="h-28 w-48 object-contain"
+          />
           <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A6B5E]">
             Studio console
           </p>

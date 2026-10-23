@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 
@@ -214,24 +215,6 @@ function Icon({ name, className }: { name: IconName; className?: string }) {
   );
 }
 
-function BrandMark() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.7}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-[21px] w-[21px]"
-      aria-hidden="true"
-    >
-      <path d="M4 9a2.5 2.5 0 0 1 2.5-2.5h1L8.7 4.9h6.6l1.2 1.6h1A2.5 2.5 0 0 1 20 9v6.5A2.5 2.5 0 0 1 17.5 18h-11A2.5 2.5 0 0 1 4 15.5z" />
-      <circle cx="12" cy="12" r="3.2" />
-    </svg>
-  );
-}
-
 export function AdminShell({
   adminName,
   pendingCount,
@@ -293,7 +276,14 @@ export function AdminShell({
       <aside className="admin-sidebar" aria-label="Navigasi admin">
         <div className="admin-brand">
           <span className="admin-brand-mark">
-            <BrandMark />
+            <Image
+              src="/logo-mark.png"
+              alt=""
+              width={512}
+              height={512}
+              priority
+              className="h-7 w-7 object-contain"
+            />
           </span>
           <span className="admin-brand-text min-w-0 flex-1">
             <span className="admin-brand-name block leading-tight">PanoriCam</span>

@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
+import Image from "next/image"
 import { useEffect, useRef } from "react"
 
 export interface StripImage {
@@ -169,7 +170,13 @@ export function InteractivePrintStrip({
           </div>
 
           <div className="flex items-center justify-between px-0.5 pt-1.5 text-[7px] uppercase tracking-[0.18em] text-[#BF3131]/65">
-            <span>Panoricam</span>
+            <Image
+              src="/logo.png"
+              alt="PanoriCam"
+              width={666}
+              height={375}
+              className="h-5 w-auto"
+            />
             <span className="font-mono text-[#BF3131]/45">#{number}</span>
           </div>
         </div>

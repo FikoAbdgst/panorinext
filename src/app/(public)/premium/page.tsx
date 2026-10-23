@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -169,7 +170,13 @@ export default function PremiumPage() {
               <div className="relative border border-[#BF3131]/30 bg-[#FFFBF3] p-5 shadow-[8px_8px_0_rgba(122,28,28,0.12)] sm:p-7">
                 <div className="flex items-center justify-between border-b border-dashed border-[#BF3131]/25 pb-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[#7A5A50]">
                   <span>Tiket ruang premium</span>
-                  <span className="text-[#BF3131]">PanoriCam</span>
+                  <Image
+                    src="/logo.png"
+                    alt="PanoriCam"
+                    width={666}
+                    height={375}
+                    className="h-7 w-auto"
+                  />
                 </div>
 
                 <Suspense fallback={<p className="mt-5 text-sm text-[#7A5A50]">Memeriksa akses...</p>}>

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   title: "PanoriCam - Photobooth Online",
   description:
     "PanoriCam: photobooth online. Pilih frame, ambil foto, lalu terima hasil PNG dan GIF lewat email.",
-  icons: { icon: "/panor.png" },
+  applicationName: "PanoriCam",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

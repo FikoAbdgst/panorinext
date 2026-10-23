@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useState } from "react"
 
 const STEPS = [
@@ -112,9 +113,15 @@ function StepVisual({ step }: { step: number }) {
               <div key={slot} className="h-6 w-full bg-[#BF3131]/15" />
             ))}
           </div>
-          <p className="mt-1 text-center text-[6px] font-bold uppercase tracking-[0.12em] text-[#BF3131]/60">
-            Panoricam
-          </p>
+          <div className="mt-1 flex justify-center">
+            <Image
+              src="/logo.png"
+              alt="PanoriCam"
+              width={666}
+              height={375}
+              className="h-5 w-auto"
+            />
+          </div>
         </div>
       </div>
 

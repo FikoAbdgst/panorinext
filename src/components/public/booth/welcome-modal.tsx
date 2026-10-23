@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 const STEPS = [
   {
     title: "Ambil foto",
@@ -54,7 +56,13 @@ export function WelcomeModal({ onClose }: { onClose: () => void }) {
             <div className="bg-white p-2 shadow-[7px_9px_0_rgba(191,49,49,0.12)] ring-1 ring-[#BF3131]/20">
               <div className="border border-[#BF3131]/25 p-1.5">
                 <div className="flex items-center justify-between text-[6px] font-bold uppercase tracking-[0.18em] text-[#BF3131]/70">
-                  <span>PanoriCam</span>
+                  <Image
+                    src="/logo.png"
+                    alt="PanoriCam"
+                    width={666}
+                    height={375}
+                    className="h-5 w-auto"
+                  />
                   <span>35mm</span>
                 </div>
                 <div className="mt-1.5 space-y-1.5">
