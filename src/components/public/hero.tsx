@@ -7,15 +7,15 @@ import Link from "next/link"
 import { InteractivePrintStrip } from "./interactive-print-strip"
 
 const LEFT_STRIP = [
-  { src: "/images/m1.jpeg", alt: "Contoh photostrip PanoriCam 1" },
-  { src: "/images/m2.jpeg", alt: "Contoh photostrip PanoriCam 2" },
-  { src: "/images/m3.jpeg", alt: "Contoh photostrip PanoriCam 3" },
+  { src: "/images/m1.png", alt: "Contoh photostrip PanoriCam 1" },
+  { src: "/images/m2.png", alt: "Contoh photostrip PanoriCam 2" },
+  { src: "/images/m3.png", alt: "Contoh photostrip PanoriCam 3" },
 ] as const
 
 const RIGHT_STRIP = [
-  { src: "/images/k1.jpeg", alt: "Contoh photostrip PanoriCam 4" },
-  { src: "/images/k2.jpeg", alt: "Contoh photostrip PanoriCam 5" },
-  { src: "/images/k3.jpeg", alt: "Contoh photostrip PanoriCam 6" },
+  { src: "/images/m2.png", alt: "Contoh photostrip PanoriCam 4" },
+  { src: "/images/m3.png", alt: "Contoh photostrip PanoriCam 5" },
+  { src: "/images/m1.png", alt: "Contoh photostrip PanoriCam 6" },
 ] as const
 
 export function Hero() {
@@ -136,11 +136,9 @@ export function Hero() {
               data-aos-duration="1200"
               className="text-balance text-[2.5rem] font-extrabold leading-[0.93] tracking-[-0.055em] text-[#2A0A0A] min-[380px]:text-[2.7rem] sm:text-6xl lg:text-[4.2rem] xl:text-[5.1rem]"
             >
-              Frame lucu,
-              <br />
-              foto rame,
-              <br />
-              <span className="text-[#BF3131]">langsung jadi.</span>
+              Saatnya jepret
+              <br/>
+              <span className="text-[#BF3131]">di Panoricam.</span>
             </h1>
 
             <p
@@ -150,9 +148,8 @@ export function Hero() {
               data-aos-delay="160"
               className="mx-auto mt-6 max-w-xl text-pretty text-sm leading-relaxed text-[#5B3A32] sm:text-base lg:text-lg"
             >
-              Photobooth online buat pesta, wisuda, atau event kantor. Pilih
-              frame custom, pose bareng, lalu bawa pulang photostrip dan GIF-mu
-              tanpa install.
+              Pilih frame, jepret, jadi. Foto bareng siapa aja seru
+              <br />apalagi kalau sama kamu!
             </p>
 
             <div

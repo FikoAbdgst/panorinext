@@ -41,8 +41,7 @@ export async function TestimonialsSection() {
               data-aos-delay="140"
               className="mt-4 max-w-xl text-sm leading-relaxed text-[#5B3A32] sm:text-base"
             >
-              Cerita dari orang yang sudah mencoba PanoriCam. Ada yang soal
-              frame, ada yang soal hasilnya.
+              Mereka yang udah nyobain PanoriCam, ini katanya!
             </p>
           </div>
         </div>

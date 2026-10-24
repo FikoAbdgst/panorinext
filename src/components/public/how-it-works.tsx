@@ -6,7 +6,7 @@ import { useState } from "react"
 const STEPS = [
   {
     title: "Pilih frame",
-    body: "Mulai dari frame lucu yang sudah tersedia, atau ajukan frame custom buat acaramu.",
+    body: "Mulai dari frame yang udah ada, atau bikin frame custom khusus acaramu!",
     label: "Frame rack",
   },
   {
@@ -16,7 +16,7 @@ const STEPS = [
   },
   {
     title: "Bawa pulang",
-    body: "Download photostrip PNG atau GIF, lalu kirim ke email kalau mau simpan versi digitalnya.",
+    body: "Download photostrip dan GIF, jangan lupa kirim ke email kalau mau simpan versi digitalnya.",
     label: "Print / export",
   },
 ] as const

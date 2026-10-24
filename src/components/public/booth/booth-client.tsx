@@ -2051,6 +2051,17 @@ export function BoothClient({
             </div>
 
             <div className="mt-5 space-y-2">
+              <p className="flex items-center justify-center gap-2 border border-dashed border-[#BF3131]/30 bg-[#FEF3E2]/60 px-3 py-2 text-center text-xs font-semibold leading-relaxed text-[#2A0A0A]">
+                <Icon
+                  name="sparkle"
+                  className="h-4 w-4 shrink-0 text-[#BF3131]"
+                />
+                <span>
+                  Jangan lupa tag IG{" "}
+                  <span className="text-[#BF3131]">@panoricam</span> ya temantimun!{" "}
+                </span>
+              </p>
+
               <button
                 type="button"
                 id="modalDownloadButton"

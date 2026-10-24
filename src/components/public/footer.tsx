@@ -35,7 +35,7 @@ export function Footer() {
                 Frame sudah siap. Tinggal pose.
               </h2>
               <p className="mt-4 max-w-xl text-sm leading-relaxed text-[#FEF3E2]/85 sm:text-base">
-                Pilih frame, ambil foto, lalu bawa pulang photostrip dan GIF-mu.
+                Pilih frame, ambil foto, lalu simpan photostrip dan GIF-mu.
                 Bisa dari HP atau laptop.
               </p>
             </div>
@@ -87,7 +87,7 @@ export function Footer() {
               langsung dibawa pulang.
             </p>
             <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.22em] text-[#BF3131]/70">
-              Panoricam photo lab / online
+              Panoricam photo 
             </p>
           </div>
 

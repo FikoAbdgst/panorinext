@@ -69,14 +69,14 @@ export async function FeaturedFrames() {
             data-aos-delay="140"
             className="mt-4 max-w-lg text-sm leading-relaxed text-[#5B3A32] sm:text-base"
           >
-            Frame pilihan yang bisa langsung dicoba tanpa biaya.
+            Frame pilihan yang bisa langsung dicoba gratis.
             {PREMIUM_PUBLIC_ENABLED
               ? " Untuk koleksi premium, buka paket dan masuk dengan satu kode."
               : null}
           </p>
 
           <p className="mt-2 text-xs leading-relaxed text-[#9A6B5E]">
-            Klik frame untuk preview, pilih slot, lalu mulai sesi tanpa install.
+            Klik frame untuk preview, pilih slot, lalu mulai foto.
           </p>
         </div>
 

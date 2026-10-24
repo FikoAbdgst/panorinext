@@ -65,7 +65,7 @@ export default function FramePage({ searchParams }: PageProps<"/frame">) {
                 className="mt-5 max-w-xl text-pretty text-sm leading-relaxed text-[#5B3A32] sm:text-base"
               >
                 Preview frame langsung di kamera sebelum mulai sesi. Semua
-                frame di katalog ini gratis dipakai.
+                frame di katalog ini gratis dipakai yaaa.
               </p>
             </div>
 
