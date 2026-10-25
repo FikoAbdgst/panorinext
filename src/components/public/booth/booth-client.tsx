@@ -383,6 +383,7 @@ export function BoothClient({
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const pendingFileRef = useRef<File | null>(null)
   const isAutoCapturingRef = useRef(false)
+  const isSendingEmailRef = useRef(false)
 
   const router = useRouter()
 
@@ -1059,8 +1060,8 @@ export function BoothClient({
       }
 
       availablePhotos.forEach((photo) => {
-        if (typeof window === "undefined" || typeof Image === "undefined") return
-        const image = new (Image as unknown as new () => HTMLImageElement)()
+        if (typeof window === "undefined") return
+        const image = new window.Image()
         image.crossOrigin = "anonymous"
         image.onload = () => {
           const canvas = document.createElement("canvas")
@@ -1135,6 +1136,8 @@ export function BoothClient({
   }
 
   async function sendPhotoToDrive() {
+    if (isSendingEmailRef.current) return
+
     const target = email.trim()
     if (!target) {
       showToast("Isi email tujuan dulu.", "error")
@@ -1149,6 +1152,7 @@ export function BoothClient({
       return
     }
 
+    isSendingEmailRef.current = true
     setIsEmailOpen(false)
     setIsSending(true)
     setDriveProgress({ percentage: 10, text: "Mempersiapkan file..." })
@@ -1231,6 +1235,17 @@ export function BoothClient({
       }
 
       if (!response.ok || !result.success) {
+        if (response.status === 429) {
+          setIsSending(false)
+          showToast(
+            result.message ??
+              "Kuota pengiriman email hari ini sudah tercapai. Silakan coba lagi nanti.",
+            "warning",
+            10000,
+          )
+          return
+        }
+
         throw new Error(result.message ?? "Gagal mengirim file")
       }
 
@@ -1250,6 +1265,8 @@ export function BoothClient({
         }`,
         "error",
       )
+    } finally {
+      isSendingEmailRef.current = false
     }
   }
 

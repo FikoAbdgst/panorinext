@@ -68,6 +68,24 @@ function readPath(value: unknown, pattern: RegExp): string | null {
   return pattern.test(trimmed) ? trimmed : null
 }
 
+function isGmailDailyLimitError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false
+
+  const details = error as {
+    responseCode?: unknown
+    response?: unknown
+    message?: unknown
+  }
+  const responseText = [details.response, details.message]
+    .filter((value): value is string => typeof value === "string")
+    .join(" ")
+
+  return (
+    details.responseCode === 550 &&
+    /5\.4\.5|daily user sending limit exceeded/i.test(responseText)
+  )
+}
+
 export async function POST(request: Request) {
   let payload: SendEmailPayload
   try {
@@ -96,10 +114,7 @@ export async function POST(request: Request) {
   const gmailUser = process.env.GMAIL_USER?.trim()
   const gmailAppPassword = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, "")
   if (!gmailUser || !gmailAppPassword) {
-    return fail(
-      "Gagal mengirim email: Masalah konfigurasi email server. Silakan hubungi admin.",
-      500,
-    )
+    return fail("Gagal mengirim email: konfigurasi Gmail belum lengkap.", 503)
   }
 
   if (!isSupabaseAdminConfigured()) {
@@ -145,32 +160,42 @@ export async function POST(request: Request) {
       socketTimeout: 20000,
     })
 
-    const from = process.env.EMAIL_FROM?.trim() || `PanoriCam <${gmailUser}>`
-
-    await transporter.sendMail({
-      from,
-      to: email,
-      subject: EMAIL_SUBJECT,
-      text: EMAIL_TEXT,
-      attachments: [
-        {
-          filename: "Panoricam💫.png",
-          content: Buffer.from(photoBuffer),
-          contentType: "image/png",
-        },
-        {
-          filename: "PanoricamGif✨.gif",
-          content: Buffer.from(gifBuffer),
-          contentType: "image/gif",
-        },
-      ],
-    })
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_FROM?.trim() || `PanoriCam <${gmailUser}>`,
+        to: email,
+        subject: EMAIL_SUBJECT,
+        text: EMAIL_TEXT,
+        attachments: [
+          {
+            filename: "Panoricam.png",
+            content: Buffer.from(photoBuffer),
+            contentType: "image/png",
+          },
+          {
+            filename: "PanoricamGif.gif",
+            content: Buffer.from(gifBuffer),
+            contentType: "image/gif",
+          },
+        ],
+      })
+    } finally {
+      transporter.close()
+    }
 
     return NextResponse.json({
       success: true,
       message: `Foto HD dan GIF animasi berhasil dikirim ke email ${email}`,
     })
   } catch (error) {
+    if (isGmailDailyLimitError(error)) {
+      console.error("Gmail daily sending limit exceeded:", error)
+      return fail(
+        "Kuota pengiriman harian Gmail sudah tercapai. Silakan coba lagi setelah kuota pulih.",
+        429,
+      )
+    }
+
     return fail(
       `Gagal mengirim email: ${
         error instanceof Error ? error.message : "kesalahan tidak diketahui"
