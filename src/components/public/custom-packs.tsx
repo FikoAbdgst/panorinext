@@ -233,7 +233,15 @@ const PIECES: Record<ThemeKey, Piece[]> = {
 const STAR_POINTS =
   "50,6 64.1,32.6 93.7,37.8 72.8,59.4 77,89.2 50,76 23,89.2 27.2,59.4 6.3,37.8 35.9,32.6"
 
-function PieceView({ piece, pid }: { piece: Piece; pid: string }) {
+function PieceView({
+  piece,
+  pid,
+  index,
+}: {
+  piece: Piece
+  pid: string
+  index: number
+}) {
   const { shape, x, y, w, h, r, bg } = piece
   const base = {
     left: `${x}%`,
@@ -241,16 +249,25 @@ function PieceView({ piece, pid }: { piece: Piece; pid: string }) {
     width: w,
     height: h,
     transform: `rotate(${r}deg)`,
-  }
+    "--r": r,
+    "--x": `${(x - 50) * 0.4}px`,
+    "--y": `${(y - 50) * 0.4}px`,
+  } as React.CSSProperties
   const z = piece.top ? "z-30" : "z-0"
+  const delay = index * 28
+  const floatClass = index % 3 === 0 && piece.top ? "pack-float" : ""
 
   if (shape === "star") {
     const [c1, c2 = c1] = bg.split(",")
     return (
       <span
         aria-hidden="true"
-        className={`absolute ${z}`}
-        style={{ ...base, filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.28))" }}
+        className={`absolute ${z} pack-sticker ${floatClass}`}
+        style={{
+          ...base,
+          filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.28))",
+          animationDelay: `${delay}ms`,
+        }}
       >
         <svg viewBox="0 0 100 100" className="block h-full w-full">
           <defs>
@@ -274,11 +291,12 @@ function PieceView({ piece, pid }: { piece: Piece; pid: string }) {
   return (
     <span
       aria-hidden="true"
-      className={`absolute ${SHAPE_CLASS[shape]} ${z}`}
+      className={`absolute ${SHAPE_CLASS[shape]} ${z} pack-sticker ${floatClass}`}
       style={{
         ...base,
         background: bg,
         boxShadow: "0 1px 2px rgba(0,0,0,0.3)",
+        animationDelay: `${delay}ms`,
       }}
     />
   )
@@ -304,12 +322,14 @@ function PhotoColumn({ images, filter }: { images: Triple; filter: string }) {
           sizes="(max-width: 640px) 34vw, 170px"
           loading="lazy"
           decoding="async"
-          style={{
-            transform: `translateX(${SHIFT[index]}px) rotate(${TILT[index]}deg)`,
-          }}
-          // border tipis = pinggir cetakan photobooth seperti di referensi.
-          // Hapus "border-[3px] border-[#141010]" kalau mau benar-benar tanpa pinggir.
-          className={`aspect-[4/3] w-full border-[3px] border-[#141010] object-cover shadow-[2px_4px_6px_-1px_rgba(0,0,0,0.45)] ${filter}`}
+          style={
+            {
+              "--rot": `${TILT[index]}deg`,
+              transform: `translateX(${SHIFT[index]}px) rotate(${TILT[index]}deg)`,
+              animationDelay: `${index * 90}ms`,
+            } as React.CSSProperties
+          }
+          className={`pack-photo aspect-[4/3] w-full border-[3px] border-[#141010] object-cover shadow-[2px_4px_6px_-1px_rgba(0,0,0,0.45)] ${filter}`}
         />
       ))}
     </div>
@@ -324,10 +344,14 @@ function ThemeScene({ theme }: { theme: Theme }) {
   const key = theme.key
 
   return (
-    <div className="absolute inset-0" style={{ backgroundColor: SURFACE[key] }}>
+    <div
+      key={key}
+      className="pack-scene-in absolute inset-0 transition-colors duration-700 ease-out"
+      style={{ backgroundColor: SURFACE[key] }}
+    >
       <span
         aria-hidden="true"
-        className="absolute inset-0 mix-blend-overlay"
+        className="absolute inset-0 mix-blend-overlay transition-opacity duration-700"
         style={{ backgroundImage: NOISE, opacity: NOISE_OPACITY[key] }}
       />
       <span
@@ -340,7 +364,12 @@ function ThemeScene({ theme }: { theme: Theme }) {
       />
 
       {PIECES[key].map((piece, index) => (
-        <PieceView key={index} piece={piece} pid={`star-${key}-${index}`} />
+        <PieceView
+          key={`${key}-${index}`}
+          piece={piece}
+          pid={`star-${key}-${index}`}
+          index={index}
+        />
       ))}
 
       <PhotoColumn images={theme.photos} filter={theme.filter} />
@@ -357,6 +386,85 @@ export function CustomPacks() {
       id="custom-pack"
       className="relative overflow-hidden bg-[#FEF3E2] pb-16 pt-10 font-['Poppins'] sm:pb-20 sm:pt-14"
     >
+      <style>{`
+        @keyframes pack-scene-in {
+          from {
+            opacity: 0;
+            filter: blur(4px);
+            transform: scale(1.01);
+          }
+          to {
+            opacity: 1;
+            filter: blur(0);
+            transform: scale(1);
+          }
+        }
+
+        @keyframes pack-photo-in {
+          from {
+            opacity: 0;
+            transform: translateY(18px) scale(0.96) rotate(var(--rot));
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1) rotate(var(--rot));
+          }
+        }
+
+        @keyframes pack-sticker-in {
+          from {
+            opacity: 0;
+            transform: translate(var(--x), calc(var(--y) - 10px)) scale(0.4) rotate(calc(var(--r) * 1deg - 12deg));
+          }
+          to {
+            opacity: 1;
+            transform: translate(0, 0) scale(1) rotate(calc(var(--r) * 1deg));
+          }
+        }
+
+        @keyframes pack-float {
+          0%,
+          100% {
+            translate: 0 0;
+          }
+          50% {
+            translate: 0 -4px;
+          }
+        }
+
+        .pack-scene-in {
+          animation: pack-scene-in 680ms cubic-bezier(0.25, 0.8, 0.25, 1);
+          will-change: opacity, filter, transform;
+        }
+
+        .pack-photo {
+          animation: pack-photo-in 620ms cubic-bezier(0.25, 0.8, 0.25, 1) both;
+          will-change: transform, opacity;
+        }
+
+        .pack-sticker {
+          animation: pack-sticker-in 520ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+          will-change: transform, opacity;
+        }
+
+        .pack-float {
+          animation: pack-float 4.6s ease-in-out infinite;
+          animation-delay: 680ms;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .pack-scene-in,
+          .pack-photo,
+          .pack-sticker,
+          .pack-float {
+            animation: none !important;
+            transform: none !important;
+            filter: none !important;
+            opacity: 1 !important;
+          }
+        }
+      `}</style>
+
       <div
         aria-hidden="true"
         className="lab-paper absolute inset-0 opacity-60"
@@ -398,10 +506,10 @@ export function CustomPacks() {
                 type="button"
                 onClick={() => setActive(index)}
                 aria-pressed={isActive}
-                className={`min-h-11 rounded-full border px-4 py-2.5 text-xs font-semibold transition duration-200 sm:px-5 sm:text-sm ${
+                className={`min-h-11 rounded-full border px-4 py-2.5 text-xs font-semibold transition-all duration-300 ease-out sm:px-5 sm:text-sm ${
                   isActive
-                    ? "border-[#2A0A0A] bg-[#2A0A0A] text-[#FEF3E2] shadow-[0_10px_24px_-14px_rgba(42,10,10,0.8)]"
-                    : "border-[#2A0A0A]/20 bg-transparent text-[#5B3A32] hover:border-[#2A0A0A]/50 hover:text-[#2A0A0A]"
+                    ? "scale-[1.02] border-[#2A0A0A] bg-[#2A0A0A] text-[#FEF3E2] shadow-[0_12px_26px_-14px_rgba(42,10,10,0.9)]"
+                    : "border-[#2A0A0A]/20 bg-transparent text-[#5B3A32] hover:-translate-y-0.5 hover:border-[#2A0A0A]/50 hover:text-[#2A0A0A] hover:shadow-[0_10px_22px_-16px_rgba(42,10,10,0.6)]"
                 }`}
               >
                 {item.name}
@@ -454,10 +562,7 @@ export function CustomPacks() {
             </div>
 
             <div className="min-w-0 p-3 pt-0 sm:p-4 sm:pt-0 lg:p-6 lg:pl-0">
-              <div
-                key={`art-${theme.key}`}
-                className="pack-card-enter relative h-full min-h-[340px] overflow-hidden rounded-[20px] sm:min-h-[400px] lg:min-h-[460px]"
-              >
+              <div className="relative h-full min-h-[340px] overflow-hidden rounded-[20px] sm:min-h-[400px] lg:min-h-[460px]">
                 <ThemeScene theme={theme} />
               </div>
             </div>
