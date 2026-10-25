@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -1058,7 +1059,8 @@ export function BoothClient({
       }
 
       availablePhotos.forEach((photo) => {
-        const image = new Image()
+        if (typeof window === "undefined" || typeof Image === "undefined") return
+        const image = new (Image as unknown as new () => HTMLImageElement)()
         image.crossOrigin = "anonymous"
         image.onload = () => {
           const canvas = document.createElement("canvas")
@@ -1810,7 +1812,7 @@ export function BoothClient({
                             data-slot={index}
                           >
                             <div className="flex h-full items-center justify-center rounded-lg p-2">
-                              <img src="/logo.png" alt="" className="h-24" />
+                              <Image src="/logo.png" alt="" width={666} height={375} className="h-24 w-auto" />
                             </div>
                           </div>
                         ))

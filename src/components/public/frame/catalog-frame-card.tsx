@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import type { CatalogFrame } from "@/lib/frames/types";
@@ -62,20 +63,24 @@ export function CatalogFrameCard({
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={SAMPLE_PHOTOS[slotIndex % SAMPLE_PHOTOS.length]}
                     alt=""
+                    fill
+                    sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 33vw"
                     loading="lazy"
-                    className="h-full w-full object-cover"
+                    className="object-cover"
                   />
                 </span>
               ))}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={imageUrl}
                 alt={frame.name}
+                fill
+                sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 33vw"
                 loading="lazy"
-                className="absolute inset-0 z-10 h-full w-full object-contain transition duration-500 group-hover:scale-[1.02]"
+                className="absolute inset-0 z-10 h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]"
               />
             </span>
           ) : (

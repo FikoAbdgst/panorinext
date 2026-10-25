@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -39,7 +40,11 @@ let logoPromise: Promise<HTMLImageElement | null> | null = null;
 function loadLogo(): Promise<HTMLImageElement | null> {
   if (!logoPromise) {
     logoPromise = new Promise((resolve) => {
-      const image = new Image();
+      if (typeof window === "undefined" || typeof Image === "undefined") {
+        resolve(null);
+        return;
+      }
+      const image = new (Image as unknown as new () => HTMLImageElement)();
       image.src = "/logo.png";
       image.onload = () => resolve(image);
       image.onerror = () => resolve(null);
@@ -373,7 +378,7 @@ export function FramePreviewModal({
               ) : null}
               {frame.isFree ? null : (
                 <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center opacity-40">
-                  <img src="/logo.png" alt="" className="h-10" />
+                  <Image src="/logo.png" alt="" width={666} height={375} className="h-10 w-auto" />
                 </div>
               )}
               <div

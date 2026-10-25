@@ -1,7 +1,6 @@
 "use client"
 
-/* eslint-disable @next/next/no-img-element */
-
+import Image from "next/image"
 import { useCallback, useState } from "react"
 
 import {
@@ -101,17 +100,21 @@ export function FeaturedFrameCard({
                         height: `${(slot.h / frameHeight) * 100}%`,
                       }}
                     >
-                      <img
+                      <Image
                         src={SAMPLE_PHOTOS[slotIndex % SAMPLE_PHOTOS.length]}
                         alt=""
+                        fill
+                        sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 33vw"
                         loading="lazy"
-                        className="h-full w-full object-cover"
+                        className="object-cover"
                       />
                     </span>
                   ))}
-                  <img
+                  <Image
                     src={imageUrl}
                     alt={frame.name}
+                    fill
+                    sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 33vw"
                     loading="lazy"
                     className="absolute inset-0 z-10 h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]"
                   />

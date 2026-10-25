@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
@@ -146,13 +147,14 @@ function TestimonialCard({
 
         {isPhoto ? (
           <>
-            <div className="flex h-[330px] items-center justify-center overflow-hidden border border-[#2A0A0A]/10 bg-[#F6E7D0] p-2 sm:h-[380px]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+            <div className="relative flex h-[330px] items-center justify-center overflow-hidden border border-[#2A0A0A]/10 bg-[#F6E7D0] p-2 sm:h-[380px]">
+              <Image
                 src={testimonial.photo_url ?? ""}
                 alt={`Fotostrip ${name}`}
+                fill
+                sizes="(max-width: 640px) 90vw, 420px"
                 loading="lazy"
-                className="h-full w-full object-contain"
+                className="object-contain"
               />
             </div>
 
@@ -337,10 +339,6 @@ export function TestimonialMarquee({ items }: { items: TestimonialItem[] }) {
                   ×
                 </button>
 
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#BF3131]/65">
-                  Guestbook / note{" "}
-                  {String((selected ?? 0) + 1).padStart(3, "0")}
-                </p>
                 <h2
                   id="testimonial-dialog-title"
                   className="mt-4 pr-10 text-3xl font-extrabold leading-tight tracking-[-0.04em] text-[#2A0A0A]"
@@ -356,11 +354,13 @@ export function TestimonialMarquee({ items }: { items: TestimonialItem[] }) {
                 </div>
 
                 {current.photo_url ? (
-                  <div className="mt-5 border border-[#BF3131]/25 bg-[#FFFBF3] p-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                  <div className="relative mt-5 border border-[#BF3131]/25 bg-[#FFFBF3] p-2">
+                    <Image
                       src={current.photo_url}
                       alt={`Fotostrip ${current.name?.trim() || "Tamu PanoriCam"}`}
+                      width={800}
+                      height={600}
+                      sizes="(max-width: 640px) 90vw, 800px"
                       className="mx-auto max-h-[60vh] w-auto object-contain"
                     />
                   </div>

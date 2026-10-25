@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 
 import { PREMIUM_PUBLIC_ENABLED } from "@/lib/premium/availability"
@@ -6,8 +7,6 @@ import {
   buildAdminWhatsappUrl,
   WHATSAPP_TEMPLATES,
 } from "@/lib/whatsapp"
-
-/* eslint-disable @next/next/no-img-element */
 
 export function Footer() {
   return (
@@ -81,7 +80,7 @@ export function Footer() {
             data-aos-duration="1000"
             data-aos-delay="80"
           >
-            <img src="/logo.png" alt="PanoriCam" className="h-12 w-auto" />
+            <Image src="/logo.png" alt="PanoriCam" width={666} height={375} className="h-12 w-auto" />
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-[#5B3A32]">
               Photobooth online dengan frame custom dan hasil digital yang bisa
               langsung dibawa pulang.

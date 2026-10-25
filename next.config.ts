@@ -5,6 +5,20 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [{ source: "/about", destination: "/premium", permanent: true }];
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "fhnziwsuhwasefzkkmpr.supabase.co",
+        pathname: "/storage/v1/object/**",
+      },
+      {
+        protocol: "https",
+        hostname: "fhnziwsuhwasefzkkmpr.supabase.co",
+        pathname: "/storage/v1/object/sign/**",
+      },
+    ],
+  },
   cacheComponents: true,
   partialPrefetching: true,
   experimental: {

@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -44,10 +45,12 @@ export function Navbar() {
             aria-label="PanoriCam - Home"
             className="flex min-w-0 flex-shrink-0 items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131]/40 focus-visible:ring-offset-4 focus-visible:ring-offset-[#FEF3E2]"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src="/logo.png"
               alt="PanoriCam"
+              width={666}
+              height={375}
+              priority
               className={`w-auto transition-[height] duration-300 ${
                 scrolled ? "h-9 sm:h-12" : "h-10 sm:h-16"
               }`}

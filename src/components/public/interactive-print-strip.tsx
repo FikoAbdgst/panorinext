@@ -1,7 +1,5 @@
 "use client"
 
-/* eslint-disable @next/next/no-img-element */
-
 import Image from "next/image"
 import { useEffect, useRef } from "react"
 
@@ -158,11 +156,16 @@ export function InteractivePrintStrip({
 
         <div className="border border-[#BF3131]/35 px-1.5 pb-1.5 pt-1.5">
           <div className="mt-1.5 space-y-1.5">
-            {images.map((image) => (
-              <img
+            {images.map((image, idx) => (
+              <Image
                 key={image.src}
                 src={image.src}
                 alt={image.alt}
+                width={640}
+                height={480}
+                sizes="(max-width: 1024px) 46vw, 180px"
+                loading={idx === 0 ? "eager" : "lazy"}
+                priority={idx === 0}
                 decoding="async"
                 className="aspect-[4/3] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
               />

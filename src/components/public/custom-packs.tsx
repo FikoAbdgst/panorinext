@@ -1,7 +1,6 @@
 "use client"
 
-/* eslint-disable @next/next/no-img-element */
-
+import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 
@@ -296,10 +295,13 @@ function PhotoColumn({ images, filter }: { images: Triple; filter: string }) {
   return (
     <div className="absolute left-1/2 top-1/2 z-20 flex w-[34%] max-w-[170px] -translate-x-1/2 -translate-y-1/2 flex-col gap-2">
       {images.map((src, index) => (
-        <img
+        <Image
           key={`${src}-${index}`}
           src={src}
           alt=""
+          width={640}
+          height={480}
+          sizes="(max-width: 640px) 34vw, 170px"
           loading="lazy"
           decoding="async"
           style={{
