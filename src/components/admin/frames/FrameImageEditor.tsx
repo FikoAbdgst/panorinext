@@ -88,6 +88,9 @@ export function FrameImageEditor({
   const [future, setFuture] = useState<Snapshot[]>([]);
   const [tool, setTool] = useState<Tool>("wand");
   const [tolerance, setTolerance] = useState(24);
+  const [cleanup, setCleanup] = useState(2);
+  const [expand, setExpand] = useState(1);
+  const [feather, setFeather] = useState(1);
   const [contiguous, setContiguous] = useState(true);
   const [addSlot, setAddSlot] = useState(true);
   const [rectStart, setRectStart] = useState<Point | null>(null);
@@ -227,6 +230,9 @@ export function FrameImageEditor({
     const result = eraseColorRegion(next, point.x, point.y, {
       tolerance,
       contiguous,
+      cleanup,
+      expand,
+      feather,
     });
     if (result.area === 0 || !result.bounds) {
       setError("Area tidak ditemukan atau sudah transparan.");
@@ -452,7 +458,7 @@ export function FrameImageEditor({
           </div>
           <p className="text-xs text-neutral-500">
             {tool === "wand"
-              ? "Klik area slot. Magic wand mempertahankan dekorasi di atas slot."
+              ? "Klik area slot. Magic wand mempertahankan dekorasi di atas slot. Jika masih ada sisa putih tipis, naikkan Bersihkan sisa background."
               : "Tarik kotak di area slot. Seluruh isi kotak akan dibuat transparan."}
           </p>
         </div>
@@ -497,6 +503,63 @@ export function FrameImageEditor({
               className="w-full accent-[#BF3131]"
             />
           </label>
+
+          <div className="space-y-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
+                Perapian tepi
+              </p>
+              <p className="mt-0.5 text-xs leading-relaxed text-neutral-500">
+                Naikkan nilainya bila masih ada sisa putih tipis di pinggir
+                slot.
+              </p>
+            </div>
+
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-neutral-700">
+                Bersihkan sisa background: {cleanup}px
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={12}
+                step={1}
+                value={cleanup}
+                onChange={(event) => setCleanup(Number(event.target.value))}
+                className="w-full accent-[#BF3131]"
+              />
+            </label>
+
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-neutral-700">
+                Perluas area hapus: {expand}px
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={8}
+                step={1}
+                value={expand}
+                onChange={(event) => setExpand(Number(event.target.value))}
+                className="w-full accent-[#BF3131]"
+              />
+            </label>
+
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-neutral-700">
+                Kehalusan tepi: {feather}px
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={8}
+                step={1}
+                value={feather}
+                onChange={(event) => setFeather(Number(event.target.value))}
+                className="w-full accent-[#BF3131]"
+              />
+            </label>
+          </div>
 
           <label className="flex items-start gap-2 text-sm text-neutral-700">
             <input

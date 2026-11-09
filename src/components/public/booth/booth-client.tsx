@@ -225,10 +225,15 @@ function Icon({
 
 const PANEL_WIDTH = 190
 const PANEL_MAX_HEIGHT = 500
-const CAPTURE_OUTPUT_WIDTH = 1200
-const STRIP_EXPORT_WIDTH = 1080
-const GIF_WIDTH = 1080
-const GIF_HEIGHT = 810
+/* Simpan resolusi asli kamera (maksimal 2560px) agar detail foto tetap tajam
+ * saat dikomposit ke frame HD maupun diunduh per slot. */
+const CAPTURE_MAX_DIMENSION = 2560
+const STRIP_EXPORT_MIN_WIDTH = 1080
+const STRIP_EXPORT_MAX_WIDTH = 3840
+const SLOT_EXPORT_MIN_LONG_EDGE = 1080
+const GIF_WIDTH = 1440
+const GIF_HEIGHT = 1080
+const GIF_QUALITY = 5
 const FRAME_BACKGROUND = "#FEF3E2"
 
 function isIosDevice(): boolean {
@@ -268,6 +273,26 @@ function triggerDownload(href: string, filename: string): void {
   document.body.appendChild(link)
   link.click()
   link.remove()
+}
+
+function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  type = "image/png",
+  quality?: number,
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          resolve(blob)
+          return
+        }
+        reject(new Error("Gagal membuat gambar"))
+      },
+      type,
+      quality,
+    )
+  })
 }
 
 function sleep(ms: number): Promise<void> {
@@ -341,6 +366,7 @@ export function BoothClient({
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [isComposing, setIsComposing] = useState(false)
+  const [downloadingSlot, setDownloadingSlot] = useState<number | null>(null)
 
   const [gifProgress, setGifProgress] = useState({
     percentage: 0,
@@ -526,8 +552,8 @@ export function BoothClient({
         try {
           return await navigator.mediaDevices.getUserMedia({
             video: {
-              width: { ideal: ios ? 1280 : 1920 },
-              height: { ideal: ios ? 720 : 1080 },
+              width: { ideal: ios ? 1920 : 3840 },
+              height: { ideal: ios ? 1080 : 2160 },
               aspectRatio: ios ? { exact: 4 / 3 } : { ideal: 4 / 3 },
               facingMode: target,
               frameRate: { ideal: ios ? 24 : 30, max: ios ? 30 : 60 },
@@ -625,8 +651,12 @@ export function BoothClient({
       // ke ukuran frame terjadi saat ditampilkan/dikomposit (mode "cover").
       const videoWidth = video.videoWidth
       const videoHeight = video.videoHeight
-      const outputScale =
-        CAPTURE_OUTPUT_WIDTH / Math.max(videoWidth, videoHeight)
+      /* Jangan pernah menurunkan resolusi di bawah kemampuan kamera. Hanya
+       * batasi sisi terpanjang agar memori perangkat tetap aman. */
+      const outputScale = Math.min(
+        1,
+        CAPTURE_MAX_DIMENSION / Math.max(videoWidth, videoHeight),
+      )
 
       const canvas = document.createElement("canvas")
       canvas.width = Math.round(videoWidth * outputScale)
@@ -859,6 +889,61 @@ export function BoothClient({
     })
   }
 
+  /* --- Unduh per slot ---------------------------------------------------- */
+
+  async function downloadSlotPhoto(index: number) {
+    const photo = photos[index]
+    const slot = slots[index]
+    if (!photo || !slot || downloadingSlot !== null) return
+
+    setDownloadingSlot(index)
+    try {
+      const image = await loadImage(photo)
+      const sourceWidth = image.naturalWidth || image.width
+      const sourceHeight = image.naturalHeight || image.height
+      if (sourceWidth <= 0 || sourceHeight <= 0) {
+        throw new Error("Ukuran foto tidak valid")
+      }
+
+      // Potong dengan mode cover persis seperti yang tampil di slot.
+      const { sx, sy, sw, sh } = getCoverSourceRect(
+        sourceWidth,
+        sourceHeight,
+        slot.w,
+        slot.h,
+      )
+
+      let outputWidth = Math.max(1, Math.round(sw))
+      let outputHeight = Math.max(1, Math.round(sh))
+      const longEdge = Math.max(outputWidth, outputHeight)
+      if (longEdge < SLOT_EXPORT_MIN_LONG_EDGE) {
+        const upscale = SLOT_EXPORT_MIN_LONG_EDGE / longEdge
+        outputWidth = Math.round(outputWidth * upscale)
+        outputHeight = Math.round(outputHeight * upscale)
+      }
+
+      const canvas = document.createElement("canvas")
+      canvas.width = outputWidth
+      canvas.height = outputHeight
+      const ctx = canvas.getContext("2d")
+      if (!ctx) throw new Error("Canvas tidak tersedia")
+
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = "high"
+      ctx.drawImage(image, sx, sy, sw, sh, 0, 0, outputWidth, outputHeight)
+
+      const blob = await canvasToBlob(canvas, "image/png")
+      const url = URL.createObjectURL(blob)
+      triggerDownload(url, `Panoricam-slot-${index + 1}.png`)
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+      showToast(`Foto slot ${index + 1} tersimpan.`, "success", 2000)
+    } catch {
+      showToast(`Gagal mengunduh foto slot ${index + 1}. Coba lagi.`, "error")
+    } finally {
+      setDownloadingSlot(null)
+    }
+  }
+
   /* --- Share ------------------------------------------------------------- */
 
   async function sharePhotoStrip() {
@@ -937,8 +1022,14 @@ export function BoothClient({
       })
 
       const output = document.createElement("canvas")
-      const outputScale = STRIP_EXPORT_WIDTH / frame.width
-      output.width = STRIP_EXPORT_WIDTH
+      /* Ekspor mengikuti resolusi asli frame (frame HD biasanya 2160px),
+       * tidak lagi dipaksa turun ke 1080px. */
+      const outputWidth = Math.min(
+        Math.max(frame.width, STRIP_EXPORT_MIN_WIDTH),
+        STRIP_EXPORT_MAX_WIDTH,
+      )
+      const outputScale = outputWidth / frame.width
+      output.width = outputWidth
       output.height = Math.round(frame.height * outputScale)
       const ctx = output.getContext("2d")
       if (!ctx) return null
@@ -1034,7 +1125,7 @@ export function BoothClient({
 
       const gif = new GIF({
         workers: 4,
-        quality: 10,
+        quality: GIF_QUALITY,
         width: gifWidth,
         height: gifHeight,
         dither: false,
@@ -1846,9 +1937,37 @@ export function BoothClient({
                 </div>
               </div>
 
+              {takenCount > 0 ? (
+                <div className="mt-3 border border-dashed border-[#BF3131]/25 bg-[#FEF3E2]/50 p-2.5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#7A5A50]">
+                    Unduh per slot
+                  </p>
+                  <div className="mt-2 grid grid-cols-2 gap-1.5">
+                    {slots.map((_, index) =>
+                      photos[index] ? (
+                        <button
+                          key={`download-slot-${index}`}
+                          type="button"
+                          disabled={downloadingSlot !== null}
+                          onClick={() => {
+                            void downloadSlotPhoto(index)
+                          }}
+                          className={`inline-flex min-h-9 items-center justify-center gap-1.5 rounded-[2px] border border-[#BF3131]/30 bg-[#FFFBF3]/80 px-2 py-1.5 text-[11px] font-semibold text-[#BF3131] transition hover:bg-[#FFFBF3] disabled:pointer-events-none disabled:opacity-50 ${FOCUS_RING}`}
+                        >
+                          <Icon name="download" className="h-3.5 w-3.5" />
+                          {downloadingSlot === index
+                            ? "Menyiapkan…"
+                            : `Slot ${index + 1}`}
+                        </button>
+                      ) : null,
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
               <p className="mt-3 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A5A50]">
                 {takenCount > 0
-                  ? "Ketuk foto untuk ganti"
+                  ? "Ketuk foto untuk ganti atau atur potongan"
                   : "Slot kosong menunggu fotomu"}
               </p>
 
@@ -2037,7 +2156,7 @@ export function BoothClient({
               Strip kamu siap.
             </h2>
             <p className="mt-1 text-xs text-[#7A5A50]">
-              PNG resolusi tinggi
+              PNG resolusi tinggi · unduh strip atau per slot
               {frame.isFree ? " · GIF bisa dibuat di sini" : ""}.
             </p>
 
@@ -2093,6 +2212,34 @@ export function BoothClient({
                 <Icon name="download" />
                 {isComposing ? "Menyiapkan…" : "Unduh PNG"}
               </button>
+
+              {takenCount > 0 ? (
+                <div className="border border-dashed border-[#BF3131]/25 bg-[#FEF3E2]/50 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#7A5A50]">
+                    Unduh foto per slot
+                  </p>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {slots.map((_, index) =>
+                      photos[index] ? (
+                        <button
+                          key={`modal-download-slot-${index}`}
+                          type="button"
+                          disabled={downloadingSlot !== null}
+                          onClick={() => {
+                            void downloadSlotPhoto(index)
+                          }}
+                          className={BTN_SECONDARY}
+                        >
+                          <Icon name="download" className="h-4 w-4" />
+                          {downloadingSlot === index
+                            ? "Menyiapkan…"
+                            : `Slot ${index + 1}`}
+                        </button>
+                      ) : null,
+                    )}
+                  </div>
+                </div>
+              ) : null}
 
               <div className="grid grid-cols-2 gap-2">
                 <button

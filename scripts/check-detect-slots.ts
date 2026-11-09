@@ -117,6 +117,42 @@ function runSyntheticTests() {
   assert.equal(toleranceResult.area, 96);
   assert.equal(toleranceImage.data[(8 * 10 + 8) * 4 + 3], 255);
 
+  // Sisa putih tipis di tepi harus ikut dibersihkan (cleanup)...
+  const cleanupImage = makeImage(40, 40, { r: 20, g: 10, b: 10, a: 255 });
+  fillRect(cleanupImage, 10, 10, 10, 10, { r: 250, g: 250, b: 250, a: 255 });
+  fillRect(cleanupImage, 11, 11, 8, 8, { r: 255, g: 255, b: 255, a: 255 });
+  const cleanupResult = eraseColorRegion(cleanupImage, 15, 15, {
+    tolerance: 2,
+    cleanup: 1,
+  });
+  assert.equal(cleanupResult.area, 100, "fringe putih harus ikut terhapus");
+  assert.deepEqual(cleanupResult.bounds, { x: 10, y: 10, w: 10, h: 10 });
+
+  // ...atau diperluas tanpa cek warna (expand)...
+  const expandImage = makeImage(40, 40, { r: 20, g: 10, b: 10, a: 255 });
+  fillRect(expandImage, 10, 10, 10, 10, { r: 255, g: 255, b: 255, a: 255 });
+  const expandResult = eraseColorRegion(expandImage, 15, 15, {
+    tolerance: 2,
+    expand: 1,
+  });
+  assert.equal(expandResult.area, 144, "expand 1px harus melebarkan area");
+  assert.deepEqual(expandResult.bounds, { x: 9, y: 9, w: 12, h: 12 });
+
+  // Feather membuat tepi semi-transparan bertingkat tanpa mengubah area slot.
+  const featherImage = makeImage(40, 40, { r: 20, g: 10, b: 10, a: 255 });
+  fillRect(featherImage, 10, 10, 20, 20, { r: 255, g: 255, b: 255, a: 255 });
+  const featherResult = eraseColorRegion(featherImage, 15, 15, {
+    tolerance: 2,
+    feather: 2,
+  });
+  assert.equal(featherResult.area, 400);
+  assert.deepEqual(featherResult.bounds, { x: 10, y: 10, w: 20, h: 20 });
+  const alphaAt = (x: number, y: number) =>
+    featherImage.data[(y * 40 + x) * 4 + 3];
+  assert.equal(alphaAt(9, 15), Math.round(255 / 3));
+  assert.equal(alphaAt(8, 15), Math.round((255 * 2) / 3));
+  assert.equal(alphaAt(7, 15), 255, "di luar radius feather harus tetap opaque");
+
   const rectImage = makeImage(50, 50, opaque);
   const rectResult = eraseRect(rectImage, { x: -5, y: 10, w: 20, h: 30 });
   assert.deepEqual(rectResult.bounds, { x: 0, y: 10, w: 15, h: 30 });

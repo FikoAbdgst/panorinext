@@ -8,7 +8,11 @@ import {
   warnSupabaseNotConfigured,
 } from "@/lib/supabase/config"
 
-const MAX_FILE_BYTES = 10 * 1024 * 1024
+/* Hasil HD (PNG resolusi frame + GIF 1440px) bisa lebih besar dari versi lama.
+ * Batas total dibuat 16MB agar masih aman di bawah limit attachment Gmail
+ * (25MB setelah encoding base64). */
+const MAX_FILE_BYTES = 16 * 1024 * 1024
+const MAX_TOTAL_BYTES = 16 * 1024 * 1024
 
 const EMAIL_SUBJECT = "Foto dan GIF kamu dari PanoriCam sudah siap 📸"
 
@@ -140,9 +144,13 @@ export async function POST(request: Request) {
 
     if (
       photoDownload.data.size > MAX_FILE_BYTES ||
-      gifDownload.data.size > MAX_FILE_BYTES
+      gifDownload.data.size > MAX_FILE_BYTES ||
+      photoDownload.data.size + gifDownload.data.size > MAX_TOTAL_BYTES
     ) {
-      return fail("Gagal mengirim email: ukuran file melebihi 10MB", 400)
+      return fail(
+        "Gagal mengirim email: ukuran foto + GIF melebihi 16MB. Coba kurangi jumlah foto.",
+        400,
+      )
     }
 
     const [photoBuffer, gifBuffer] = await Promise.all([

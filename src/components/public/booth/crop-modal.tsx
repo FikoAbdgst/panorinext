@@ -11,7 +11,9 @@ export type CropRequest = {
   onConfirm: (dataUrl: string) => void;
 };
 
-const OUTPUT_WIDTH = 800;
+/* Mendekati lebar frame HD (2160px) agar hasil crop tidak menjadi bottleneck
+ * saat strip dikomposit atau diunduh per slot. */
+const OUTPUT_WIDTH = 1800;
 
 const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFFBF3]";
