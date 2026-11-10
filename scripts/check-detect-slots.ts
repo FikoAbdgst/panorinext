@@ -10,6 +10,7 @@ import {
   eraseColorRegion,
   eraseRect,
   mergeSlots,
+  removeWhiteFringe,
   sortSlots,
 } from "../src/lib/frames/edit-image";
 import { getCoverSourceRect } from "../src/lib/frames/geometry";
@@ -180,6 +181,42 @@ function runSyntheticTests() {
   assert.equal(rectResult.area, 450);
   assert.equal(rectImage.data[(10 * 50 + 0) * 4 + 3], 0);
   assert.equal(rectImage.data[(10 * 50 + 20) * 4 + 3], 255);
+
+  // Toleransi otomatis harus bisa membersihkan background rata tanpa set angka.
+  const purple: RGBA = { r: 120, g: 60, b: 160, a: 255 };
+  const autoImage = makeImage(20, 20, { r: 255, g: 255, b: 255, a: 255 });
+  fillRect(autoImage, 5, 5, 10, 10, purple);
+  const autoResult = eraseColorRegion(autoImage, 1, 1, {
+    autoTolerance: true,
+    contiguous: true,
+    cleanup: 0,
+  });
+  assert.equal(autoResult.area, 300, "background putih harus terhapus");
+  assert.equal(autoImage.data[(10 * 20 + 10) * 4 + 3], 255, "objek ungu tetap");
+
+  // Halo putih di tepi area terhapus harus ikut dibersihkan dengan cleanupWhite.
+  const haloImage = makeImage(30, 30, { r: 255, g: 255, b: 255, a: 255 });
+  fillRect(haloImage, 10, 10, 10, 10, purple);
+  fillRect(haloImage, 8, 10, 2, 10, { r: 245, g: 245, b: 248, a: 255 });
+  const haloResult = eraseColorRegion(haloImage, 1, 1, {
+    tolerance: 2,
+    contiguous: true,
+    cleanup: 0,
+    cleanupWhite: true,
+  });
+  assert.ok(haloResult.area > 0);
+  assert.equal(haloImage.data[(15 * 30 + 9) * 4 + 3], 0, "halo putih terhapus");
+  assert.equal(haloImage.data[(15 * 30 + 15) * 4 + 3], 255, "objek tetap utuh");
+
+  // Tombol pembersih global hanya memangkas putih yang menempel area transparan.
+  const fringeImage = makeImage(30, 30, purple);
+  fillRect(fringeImage, 20, 0, 10, 30, clear);
+  fillRect(fringeImage, 19, 0, 1, 30, { r: 245, g: 245, b: 248, a: 255 });
+  fillRect(fringeImage, 18, 0, 1, 30, purple);
+  const fringeResult = removeWhiteFringe(fringeImage, { radius: 2 });
+  assert.equal(fringeResult.area, 30);
+  assert.equal(fringeImage.data[(15 * 30 + 19) * 4 + 3], 0);
+  assert.equal(fringeImage.data[(15 * 30 + 18) * 4 + 3], 255);
 
   const merged = mergeSlots(
     [{ x: 10, y: 10, w: 20, h: 20 }],

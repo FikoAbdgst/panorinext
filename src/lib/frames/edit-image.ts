@@ -4,11 +4,22 @@ export type EraseColorOptions = {
   tolerance?: number;
   contiguous?: boolean;
   /**
+   * Hitung toleransi otomatis dari variasi warna di sekitar titik klik.
+   * Saat aktif, nilai `tolerance` diabaikan. Ini menghindari admin harus
+   * menebak-nebak angka toleransi.
+   */
+  autoTolerance?: boolean;
+  /**
    * Radius (px) pembersihan tambahan di sekitar area terhapus. Hanya piksel
    * yang warnanya masih mirip warna target yang ikut dihapus, sehingga sisa
    * putih / anti-aliasing di tepi slot hilang tanpa memakan dekorasi frame.
    */
   cleanup?: number;
+  /**
+   * Ikut hapus piksel putih/terang di cincin tepi area terhapus. Berguna untuk
+   * membuang garis putih tipis sisa background tanpa menaikkan toleransi.
+   */
+  cleanupWhite?: boolean;
   /**
    * Radius (px) perluasan area transparan tanpa cek warna. Dipakai untuk
    * memotong sisa tepi yang sudah tercampur warna lain.
@@ -18,12 +29,30 @@ export type EraseColorOptions = {
   feather?: number;
 };
 
+export type WhiteFringeOptions = {
+  /** Radius (px) cincin di sekitar area transparan yang ikut dibersihkan. */
+  radius?: number;
+  /** Ambang kecerahan minimum piksel yang dianggap putih. */
+  luminance?: number;
+  /** Ambang selisih warna maksimum agar piksel dianggap putih/netral. */
+  chroma?: number;
+};
+
 export type EraseResult = {
   bounds: FrameSlot | null;
   area: number;
 };
 
 const DEFAULT_TOLERANCE = 24;
+const LUMINANCE_RED = 0.299;
+const LUMINANCE_GREEN = 0.587;
+const LUMINANCE_BLUE = 0.114;
+const WHITE_LUMINANCE = 195;
+const WHITE_CHROMA = 42;
+
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
 
 export function cloneAlphaImage(image: AlphaImageData): AlphaImageData {
   return {
@@ -31,6 +60,28 @@ export function cloneAlphaImage(image: AlphaImageData): AlphaImageData {
     width: image.width,
     height: image.height,
   };
+}
+
+/**
+ * Jarak warna berbobot persepsi (bukan selisih per-kanal). Perubahan hijau
+ * lebih terasa daripada biru, sehingga satu angka toleransi berperilaku lebih
+ * konsisten di berbagai warna background.
+ */
+function colorDistance(
+  data: Uint8ClampedArray | Uint8Array,
+  offset: number,
+  r: number,
+  g: number,
+  b: number,
+): number {
+  const dr = data[offset] - r;
+  const dg = data[offset + 1] - g;
+  const db = data[offset + 2] - b;
+  return Math.sqrt(
+    LUMINANCE_RED * dr * dr +
+      LUMINANCE_GREEN * dg * dg +
+      LUMINANCE_BLUE * db * db,
+  );
 }
 
 function matchesColor(
@@ -43,10 +94,75 @@ function matchesColor(
 ): boolean {
   return (
     data[offset + 3] > 0 &&
-    Math.abs(data[offset] - r) <= tolerance &&
-    Math.abs(data[offset + 1] - g) <= tolerance &&
-    Math.abs(data[offset + 2] - b) <= tolerance
+    colorDistance(data, offset, r, g, b) <= tolerance
   );
+}
+
+function isWhitishPixel(
+  data: Uint8ClampedArray | Uint8Array,
+  offset: number,
+  luminanceThreshold = WHITE_LUMINANCE,
+  chromaThreshold = WHITE_CHROMA,
+): boolean {
+  if (data[offset + 3] === 0) {
+    return false;
+  }
+  const r = data[offset];
+  const g = data[offset + 1];
+  const b = data[offset + 2];
+  const maximum = Math.max(r, g, b);
+  const minimum = Math.min(r, g, b);
+  const luminance =
+    LUMINANCE_RED * r + LUMINANCE_GREEN * g + LUMINANCE_BLUE * b;
+  return luminance >= luminanceThreshold && maximum - minimum <= chromaThreshold;
+}
+
+/**
+ * Perkirakan toleransi dari variasi warna lokal di sekitar klik. Background
+ * rata menghasilkan angka kecil; background bergradasi/noise otomatis
+ * mendapat angka lebih longgar.
+ */
+function estimateAutoTolerance(
+  image: AlphaImageData,
+  x: number,
+  y: number,
+): number {
+  const { data, width, height } = image;
+  const radius = Math.max(
+    2,
+    Math.min(8, Math.round(Math.min(width, height) * 0.01)),
+  );
+  const seedOffset = (y * width + x) * 4;
+  const r = data[seedOffset];
+  const g = data[seedOffset + 1];
+  const b = data[seedOffset + 2];
+  const distances: number[] = [];
+
+  for (let py = Math.max(0, y - radius); py <= Math.min(height - 1, y + radius); py += 1) {
+    for (let px = Math.max(0, x - radius); px <= Math.min(width - 1, x + radius); px += 1) {
+      const dx = px - x;
+      const dy = py - y;
+      if (dx * dx + dy * dy > radius * radius) {
+        continue;
+      }
+      const offset = (py * width + px) * 4;
+      if (data[offset + 3] === 0) {
+        continue;
+      }
+      distances.push(colorDistance(data, offset, r, g, b));
+    }
+  }
+
+  if (distances.length === 0) {
+    return DEFAULT_TOLERANCE;
+  }
+  distances.sort((a, b) => a - b);
+  const median = distances[Math.floor((distances.length - 1) * 0.5)];
+  const high = distances[Math.floor((distances.length - 1) * 0.9)];
+  /* Batasi pengaruh outlier (mis. klik di dekat garis objek) agar toleransi
+   * tidak melonjak dan "memakan" objek. */
+  const estimated = Math.min(high, median * 2 + 24) + 10;
+  return Math.min(90, Math.max(18, Math.round(estimated)));
 }
 
 function clearPixel(
@@ -178,11 +294,20 @@ export function eraseColorRegion(
   options: EraseColorOptions = {},
 ): EraseResult {
   const { data, width, height } = image;
-  const tolerance = options.tolerance ?? DEFAULT_TOLERANCE;
   const contiguous = options.contiguous ?? true;
+  const autoTolerance = options.autoTolerance ?? false;
+  const cleanupWhite = options.cleanupWhite ?? false;
+  const tolerance = autoTolerance
+    ? estimateAutoTolerance(image, x, y)
+    : options.tolerance ?? DEFAULT_TOLERANCE;
   const cleanupRadius = Math.max(0, Math.floor(options.cleanup ?? 0));
   const expandRadius = Math.max(0, Math.floor(options.expand ?? 0));
   const featherRadius = Math.max(0, Math.floor(options.feather ?? 0));
+  /* Pembersihan putih harus mencakup seluruh cincin feather; kalau tidak,
+   * sisa anti-aliasing putih tetap terlihat sebagai garis samar. */
+  const effectiveCleanupRadius = cleanupWhite
+    ? Math.max(cleanupRadius, featherRadius + 1, 2)
+    : cleanupRadius;
 
   if (width <= 0 || height <= 0 || x < 0 || y < 0 || x >= width || y >= height) {
     return { bounds: null, area: 0 };
@@ -280,18 +405,25 @@ export function eraseColorRegion(
   /* Pembersihan pertama: buang sisa warna background di sekitar area yang
    * baru dihapus (mis. putih tipis / anti-aliasing) dengan toleransi lebih
    * longgar, tetapi hanya untuk piksel yang masih mirip warna target. */
-  if (cleanupRadius > 0) {
-    const cleanupTolerance = Math.min(255, tolerance + 40);
+  if (effectiveCleanupRadius > 0) {
+    /* Toleransi pembersihan selalu lebih longgar dari toleransi utama supaya
+     * anti-aliasing di tepi ikut terangkat tanpa perlu admin menaikkan angka. */
+    const cleanupTolerance = Math.min(
+      255,
+      Math.max(tolerance + 55, cleanupWhite ? 90 : 0),
+    );
     const cleaned = growMask(
       mask,
       width,
       height,
-      cleanupRadius,
+      effectiveCleanupRadius,
       bounds,
       (index) => {
         const offset = index * 4;
-        return (
-          data[offset + 3] > 0 &&
+        if (data[offset + 3] === 0) {
+          return false;
+        }
+        if (
           matchesColor(
             data,
             offset,
@@ -300,7 +432,10 @@ export function eraseColorRegion(
             targetB,
             cleanupTolerance,
           )
-        );
+        ) {
+          return true;
+        }
+        return cleanupWhite && isWhitishPixel(data, offset);
       },
     );
     mask = cleaned.mask;
@@ -377,6 +512,81 @@ export function eraseRect(
     bounds: { x: x0, y: y0, w: x1 - x0, h: y1 - y0 },
     area: (x1 - x0) * (y1 - y0),
   };
+}
+
+/**
+ * Bersihkan sisa putih/terang yang menempel pada tepi area transparan.
+ * Dipakai sebagai tombol "Bersihkan Sisa Putih" untuk merapikan halo putih
+ * yang tertinggal setelah Magic Wand tanpa harus mengubah toleransi.
+ */
+export function removeWhiteFringe(
+  image: AlphaImageData,
+  options: WhiteFringeOptions = {},
+): EraseResult {
+  const { data, width, height } = image;
+  const radius = clampNumber(Math.floor(options.radius ?? 2), 0, 32);
+  if (radius <= 0 || width <= 0 || height <= 0) {
+    return { bounds: null, area: 0 };
+  }
+
+  const total = width * height;
+  const mask = new Uint8Array(total);
+  let frontier: number[] = [];
+  for (let index = 0; index < total; index += 1) {
+    if (data[index * 4 + 3] === 0) {
+      mask[index] = 1;
+      frontier.push(index);
+    }
+  }
+  if (frontier.length === 0) {
+    return { bounds: null, area: 0 };
+  }
+
+  const luminance = options.luminance ?? WHITE_LUMINANCE;
+  const chroma = options.chroma ?? WHITE_CHROMA;
+  const clearedBounds = emptyBounds();
+  let area = 0;
+
+  for (let step = 0; step < radius; step += 1) {
+    if (frontier.length === 0) {
+      break;
+    }
+    const added: number[] = [];
+
+    for (const index of frontier) {
+      const x = index % width;
+      const y = (index - x) / width;
+      for (let dy = -1; dy <= 1; dy += 1) {
+        for (let dx = -1; dx <= 1; dx += 1) {
+          if (dx === 0 && dy === 0) {
+            continue;
+          }
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) {
+            continue;
+          }
+          const neighbor = ny * width + nx;
+          if (mask[neighbor]) {
+            continue;
+          }
+          const offset = neighbor * 4;
+          if (!isWhitishPixel(data, offset, luminance, chroma)) {
+            continue;
+          }
+          clearPixel(data, offset);
+          mask[neighbor] = 1;
+          added.push(neighbor);
+          extendMaskBounds(clearedBounds, neighbor, width);
+          area += 1;
+        }
+      }
+    }
+
+    frontier = added;
+  }
+
+  return { bounds: toBounds(clearedBounds), area };
 }
 
 function slotArea(slot: FrameSlot): number {
