@@ -28,6 +28,7 @@ import { STORAGE_BUCKETS } from "@/lib/constants"
 import { composeStrip } from "@/lib/frames/compose-strip"
 import { getCoverSourceRect } from "@/lib/frames/geometry"
 import { loadImage } from "@/lib/frames/image"
+import { getSlotTransform } from "@/lib/frames/rotation"
 import type { FrameSlot } from "@/lib/frames/types"
 import { createClient } from "@/lib/supabase/client"
 
@@ -1819,6 +1820,8 @@ export function BoothClient({
                         top: slot.y * scale,
                         width: slot.w * scale,
                         height: slot.h * scale,
+                        transform: getSlotTransform(slot),
+                        transformOrigin: "center",
                       }
                       return (
                         <div key={`placeholder-${index}`}>
@@ -1843,6 +1846,8 @@ export function BoothClient({
                         top: slot.y * scale,
                         width: slot.w * scale,
                         height: slot.h * scale,
+                        transform: getSlotTransform(slot),
+                        transformOrigin: "center",
                       }
                       const photo = photos[index]
                       return (
@@ -1916,6 +1921,8 @@ export function BoothClient({
                               top: slot.y * scale,
                               width: slot.w * scale,
                               height: slot.h * scale,
+                              transform: getSlotTransform(slot),
+                              transformOrigin: "center",
                             }}
                             data-slot={index}
                           >

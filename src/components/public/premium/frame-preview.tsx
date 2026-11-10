@@ -2,6 +2,7 @@ import Image from "next/image";
 
 import type { PackFrame } from "@/lib/premium/types";
 import { getFramePublicUrl } from "@/lib/frames/url";
+import { getSlotTransform } from "@/lib/frames/rotation";
 
 const SAMPLE_PHOTOS = [
   "/images/m1.jpeg",
@@ -47,6 +48,8 @@ export function PremiumFramePreview({
                 top: `${(slot.y / frameHeight) * 100}%`,
                 width: `${(slot.w / frameWidth) * 100}%`,
                 height: `${(slot.h / frameHeight) * 100}%`,
+                transform: getSlotTransform(slot),
+                transformOrigin: "center",
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -9,6 +9,7 @@ import {
 } from "@/components/public/frame-preview-modal"
 import type { FrameSlot } from "@/lib/frames/types"
 import { getFramePublicUrl } from "@/lib/frames/url"
+import { getSlotTransform } from "@/lib/frames/rotation"
 
 export type FeaturedFrameCardData = {
   id: number
@@ -98,6 +99,8 @@ export function FeaturedFrameCard({
                         top: `${(slot.y / frameHeight) * 100}%`,
                         width: `${(slot.w / frameWidth) * 100}%`,
                         height: `${(slot.h / frameHeight) * 100}%`,
+                        transform: getSlotTransform(slot),
+                        transformOrigin: "center",
                       }}
                     >
                       <Image

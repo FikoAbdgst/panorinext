@@ -1,4 +1,5 @@
 import { getCoverSourceRect } from "./geometry";
+import { getSlotRotation } from "./rotation";
 import type { FrameSlot } from "./types";
 
 export type ComposeStripInput = {
@@ -72,7 +73,16 @@ export function composeStrip(input: ComposeStripInput): HTMLCanvasElement {
       slot.w,
       slot.h,
     );
-    ctx.drawImage(photo, sx, sy, sw, sh, slot.x, slot.y, slot.w, slot.h);
+    const rotation = getSlotRotation(slot);
+    if (!rotation) {
+      ctx.drawImage(photo, sx, sy, sw, sh, slot.x, slot.y, slot.w, slot.h);
+      return;
+    }
+    ctx.save();
+    ctx.translate(slot.x + slot.w / 2, slot.y + slot.h / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.drawImage(photo, sx, sy, sw, sh, -slot.w / 2, -slot.h / 2, slot.w, slot.h);
+    ctx.restore();
   });
 
   ctx.drawImage(overlay, 0, 0, width, height);

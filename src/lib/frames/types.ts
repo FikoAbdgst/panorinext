@@ -1,10 +1,20 @@
 export type FrameAccessType = "free" | "premium";
 
 export type FrameSlot = {
+  /** Kiri atas kotak slot sebelum diputar. */
   x: number;
+  /** Atas kotak slot sebelum diputar. */
   y: number;
+  /** Lebar slot lokal (mengikuti kemiringan slot). */
   w: number;
+  /** Tinggi slot lokal (mengikuti kemiringan slot). */
   h: number;
+  /**
+   * Sudut putar slot dalam derajat, searah jarum jam, mengelilingi pusat slot.
+   * Absen/0 berarti slot tegak lurus seperti frame biasa. Slot lama tanpa
+   * properti ini tetap kompatibel.
+   */
+  rotation?: number;
 };
 
 /**

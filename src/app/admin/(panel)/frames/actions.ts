@@ -56,21 +56,32 @@ function parseSlots(raw: FormDataEntryValue | null): FrameSlot[] | null {
     const y = Number(slot.y);
     const w = Number(slot.w);
     const h = Number(slot.h);
+    const rawRotation =
+      slot.rotation === undefined || slot.rotation === null
+        ? 0
+        : Number(slot.rotation);
     if (
       !Number.isFinite(x) ||
       !Number.isFinite(y) ||
       !Number.isFinite(w) ||
       !Number.isFinite(h) ||
+      !Number.isFinite(rawRotation) ||
       w <= 0 ||
       h <= 0
     ) {
       return null;
     }
+    const normalizedRotation = ((rawRotation % 360) + 540) % 360 - 180;
+    const rotation =
+      Math.abs(normalizedRotation) < 0.05
+        ? 0
+        : Math.round(normalizedRotation * 10) / 10;
     slots.push({
       x: Math.round(x),
       y: Math.round(y),
       w: Math.round(w),
       h: Math.round(h),
+      ...(rotation ? { rotation } : {}),
     });
   }
   return slots;

@@ -49,6 +49,41 @@ function fillRect(
   }
 }
 
+/** Isi persegi panjang yang diputar, untuk menguji deteksi slot miring. */
+function fillRotatedRect(
+  image: AlphaImageData,
+  cx: number,
+  cy: number,
+  w: number,
+  h: number,
+  angleDeg: number,
+  color: RGBA,
+) {
+  const { data, width, height } = image;
+  const radians = (angleDeg * Math.PI) / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  const halfW = w / 2;
+  const halfH = h / 2;
+  const radius = Math.ceil(Math.hypot(w, h) / 2) + 1;
+
+  for (let y = Math.max(0, Math.floor(cy - radius)); y <= Math.min(height - 1, Math.ceil(cy + radius)); y += 1) {
+    for (let x = Math.max(0, Math.floor(cx - radius)); x <= Math.min(width - 1, Math.ceil(cx + radius)); x += 1) {
+      const dx = x - cx;
+      const dy = y - cy;
+      const localX = dx * cos + dy * sin;
+      const localY = -dx * sin + dy * cos;
+      if (Math.abs(localX) <= halfW && Math.abs(localY) <= halfH) {
+        const i = (y * width + x) * 4;
+        data[i] = color.r;
+        data[i + 1] = color.g;
+        data[i + 2] = color.b;
+        data[i + 3] = color.a;
+      }
+    }
+  }
+}
+
 function runSyntheticTests() {
   const opaque: RGBA = { r: 0, g: 0, b: 0, a: 255 };
   const clear: RGBA = { r: 0, g: 0, b: 0, a: 0 };
@@ -92,6 +127,44 @@ function runSyntheticTests() {
   const fullBleedSlots = detectSlots(fullBleedSlot);
   assert.equal(fullBleedSlots.length, 1, "slot full-bleed tidak boleh dibuang");
   assert.deepEqual(fullBleedSlots[0], { x: 0, y: 0, w: 100, h: 30 });
+
+  // Slot miring harus terdeteksi sebagai persegi panjang berorientasi.
+  const rotatedImage = makeImage(240, 240, opaque);
+  fillRotatedRect(rotatedImage, 120, 120, 100, 50, 30, clear);
+  const rotatedSlots = detectSlots(rotatedImage, { minAreaRatio: 0.002 });
+  assert.equal(rotatedSlots.length, 1, "slot miring harus terdeteksi");
+  const rotatedSlot = rotatedSlots[0];
+  assert.ok(
+    Math.abs((rotatedSlot.rotation ?? 0) - 30) < 2,
+    `sudut slot miring harus sekitar 30°, didapat ${rotatedSlot.rotation}`,
+  );
+  const rotatedCenterX = rotatedSlot.x + rotatedSlot.w / 2;
+  const rotatedCenterY = rotatedSlot.y + rotatedSlot.h / 2;
+  assert.ok(
+    Math.hypot(rotatedCenterX - 120, rotatedCenterY - 120) < 2,
+    "pusat slot miring harus tetap di posisi semula",
+  );
+  assert.ok(
+    Math.abs(rotatedSlot.w - 100) <= 4 && Math.abs(rotatedSlot.h - 50) <= 4,
+    `ukuran slot miring harus mendekati 100x50, didapat ${rotatedSlot.w}x${rotatedSlot.h}`,
+  );
+
+  // Sudut di luar rentang -45..45 dinormalisasi dengan menukar w/h.
+  const steepImage = makeImage(240, 240, opaque);
+  fillRotatedRect(steepImage, 120, 120, 100, 50, -60, clear);
+  const steepSlots = detectSlots(steepImage, { minAreaRatio: 0.002 });
+  assert.equal(steepSlots.length, 1, "slot miring tajam harus terdeteksi");
+  assert.ok(
+    Math.abs((steepSlots[0].rotation ?? 0) - 30) < 2.5,
+    `sudut -60° harus dinormalisasi ke sekitar 30°, didapat ${steepSlots[0].rotation}`,
+  );
+  assert.ok(
+    Math.abs(steepSlots[0].w - 50) <= 4 && Math.abs(steepSlots[0].h - 100) <= 4,
+    `dimensi harus tertukar, didapat ${steepSlots[0].w}x${steepSlots[0].h}`,
+  );
+
+  // Slot tegak lurus lama tidak boleh mendapat properti rotation.
+  assert.equal("rotation" in slots[0], false, "slot lurus tanpa rotation");
 
   const solid = makeImage(100, 100, opaque);
   assert.equal(hasTransparentPixels(solid), false);
@@ -193,6 +266,34 @@ function runSyntheticTests() {
   });
   assert.equal(autoResult.area, 300, "background putih harus terhapus");
   assert.equal(autoImage.data[(10 * 20 + 10) * 4 + 3], 255, "objek ungu tetap");
+
+  // Objek berkulit terang di atas background putih tidak boleh ikut terhapus
+  // oleh toleransi otomatis maupun pembersihan tepi.
+  const skin: RGBA = { r: 250, g: 232, b: 214, a: 255 };
+  const faceImage = makeImage(40, 40, { r: 255, g: 255, b: 255, a: 255 });
+  fillRect(faceImage, 18, 8, 12, 24, skin);
+  const faceResult = eraseColorRegion(faceImage, 2, 2, {
+    autoTolerance: true,
+    contiguous: true,
+    cleanup: 1,
+    cleanupWhite: true,
+    feather: 1,
+  });
+  assert.ok(faceResult.area > 0, "background di sekitar objek harus terhapus");
+  assert.equal(
+    faceImage.data[(20 * 40 + 24) * 4 + 3],
+    255,
+    "bagian tengah wajah tidak boleh terhapus",
+  );
+  assert.ok(
+    faceImage.data[(20 * 40 + 18) * 4 + 3] > 0,
+    "tepi wajah hanya boleh memudar tipis, bukan terhapus",
+  );
+  assert.equal(
+    faceImage.data[(20 * 40 + 17) * 4 + 3],
+    0,
+    "background tepat di samping objek harus tetap bersih",
+  );
 
   // Halo putih di tepi area terhapus harus ikut dibersihkan dengan cleanupWhite.
   const haloImage = makeImage(30, 30, { r: 255, g: 255, b: 255, a: 255 });
@@ -300,7 +401,7 @@ function scanRealPngs(publicDir: string) {
     withSlots += 1;
     const boxes = slots
       .slice(0, 6)
-      .map((slot) => `(${slot.x},${slot.y} ${slot.w}x${slot.h})`)
+      .map((slot) => `(${slot.x},${slot.y} ${slot.w}x${slot.h}${slot.rotation ? ` rot ${slot.rotation}°` : ""})`)
       .join(" ");
     slotReport.push(
       `  ${file.replace(publicDir, "public")} [${png.width}x${png.height}] -> ${slots.length} slot ${boxes}`,

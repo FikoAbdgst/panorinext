@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import type { CatalogFrame } from "@/lib/frames/types";
 import { getFramePublicUrl } from "@/lib/frames/url";
+import { getSlotTransform } from "@/lib/frames/rotation";
 
 import { FramePreviewButton } from "./frame-preview-button";
 
@@ -60,6 +61,8 @@ export function CatalogFrameCard({
                     top: `${(slot.y / frameHeight) * 100}%`,
                     width: `${(slot.w / frameWidth) * 100}%`,
                     height: `${(slot.h / frameHeight) * 100}%`,
+                    transform: getSlotTransform(slot),
+                    transformOrigin: "center",
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}

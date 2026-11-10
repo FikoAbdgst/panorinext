@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import type { FrameSlot } from "@/lib/frames/types";
+import { getSlotTransform } from "@/lib/frames/rotation";
 
 const PANEL_WIDTH = 220;
 const PANEL_MAX_HEIGHT = 520;
@@ -434,6 +435,8 @@ export function FrameUserPreview({
                               top: slot.y * scale,
                               width: slot.w * scale,
                               height: slot.h * scale,
+                              transform: getSlotTransform(slot),
+                              transformOrigin: "center",
                             }}
                           >
                             {photo ? (
@@ -463,6 +466,8 @@ export function FrameUserPreview({
                                 top: slot.y * scale,
                                 width: slot.w * scale,
                                 height: slot.h * scale,
+                                transform: getSlotTransform(slot),
+                                transformOrigin: "center",
                               }}
                             >
                               <img

@@ -1,3 +1,4 @@
+import { getSlotBounds } from "./rotation";
 import type { AlphaImageData, FrameSlot } from "./types";
 
 export type EraseColorOptions = {
@@ -47,8 +48,10 @@ const DEFAULT_TOLERANCE = 24;
 const LUMINANCE_RED = 0.299;
 const LUMINANCE_GREEN = 0.587;
 const LUMINANCE_BLUE = 0.114;
-const WHITE_LUMINANCE = 195;
-const WHITE_CHROMA = 42;
+/* Ambang putih dibuat ketat supaya warna kulit/kuning muda pada dekorasi
+ * tidak ikut dianggap sisa background. */
+const WHITE_LUMINANCE = 210;
+const WHITE_CHROMA = 24;
 
 function clampNumber(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -98,6 +101,34 @@ function matchesColor(
   );
 }
 
+/** Jumlah tetangga (8 arah) yang sudah menjadi bagian area transparan. */
+function countMaskNeighbors(
+  mask: Uint8Array,
+  index: number,
+  width: number,
+  height: number,
+): number {
+  const x = index % width;
+  const y = (index - x) / width;
+  let count = 0;
+  for (let dy = -1; dy <= 1; dy += 1) {
+    for (let dx = -1; dx <= 1; dx += 1) {
+      if (dx === 0 && dy === 0) {
+        continue;
+      }
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= width || ny >= height) {
+        continue;
+      }
+      if (mask[ny * width + nx]) {
+        count += 1;
+      }
+    }
+  }
+  return count;
+}
+
 function isWhitishPixel(
   data: Uint8ClampedArray | Uint8Array,
   offset: number,
@@ -130,7 +161,7 @@ function estimateAutoTolerance(
   const { data, width, height } = image;
   const radius = Math.max(
     2,
-    Math.min(8, Math.round(Math.min(width, height) * 0.01)),
+    Math.min(5, Math.round(Math.min(width, height) * 0.006)),
   );
   const seedOffset = (y * width + x) * 4;
   const r = data[seedOffset];
@@ -146,7 +177,7 @@ function estimateAutoTolerance(
         continue;
       }
       const offset = (py * width + px) * 4;
-      if (data[offset + 3] === 0) {
+      if (data[offset + 3] < 32) {
         continue;
       }
       distances.push(colorDistance(data, offset, r, g, b));
@@ -158,11 +189,13 @@ function estimateAutoTolerance(
   }
   distances.sort((a, b) => a - b);
   const median = distances[Math.floor((distances.length - 1) * 0.5)];
-  const high = distances[Math.floor((distances.length - 1) * 0.9)];
-  /* Batasi pengaruh outlier (mis. klik di dekat garis objek) agar toleransi
-   * tidak melonjak dan "memakan" objek. */
-  const estimated = Math.min(high, median * 2 + 24) + 10;
-  return Math.min(90, Math.max(18, Math.round(estimated)));
+  const p70 = distances[Math.floor((distances.length - 1) * 0.7)];
+  /* Hanya variasi background yang dipakai. Persentil tinggi dibatasi supaya
+   * klik di dekat objek (mis. wajah/kulit terang) tidak membuat toleransi
+   * melonjak dan ikut menghapus objek. */
+  const spread = Math.min(20, Math.max(0, p70 - median));
+  const estimated = median + spread * 0.6 + 10;
+  return clampNumber(Math.round(estimated), 14, 40);
 }
 
 function clearPixel(
@@ -229,7 +262,7 @@ function growMask(
   height: number,
   radius: number,
   bounds: MaskBounds,
-  include?: (index: number) => boolean,
+  include?: (index: number, current: Uint8Array) => boolean,
 ): { mask: Uint8Array; bounds: MaskBounds; added: number } {
   let current = mask;
   let currentBounds = { ...bounds };
@@ -257,7 +290,7 @@ function growMask(
       for (let x = search.minX; x <= search.maxX; x += 1) {
         const index = y * width + x;
         if (current[index]) continue;
-        if (include && !include(index)) continue;
+        if (include && !include(index, current)) continue;
 
         const touchesMask =
           (x > 0 && current[index - 1] === 1) ||
@@ -303,10 +336,11 @@ export function eraseColorRegion(
   const cleanupRadius = Math.max(0, Math.floor(options.cleanup ?? 0));
   const expandRadius = Math.max(0, Math.floor(options.expand ?? 0));
   const featherRadius = Math.max(0, Math.floor(options.feather ?? 0));
-  /* Pembersihan putih harus mencakup seluruh cincin feather; kalau tidak,
-   * sisa anti-aliasing putih tetap terlihat sebagai garis samar. */
+  /* Pembersihan putih maksimal dua lapis di tepi area transparan. Jangan
+   * melebar lebih jauh karena lapisan berikutnya bisa merupakan bagian objek
+   * (kulit, baju terang, dsb.). */
   const effectiveCleanupRadius = cleanupWhite
-    ? Math.max(cleanupRadius, featherRadius + 1, 2)
+    ? Math.max(cleanupRadius, 2)
     : cleanupRadius;
 
   if (width <= 0 || height <= 0 || x < 0 || y < 0 || x >= width || y >= height) {
@@ -406,19 +440,17 @@ export function eraseColorRegion(
    * baru dihapus (mis. putih tipis / anti-aliasing) dengan toleransi lebih
    * longgar, tetapi hanya untuk piksel yang masih mirip warna target. */
   if (effectiveCleanupRadius > 0) {
-    /* Toleransi pembersihan selalu lebih longgar dari toleransi utama supaya
-     * anti-aliasing di tepi ikut terangkat tanpa perlu admin menaikkan angka. */
-    const cleanupTolerance = Math.min(
-      255,
-      Math.max(tolerance + 55, cleanupWhite ? 90 : 0),
-    );
+    /* Toleransi pembersihan hanya sedikit lebih longgar dari toleransi utama
+     * supaya anti-aliasing background ikut terangkat, tetapi warna objek
+     * terang tetap aman. */
+    const cleanupTolerance = Math.min(255, tolerance + 8);
     const cleaned = growMask(
       mask,
       width,
       height,
       effectiveCleanupRadius,
       bounds,
-      (index) => {
+      (index, currentMask) => {
         const offset = index * 4;
         if (data[offset + 3] === 0) {
           return false;
@@ -435,7 +467,13 @@ export function eraseColorRegion(
         ) {
           return true;
         }
-        return cleanupWhite && isWhitishPixel(data, offset);
+        if (!cleanupWhite || !isWhitishPixel(data, offset)) {
+          return false;
+        }
+        /* Hanya buang putih yang benar-benar menempel pada tepi transparan
+         * dan tipis. Piksel putih di dalam objek (mis. wajah) punya sedikit
+         * tetangga transparan sehingga tidak ikut terhapus. */
+        return countMaskNeighbors(currentMask, index, width, height) >= 3;
       },
     );
     mask = cleaned.mask;
@@ -613,27 +651,35 @@ export function overlapRatio(a: FrameSlot, b: FrameSlot): number {
 }
 
 export function sortSlots(slots: FrameSlot[]): FrameSlot[] {
-  const sorted = [...slots].sort((a, b) =>
-    a.y === b.y ? a.x - b.x : a.y - b.y,
+  /* Posisi visual slot diputar bisa berbeda dari x/y lokalnya, jadi urutkan
+   * berdasarkan bounding box hasil rotasi. Slot tanpa rotasi tetap identik
+   * dengan perilaku lama. */
+  const entries = slots.map((slot) => ({ slot, bounds: getSlotBounds(slot) }));
+  entries.sort((a, b) =>
+    a.bounds.y === b.bounds.y
+      ? a.bounds.x - b.bounds.x
+      : a.bounds.y - b.bounds.y,
   );
-  const rows: FrameSlot[][] = [];
+  const rows: Array<typeof entries> = [];
 
-  for (const slot of sorted) {
+  for (const entry of entries) {
     const row = rows[rows.length - 1];
     if (row) {
       const tolerance = Math.max(
         4,
-        Math.round(Math.min(row[0].h, slot.h) * 0.1),
+        Math.round(Math.min(row[0].bounds.h, entry.bounds.h) * 0.1),
       );
-      if (Math.abs(slot.y - row[0].y) <= tolerance) {
-        row.push(slot);
+      if (Math.abs(entry.bounds.y - row[0].bounds.y) <= tolerance) {
+        row.push(entry);
         continue;
       }
     }
-    rows.push([slot]);
+    rows.push([entry]);
   }
 
-  return rows.flatMap((row) => row.sort((a, b) => a.x - b.x));
+  return rows.flatMap((row) =>
+    row.sort((a, b) => a.bounds.x - b.bounds.x).map((entry) => entry.slot),
+  );
 }
 
 export function mergeSlots(

@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import type { FrameSlot } from "@/lib/frames/types";
+import { getSlotTransform } from "@/lib/frames/rotation";
 
 export type PreviewFrame = {
   id: number;
@@ -434,6 +435,8 @@ export function FramePreviewModal({
                         top: slot.y * scale,
                         width: slot.w * scale,
                         height: slot.h * scale,
+                        transform: getSlotTransform(slot),
+                        transformOrigin: "center",
                       }}
                     >
                       {photo ? (
