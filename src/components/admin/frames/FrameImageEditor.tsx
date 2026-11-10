@@ -32,7 +32,7 @@ type FrameImageEditorProps = {
   onApply: (result: FrameImageEditResult) => Promise<void> | void;
 };
 
-type Tool = "wand" | "rect" | "brush";
+type Tool = "wand" | "rect" | "brush" | "restore";
 
 type Snapshot = {
   imageData: ImageData;
@@ -119,6 +119,44 @@ function drawBrushLine(
   context.restore();
 }
 
+/* Kuas kembalikan mengecat ulang piksel dari PNG asli memakai pattern canvas.
+ * Pattern tetap sejajar dengan koordinat gambar, jadi hasilnya sama persis
+ * dengan area yang pernah dihapus. */
+function drawRestoreDot(
+  context: CanvasRenderingContext2D,
+  point: Point,
+  size: number,
+  pattern: CanvasPattern,
+): void {
+  context.save();
+  context.globalCompositeOperation = "source-over";
+  context.fillStyle = pattern;
+  context.beginPath();
+  context.arc(point.x, point.y, size / 2, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+}
+
+function drawRestoreLine(
+  context: CanvasRenderingContext2D,
+  from: Point,
+  to: Point,
+  size: number,
+  pattern: CanvasPattern,
+): void {
+  context.save();
+  context.globalCompositeOperation = "source-over";
+  context.strokeStyle = pattern;
+  context.lineWidth = size;
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.beginPath();
+  context.moveTo(from.x, from.y);
+  context.lineTo(to.x, to.y);
+  context.stroke();
+  context.restore();
+}
+
 export function FrameImageEditor({
   open,
   imageUrl,
@@ -149,7 +187,9 @@ export function FrameImageEditor({
   const stageRef = useRef<HTMLDivElement>(null);
   const brushCursorRef = useRef<HTMLDivElement>(null);
   const brushRef = useRef<BrushStroke | null>(null);
+  const restorePatternRef = useRef<CanvasPattern | null>(null);
   const originalRef = useRef<ImageData | null>(null);
+  const originalCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const objectUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -184,12 +224,18 @@ export function FrameImageEditor({
         );
 
         originalRef.current = cloneImageData(data);
+        const originalCanvas = document.createElement("canvas");
+        originalCanvas.width = width;
+        originalCanvas.height = height;
+        originalCanvas.getContext("2d")?.putImageData(originalRef.current, 0, 0);
+        originalCanvasRef.current = originalCanvas;
         setImageData(data);
         setManualSlots([]);
         setHistory([]);
         setFuture([]);
         setTool("wand");
         brushRef.current = null;
+        restorePatternRef.current = null;
         setRectStart(null);
         setRectEnd(null);
       } catch {
@@ -363,6 +409,7 @@ export function FrameImageEditor({
       return;
     }
     brushRef.current = null;
+    restorePatternRef.current = null;
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
     if (!canvas || !context) {
@@ -397,14 +444,34 @@ export function FrameImageEditor({
       return;
     }
 
-    if (tool === "brush") {
+    if (tool === "brush" || tool === "restore") {
       const context = canvasRef.current?.getContext("2d");
       if (!context) {
         return;
       }
+
+      let pattern: CanvasPattern | null = null;
+      if (tool === "restore") {
+        const originalCanvas = originalCanvasRef.current;
+        if (!originalCanvas) {
+          setError("Gambar asli belum siap untuk dikembalikan.");
+          return;
+        }
+        pattern = context.createPattern(originalCanvas, "no-repeat");
+        if (!pattern) {
+          setError("Gagal menyiapkan kuas pengembali. Coba lagi.");
+          return;
+        }
+      }
+
       event.currentTarget.setPointerCapture(event.pointerId);
       pushHistory({ imageData, manualSlots });
-      drawBrushDot(context, point, brushSize);
+      if (tool === "brush") {
+        drawBrushDot(context, point, brushSize);
+      } else if (pattern) {
+        restorePatternRef.current = pattern;
+        drawRestoreDot(context, point, brushSize, pattern);
+      }
       brushRef.current = { last: point, pointerId: event.pointerId };
       setError(null);
       updateBrushCursor(point);
@@ -417,7 +484,7 @@ export function FrameImageEditor({
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (tool === "brush") {
+    if (tool === "brush" || tool === "restore") {
       const point = getPoint(event);
       updateBrushCursor(point);
       const stroke = brushRef.current;
@@ -428,7 +495,15 @@ export function FrameImageEditor({
       if (!context) {
         return;
       }
-      drawBrushLine(context, stroke.last, point, brushSize);
+      if (tool === "brush") {
+        drawBrushLine(context, stroke.last, point, brushSize);
+      } else {
+        const pattern = restorePatternRef.current;
+        if (!pattern) {
+          return;
+        }
+        drawRestoreLine(context, stroke.last, point, brushSize, pattern);
+      }
       stroke.last = point;
       return;
     }
@@ -443,7 +518,7 @@ export function FrameImageEditor({
   };
 
   const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (tool === "brush") {
+    if (tool === "brush" || tool === "restore") {
       finishBrushStroke();
       return;
     }
@@ -571,12 +646,12 @@ export function FrameImageEditor({
                   className={`block h-auto w-auto max-h-[60vh] max-w-full ${
                     applying
                       ? "cursor-wait"
-                      : tool === "brush"
+                      : tool === "brush" || tool === "restore"
                         ? "cursor-none"
                         : "cursor-crosshair"
                   }`}
                 />
-                {tool === "brush" ? (
+                {tool === "brush" || tool === "restore" ? (
                   <div
                     ref={brushCursorRef}
                     aria-hidden="true"
@@ -584,6 +659,8 @@ export function FrameImageEditor({
                     style={{
                       width: `${(brushSize / imageData.width) * 100}%`,
                       aspectRatio: "1 / 1",
+                      minWidth: "5px",
+                      minHeight: "5px",
                     }}
                   />
                 ) : null}
@@ -626,7 +703,9 @@ export function FrameImageEditor({
               ? "Klik area background/slot. Toleransi otomatis menghitung warna dari sekitar klik, lalu sisa putih di tepi ikut dibersihkan. Bila masih ada sisa, klik tombol Bersihkan Sisa Putih."
               : tool === "brush"
                 ? "Klik lalu geser kuas di atas objek/background yang ingin dihapus. Area yang dilewati menjadi transparan. Gunakan Undo bila kelebihan menghapus."
-                : "Tarik kotak di area slot. Seluruh isi kotak akan dibuat transparan."}
+                : tool === "restore"
+                  ? "Klik lalu geser kuas untuk mengembalikan area yang sudah dihapus ke gambar PNG asli. Cocok untuk memperbaiki bagian yang terlanjur terhapus."
+                  : "Tarik kotak di area slot. Seluruh isi kotak akan dibuat transparan."}
           </p>
         </div>
 
@@ -657,17 +736,28 @@ export function FrameImageEditor({
             <button
               type="button"
               onClick={() => setTool("brush")}
-              className={`col-span-2 rounded-lg border px-3 py-2 text-sm font-medium ${
+              className={`rounded-lg border px-3 py-2 text-sm font-medium ${
                 tool === "brush"
                   ? "border-[#BF3131] bg-[#FEF3E2] text-[#BF3131]"
                   : "border-neutral-300 text-neutral-700"
               }`}
             >
-              Kuas Hapus — geser untuk menghapus
+              Kuas Hapus
+            </button>
+            <button
+              type="button"
+              onClick={() => setTool("restore")}
+              className={`rounded-lg border px-3 py-2 text-sm font-medium ${
+                tool === "restore"
+                  ? "border-[#BF3131] bg-[#FEF3E2] text-[#BF3131]"
+                  : "border-neutral-300 text-neutral-700"
+              }`}
+            >
+              Kuas Kembalikan
             </button>
           </div>
 
-          {tool === "brush" ? (
+          {tool === "brush" || tool === "restore" ? (
             <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
               <label className="block space-y-1 text-sm">
                 <span className="font-medium text-neutral-700">
@@ -675,20 +765,24 @@ export function FrameImageEditor({
                 </span>
                 <input
                   type="range"
-                  min={4}
+                  min={1}
                   max={400}
-                  step={2}
+                  step={1}
                   value={brushSize}
                   onChange={(event) =>
                     setBrushSize(Number(event.target.value))
                   }
                   className="w-full accent-[#BF3131]"
                 />
+                <span className="flex justify-between text-[10px] text-neutral-400">
+                  <span>1px</span>
+                  <span>400px</span>
+                </span>
               </label>
               <p className="text-xs leading-relaxed text-neutral-500">
-                Ukuran mengikuti resolusi PNG. Lingkaran pada gambar
-                menunjukkan area yang akan dihapus. Slot baru dari area kuas
-                dideteksi saat menekan Terapkan ke Frame.
+                {tool === "brush"
+                  ? "Area yang dilewati menjadi transparan. Gunakan ukuran 1–3px untuk sela-sela kecil. Slot baru dari area kuas dideteksi saat menekan Terapkan ke Frame."
+                  : "Area yang dilewati dikembalikan ke gambar PNG asli. Berguna untuk memperbaiki bagian yang terlanjur terhapus."}
               </p>
             </div>
           ) : null}
