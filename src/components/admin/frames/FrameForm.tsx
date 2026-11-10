@@ -513,7 +513,7 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
         ) : null}
         <p className="mt-2 text-xs text-neutral-500">
           Tidak ada area transparan? Klik Edit PNG, lalu hapus area slot dengan
-          Magic Wand atau Kotak Slot.
+          Magic Wand, Kotak Slot, atau Kuas Hapus yang bisa digeser.
         </p>
         {isUploading ? (
           <p className="mt-2 text-sm text-neutral-600">

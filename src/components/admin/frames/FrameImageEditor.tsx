@@ -31,7 +31,7 @@ type FrameImageEditorProps = {
   onApply: (result: FrameImageEditResult) => Promise<void> | void;
 };
 
-type Tool = "wand" | "rect";
+type Tool = "wand" | "rect" | "brush";
 
 type Snapshot = {
   imageData: ImageData;
@@ -39,6 +39,11 @@ type Snapshot = {
 };
 
 type Point = { x: number; y: number };
+
+type BrushStroke = {
+  last: Point;
+  pointerId: number;
+};
 
 const MIN_SLOT_AREA = 64;
 const MIN_SLOT_SIZE = 6;
@@ -75,6 +80,44 @@ function normalizeRect(a: Point, b: Point): FrameSlot {
   };
 }
 
+/**
+ * Kuas hapus bekerja langsung pada canvas dengan `destination-out`, sehingga
+ * piksel yang dilewati menjadi transparan dan tepinya tetap halus (anti-alias)
+ * tanpa perlu menghitung per piksel di JavaScript.
+ */
+function drawBrushDot(
+  context: CanvasRenderingContext2D,
+  point: Point,
+  size: number,
+): void {
+  context.save();
+  context.globalCompositeOperation = "destination-out";
+  context.fillStyle = "rgba(0, 0, 0, 1)";
+  context.beginPath();
+  context.arc(point.x, point.y, size / 2, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+}
+
+function drawBrushLine(
+  context: CanvasRenderingContext2D,
+  from: Point,
+  to: Point,
+  size: number,
+): void {
+  context.save();
+  context.globalCompositeOperation = "destination-out";
+  context.strokeStyle = "rgba(0, 0, 0, 1)";
+  context.lineWidth = size;
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.beginPath();
+  context.moveTo(from.x, from.y);
+  context.lineTo(to.x, to.y);
+  context.stroke();
+  context.restore();
+}
+
 export function FrameImageEditor({
   open,
   imageUrl,
@@ -91,6 +134,7 @@ export function FrameImageEditor({
   const [cleanup, setCleanup] = useState(2);
   const [expand, setExpand] = useState(1);
   const [feather, setFeather] = useState(1);
+  const [brushSize, setBrushSize] = useState(64);
   const [contiguous, setContiguous] = useState(true);
   const [addSlot, setAddSlot] = useState(true);
   const [rectStart, setRectStart] = useState<Point | null>(null);
@@ -100,6 +144,8 @@ export function FrameImageEditor({
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const brushCursorRef = useRef<HTMLDivElement>(null);
+  const brushRef = useRef<BrushStroke | null>(null);
   const originalRef = useRef<ImageData | null>(null);
   const objectUrlRef = useRef<string | null>(null);
 
@@ -140,6 +186,7 @@ export function FrameImageEditor({
         setHistory([]);
         setFuture([]);
         setTool("wand");
+        brushRef.current = null;
         setRectStart(null);
         setRectEnd(null);
       } catch {
@@ -276,6 +323,45 @@ export function FrameImageEditor({
     }
   };
 
+  const updateBrushCursor = (point: Point | null) => {
+    const cursor = brushCursorRef.current;
+    if (!cursor) {
+      return;
+    }
+    if (!point || !imageData) {
+      cursor.style.opacity = "0";
+      return;
+    }
+    cursor.style.opacity = "1";
+    cursor.style.left = `${(point.x / imageData.width) * 100}%`;
+    cursor.style.top = `${(point.y / imageData.height) * 100}%`;
+  };
+
+  const finishBrushStroke = () => {
+    const stroke = brushRef.current;
+    if (!stroke || !imageData) {
+      return;
+    }
+    brushRef.current = null;
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
+    if (!canvas || !context) {
+      return;
+    }
+    try {
+      const next = context.getImageData(
+        0,
+        0,
+        imageData.width,
+        imageData.height,
+      );
+      setImageData(next);
+      setError(null);
+    } catch {
+      setError("Gagal menyimpan hasil kuas. Coba lagi.");
+    }
+  };
+
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!imageData || applying) {
       return;
@@ -291,12 +377,42 @@ export function FrameImageEditor({
       return;
     }
 
+    if (tool === "brush") {
+      const context = canvasRef.current?.getContext("2d");
+      if (!context) {
+        return;
+      }
+      event.currentTarget.setPointerCapture(event.pointerId);
+      pushHistory({ imageData, manualSlots });
+      drawBrushDot(context, point, brushSize);
+      brushRef.current = { last: point, pointerId: event.pointerId };
+      setError(null);
+      updateBrushCursor(point);
+      return;
+    }
+
     event.currentTarget.setPointerCapture(event.pointerId);
     setRectStart(point);
     setRectEnd(point);
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (tool === "brush") {
+      const point = getPoint(event);
+      updateBrushCursor(point);
+      const stroke = brushRef.current;
+      if (!stroke || stroke.pointerId !== event.pointerId || !point) {
+        return;
+      }
+      const context = canvasRef.current?.getContext("2d");
+      if (!context) {
+        return;
+      }
+      drawBrushLine(context, stroke.last, point, brushSize);
+      stroke.last = point;
+      return;
+    }
+
     if (tool !== "rect" || !rectStart) {
       return;
     }
@@ -307,6 +423,11 @@ export function FrameImageEditor({
   };
 
   const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (tool === "brush") {
+      finishBrushStroke();
+      return;
+    }
+
     if (tool !== "rect" || !rectStart) {
       return;
     }
@@ -325,6 +446,7 @@ export function FrameImageEditor({
     setFuture([{ imageData, manualSlots }, ...future]);
     setImageData(previous.imageData);
     setManualSlots(previous.manualSlots);
+    brushRef.current = null;
     setRectStart(null);
     setRectEnd(null);
     setError(null);
@@ -339,6 +461,7 @@ export function FrameImageEditor({
     setHistory([...history, { imageData, manualSlots }]);
     setImageData(next.imageData);
     setManualSlots(next.manualSlots);
+    brushRef.current = null;
     setRectStart(null);
     setRectEnd(null);
     setError(null);
@@ -351,6 +474,7 @@ export function FrameImageEditor({
     pushHistory({ imageData, manualSlots });
     setImageData(cloneImageData(originalRef.current));
     setManualSlots([]);
+    brushRef.current = null;
     setRectStart(null);
     setRectEnd(null);
     setError(null);
@@ -415,13 +539,34 @@ export function FrameImageEditor({
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onPointerCancel={handlePointerUp}
+                onPointerEnter={(event) => {
+                  if (tool === "brush") {
+                    updateBrushCursor(getPoint(event));
+                  }
+                }}
+                onPointerLeave={() => updateBrushCursor(null)}
               >
                 <canvas
                   ref={canvasRef}
                   className={`block h-auto w-auto max-h-[60vh] max-w-full ${
-                    applying ? "cursor-wait" : "cursor-crosshair"
+                    applying
+                      ? "cursor-wait"
+                      : tool === "brush"
+                        ? "cursor-none"
+                        : "cursor-crosshair"
                   }`}
                 />
+                {tool === "brush" ? (
+                  <div
+                    ref={brushCursorRef}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#BF3131] bg-white/25 opacity-0 shadow-[0_0_0_1px_rgba(255,255,255,0.8)]"
+                    style={{
+                      width: `${(brushSize / imageData.width) * 100}%`,
+                      aspectRatio: "1 / 1",
+                    }}
+                  />
+                ) : null}
                 {visibleSlots.map((slot, index) => (
                   <div
                     key={`${slot.x}-${slot.y}-${slot.w}-${slot.h}-${index}`}
@@ -459,7 +604,9 @@ export function FrameImageEditor({
           <p className="text-xs text-neutral-500">
             {tool === "wand"
               ? "Klik area slot. Magic wand mempertahankan dekorasi di atas slot. Jika masih ada sisa putih tipis, naikkan Bersihkan sisa background."
-              : "Tarik kotak di area slot. Seluruh isi kotak akan dibuat transparan."}
+              : tool === "brush"
+                ? "Klik lalu geser kuas di atas objek/background yang ingin dihapus. Area yang dilewati menjadi transparan. Gunakan Undo bila kelebihan menghapus."
+                : "Tarik kotak di area slot. Seluruh isi kotak akan dibuat transparan."}
           </p>
         </div>
 
@@ -487,89 +634,130 @@ export function FrameImageEditor({
             >
               Kotak Slot
             </button>
+            <button
+              type="button"
+              onClick={() => setTool("brush")}
+              className={`col-span-2 rounded-lg border px-3 py-2 text-sm font-medium ${
+                tool === "brush"
+                  ? "border-[#BF3131] bg-[#FEF3E2] text-[#BF3131]"
+                  : "border-neutral-300 text-neutral-700"
+              }`}
+            >
+              Kuas Hapus — geser untuk menghapus
+            </button>
           </div>
 
-          <label className="block space-y-1 text-sm">
-            <span className="font-medium text-neutral-700">
-              Toleransi warna: {tolerance}
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={120}
-              step={1}
-              value={tolerance}
-              onChange={(event) => setTolerance(Number(event.target.value))}
-              className="w-full accent-[#BF3131]"
-            />
-          </label>
-
-          <div className="space-y-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
-                Perapian tepi
-              </p>
-              <p className="mt-0.5 text-xs leading-relaxed text-neutral-500">
-                Naikkan nilainya bila masih ada sisa putih tipis di pinggir
-                slot.
+          {tool === "brush" ? (
+            <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+              <label className="block space-y-1 text-sm">
+                <span className="font-medium text-neutral-700">
+                  Ukuran kuas: {brushSize}px
+                </span>
+                <input
+                  type="range"
+                  min={4}
+                  max={400}
+                  step={2}
+                  value={brushSize}
+                  onChange={(event) =>
+                    setBrushSize(Number(event.target.value))
+                  }
+                  className="w-full accent-[#BF3131]"
+                />
+              </label>
+              <p className="text-xs leading-relaxed text-neutral-500">
+                Ukuran mengikuti resolusi PNG. Lingkaran pada gambar
+                menunjukkan area yang akan dihapus. Slot baru dari area kuas
+                dideteksi saat menekan Terapkan ke Frame.
               </p>
             </div>
+          ) : null}
 
-            <label className="block space-y-1 text-sm">
-              <span className="font-medium text-neutral-700">
-                Bersihkan sisa background: {cleanup}px
-              </span>
-              <input
-                type="range"
-                min={0}
-                max={12}
-                step={1}
-                value={cleanup}
-                onChange={(event) => setCleanup(Number(event.target.value))}
-                className="w-full accent-[#BF3131]"
-              />
-            </label>
+          {tool === "wand" ? (
+            <>
+              <label className="block space-y-1 text-sm">
+                <span className="font-medium text-neutral-700">
+                  Toleransi warna: {tolerance}
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={120}
+                  step={1}
+                  value={tolerance}
+                  onChange={(event) => setTolerance(Number(event.target.value))}
+                  className="w-full accent-[#BF3131]"
+                />
+              </label>
 
-            <label className="block space-y-1 text-sm">
-              <span className="font-medium text-neutral-700">
-                Perluas area hapus: {expand}px
-              </span>
-              <input
-                type="range"
-                min={0}
-                max={8}
-                step={1}
-                value={expand}
-                onChange={(event) => setExpand(Number(event.target.value))}
-                className="w-full accent-[#BF3131]"
-              />
-            </label>
+              <div className="space-y-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
+                    Perapian tepi
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-neutral-500">
+                    Naikkan nilainya bila masih ada sisa putih tipis di pinggir
+                    slot.
+                  </p>
+                </div>
 
-            <label className="block space-y-1 text-sm">
-              <span className="font-medium text-neutral-700">
-                Kehalusan tepi: {feather}px
-              </span>
-              <input
-                type="range"
-                min={0}
-                max={8}
-                step={1}
-                value={feather}
-                onChange={(event) => setFeather(Number(event.target.value))}
-                className="w-full accent-[#BF3131]"
-              />
-            </label>
-          </div>
+                <label className="block space-y-1 text-sm">
+                  <span className="font-medium text-neutral-700">
+                    Bersihkan sisa background: {cleanup}px
+                  </span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={12}
+                    step={1}
+                    value={cleanup}
+                    onChange={(event) => setCleanup(Number(event.target.value))}
+                    className="w-full accent-[#BF3131]"
+                  />
+                </label>
 
-          <label className="flex items-start gap-2 text-sm text-neutral-700">
-            <input
-              type="checkbox"
-              checked={contiguous}
-              onChange={(event) => setContiguous(event.target.checked)}
-              className="mt-0.5 accent-[#BF3131]"
-            />
-            <span>Hanya area terhubung</span>
-          </label>
+                <label className="block space-y-1 text-sm">
+                  <span className="font-medium text-neutral-700">
+                    Perluas area hapus: {expand}px
+                  </span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={8}
+                    step={1}
+                    value={expand}
+                    onChange={(event) => setExpand(Number(event.target.value))}
+                    className="w-full accent-[#BF3131]"
+                  />
+                </label>
+
+                <label className="block space-y-1 text-sm">
+                  <span className="font-medium text-neutral-700">
+                    Kehalusan tepi: {feather}px
+                  </span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={8}
+                    step={1}
+                    value={feather}
+                    onChange={(event) => setFeather(Number(event.target.value))}
+                    className="w-full accent-[#BF3131]"
+                  />
+                </label>
+              </div>
+
+              <label className="flex items-start gap-2 text-sm text-neutral-700">
+                <input
+                  type="checkbox"
+                  checked={contiguous}
+                  onChange={(event) => setContiguous(event.target.checked)}
+                  className="mt-0.5 accent-[#BF3131]"
+                />
+                <span>Hanya area terhubung</span>
+              </label>
+            </>
+          ) : null}
 
           <label className="flex items-start gap-2 text-sm text-neutral-700">
             <input
@@ -578,10 +766,13 @@ export function FrameImageEditor({
               onChange={(event) => setAddSlot(event.target.checked)}
               className="mt-0.5 accent-[#BF3131]"
             />
-            <span>Tambahkan area transparan sebagai slot</span>
+            <span>
+              Tambahkan area transparan sebagai slot
+              {tool === "brush" ? " (dideteksi saat Terapkan)" : ""}
+            </span>
           </label>
 
-          {!contiguous ? (
+          {tool === "wand" && !contiguous ? (
             <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
               Mode global menghapus semua warna serupa di seluruh gambar,
               termasuk dekorasi.
