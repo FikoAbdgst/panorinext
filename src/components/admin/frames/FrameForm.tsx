@@ -25,6 +25,7 @@ import { getFrameAdminPreviewUrl } from "@/lib/frames/url";
 import { createClient } from "@/lib/supabase/client";
 
 import { FrameImageEditor, type FrameImageEditResult } from "./FrameImageEditor";
+import { FrameUserPreview } from "./FrameUserPreview";
 import { SlotEditor } from "./SlotEditor";
 
 type CategoryOption = {
@@ -110,6 +111,7 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
   const [imagePath, setImagePath] = useState<string | null>(frame?.image_path ?? null);
   const [pendingBlob, setPendingBlob] = useState<Blob | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -468,6 +470,19 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
+              onClick={() => setIsPreviewOpen(true)}
+              disabled={!previewUrl}
+              title={
+                previewUrl
+                  ? "Lihat tampilan frame dari sisi user sebelum disimpan."
+                  : "Unggah PNG overlay dulu untuk mencoba preview sebagai user."
+              }
+              className="rounded-lg bg-[#2A0A0A] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#140606] disabled:opacity-50"
+            >
+              Preview sebagai User
+            </button>
+            <button
+              type="button"
               onClick={() => setIsEditorOpen(true)}
               disabled={!previewUrl || isUploading || isPending}
               className="rounded-lg bg-[#BF3131] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#a52929] disabled:opacity-50"
@@ -590,6 +605,18 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
           initialSlots={slots}
           onClose={() => setIsEditorOpen(false)}
           onApply={handleApplyEdit}
+        />
+      ) : null}
+
+      {isPreviewOpen ? (
+        <FrameUserPreview
+          name={name}
+          imageUrl={previewUrl}
+          width={dimensions.width}
+          height={dimensions.height}
+          slots={slots}
+          accessType={accessType}
+          onClose={() => setIsPreviewOpen(false)}
         />
       ) : null}
     </form>
