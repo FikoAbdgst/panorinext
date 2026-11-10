@@ -123,8 +123,46 @@ function readFrameFields(formData: FormData):
   if (slots === null) {
     return { error: "Data slot tidak valid." };
   }
+  /* Frame tanpa slot tidak bisa dipakai di booth maupun pratinjau publik.
+   * Menolak di sini mencegah frame "kosong" tersimpan lalu tidak muncul
+   * sebagai frame yang bisa dipakai user. */
+  if (slots.length === 0) {
+    return {
+      error:
+        "Frame harus memiliki minimal satu slot foto. Deteksi ulang PNG atau tambahkan slot manual sebelum menyimpan.",
+    };
+  }
 
   return { name, slug, categoryId, accessType, width, height, slots };
+}
+
+/**
+ * Semua tampilan yang menampilkan daftar/overlay frame. Dipanggil setiap kali
+ * frame dibuat, diubah, atau dihapus agar user tidak melihat data lama.
+ */
+function revalidateFrameViews(): void {
+  revalidatePath("/admin/frames");
+  revalidatePath("/frame");
+  revalidatePath("/");
+  revalidatePath("/premium");
+  revalidatePath("/premium/[slug]", "page");
+  revalidatePath("/premium/room", "page");
+  revalidatePath("/booth", "page");
+}
+
+/**
+ * Memastikan file overlay benar-benar ada di storage sebelum path-nya
+ * disimpan ke database. Tanpa ini, kegagalan unggah yang tidak terdeteksi
+ * bisa menghasilkan frame dengan gambar rusak/kosong.
+ */
+async function frameImageExists(
+  supabase: ReturnType<typeof createAdminClient>,
+  path: string,
+): Promise<boolean> {
+  const { error } = await supabase.storage
+    .from(STORAGE_BUCKETS.frames)
+    .createSignedUrl(path, 60);
+  return !error;
 }
 
 const IMAGE_PATH_PATTERN = /^[a-z0-9][a-z0-9._-]*\.png$/;
@@ -186,6 +224,14 @@ export async function createFrameAction(
 
   const supabase = createAdminClient();
 
+  if (!(await frameImageExists(supabase, imagePath))) {
+    return {
+      status: "error",
+      message:
+        "File PNG overlay tidak ditemukan di storage. Coba unggah ulang lalu simpan kembali.",
+    };
+  }
+
   const { error: insertError } = await supabase.from("frames").insert({
     name: fields.name,
     slug: fields.slug,
@@ -202,9 +248,7 @@ export async function createFrameAction(
     return { status: "error", message: `Gagal menyimpan frame: ${insertError.message}` };
   }
 
-  revalidatePath("/admin/frames");
-  revalidatePath("/frame");
-  revalidatePath("/");
+  revalidateFrameViews();
   return { status: "success", message: "Frame berhasil ditambahkan!" };
 }
 
@@ -267,6 +311,16 @@ export async function updateFrameAction(
     uploadedPath = submittedPath;
   }
 
+  /* Hanya verifikasi path yang benar-benar baru. Path lama dibiarkan agar frame
+   * lama tetap bisa diperbarui meski pengecekan storage sedang bermasalah. */
+  if (uploadedPath && !(await frameImageExists(supabase, uploadedPath))) {
+    return {
+      status: "error",
+      message:
+        "File PNG overlay baru tidak ditemukan di storage. Coba unggah ulang lalu simpan kembali.",
+    };
+  }
+
   const { error: updateError } = await supabase
     .from("frames")
     .update({
@@ -292,7 +346,7 @@ export async function updateFrameAction(
     await supabase.storage.from(STORAGE_BUCKETS.frames).remove([existing.image_path]);
   }
 
-  revalidatePath("/admin/frames");
+  revalidateFrameViews();
   redirect("/admin/frames");
 }
 
@@ -346,8 +400,6 @@ export async function deleteFrameAction(
     await supabase.storage.from(STORAGE_BUCKETS.frames).remove([existing.image_path]);
   }
 
-  revalidatePath("/admin/frames");
-  revalidatePath("/frame");
-  revalidatePath("/");
+  revalidateFrameViews();
   return { success: true, message: "Frame berhasil dihapus." };
 }

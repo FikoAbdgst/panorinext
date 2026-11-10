@@ -21,7 +21,7 @@ import {
   loadImageFromFile,
 } from "@/lib/frames/image";
 import type { FrameSlot } from "@/lib/frames/types";
-import { getFramePublicUrl } from "@/lib/frames/url";
+import { getFrameAdminPreviewUrl } from "@/lib/frames/url";
 import { createClient } from "@/lib/supabase/client";
 
 import { FrameImageEditor, type FrameImageEditResult } from "./FrameImageEditor";
@@ -85,8 +85,27 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
     height: frame?.height ?? FRAME_STANDARD_SIZE.height,
   });
   const [slots, setSlots] = useState<FrameSlot[]>(frame?.slots ?? []);
+
+  /* State React baru terlihat setelah render. Ref ini memastikan data slot dan
+   * ukuran yang dikirim selalu versi terbaru, bahkan bila user langsung
+   * menekan simpan setelah deteksi/edit. */
+  const dimensionsRef = useRef({
+    width: frame?.width ?? FRAME_STANDARD_SIZE.width,
+    height: frame?.height ?? FRAME_STANDARD_SIZE.height,
+  });
+  const slotsRef = useRef<FrameSlot[]>(frame?.slots ?? []);
+
+  const commitDimensions = (next: { width: number; height: number }) => {
+    dimensionsRef.current = next;
+    setDimensions(next);
+  };
+
+  const commitSlots = (next: FrameSlot[]) => {
+    slotsRef.current = next;
+    setSlots(next);
+  };
   const [previewUrl, setPreviewUrl] = useState<string | null>(
-    frame?.image_path ? getFramePublicUrl(frame.image_path) : null,
+    frame?.image_path ? getFrameAdminPreviewUrl(frame.image_path) : null,
   );
   const [imagePath, setImagePath] = useState<string | null>(frame?.image_path ?? null);
   const [pendingBlob, setPendingBlob] = useState<Blob | null>(null);
@@ -98,6 +117,14 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
   const imageRef = useRef<HTMLImageElement | null>(null);
   const objectUrlRef = useRef<string | null>(null);
   const uploadedPathRef = useRef<string | null>(null);
+  /**
+   * Salinan sinkron dari blob yang belum diunggah. State React bisa telat
+   * ter-render, jadi submit harus membaca ref ini agar PNG hasil edit tidak
+   * tergantikan oleh `image_path` lama.
+   */
+  const pendingBlobRef = useRef<Blob | null>(null);
+  /** Penjaga sinkron agar klik ganda tidak memicu dua kali unggah/simpan. */
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -120,35 +147,66 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
       });
   }, [mode, previewUrl]);
 
-  const runDetection = (image: HTMLImageElement) => {
+  /**
+   * Jika aksi server gagal setelah file terunggah, server menghapus file
+   * tersebut. Kosongkan penanda agar percobaan berikutnya mengunggah ulang,
+   * bukan menyimpan path yang sudah tidak ada.
+   */
+  useEffect(() => {
+    if (state.status === "error") {
+      uploadedPathRef.current = null;
+    }
+    if (state.status !== "idle") {
+      submittingRef.current = false;
+    }
+  }, [state]);
+
+  const runDetection = (
+    image: HTMLImageElement,
+    options: { keepExistingWhenEmpty?: boolean } = {},
+  ) => {
     const width = image.naturalWidth || image.width;
     const height = image.naturalHeight || image.height;
-    setDimensions({ width, height });
+    commitDimensions({ width, height });
 
     let imageData;
     try {
       imageData = getImageData(image, width, height);
     } catch {
       setWarnings([
-        "Tidak dapat membaca piksel PNG (kemungkinan dibatasi CORS). Gunakan unggah ulang PNG.",
+        "Tidak dapat membaca piksel PNG. Coba muat ulang halaman lalu deteksi ulang, atau unggah ulang PNG.",
       ]);
       return;
     }
 
-    if (!hasTransparentPixels(imageData)) {
-      setSlots([]);
-      setWarnings([
-        "PNG tidak memiliki area transparan. Slot foto tidak dapat dideteksi otomatis; tambahkan slot manual.",
-      ]);
-      return;
-    }
+    const hasAlpha = hasTransparentPixels(imageData);
+    /* Ambang 1% terlalu besar untuk overlay beresolusi tinggi: slot kecil di
+     * kanvas besar bisa ikut terbuang. 0.2% lebih aman untuk semua ukuran. */
+    const detected = hasAlpha
+      ? detectSlots(imageData, { minAreaRatio: 0.002 })
+      : [];
 
-    const detected = detectSlots(imageData);
-    setSlots(detected);
+    if (detected.length > 0) {
+      commitSlots(detected);
+    } else if (!options.keepExistingWhenEmpty) {
+      commitSlots([]);
+    }
 
     const next: string[] = [];
     if (detected.length === 0) {
-      next.push("Tidak ada slot yang terdeteksi otomatis. Tambahkan slot secara manual.");
+      if (!hasAlpha) {
+        next.push(
+          "PNG tidak memiliki area transparan. Slot foto tidak dapat dideteksi otomatis; tambahkan slot manual.",
+        );
+      } else if (options.keepExistingWhenEmpty) {
+        next.push(
+          "Deteksi otomatis tidak menemukan slot baru. Slot manual yang sudah ada tetap dipertahankan.",
+        );
+      } else {
+        next.push(
+          "Tidak ada slot yang terdeteksi otomatis. Tambahkan slot secara manual atau gunakan Edit PNG.",
+        );
+      }
     }
     if (
       width !== FRAME_STANDARD_SIZE.width ||
@@ -181,6 +239,7 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
       objectUrlRef.current = objectUrl;
       imageRef.current = image;
       setPreviewUrl(objectUrl);
+      pendingBlobRef.current = file;
       setPendingBlob(file);
       setImagePath(null);
       uploadedPathRef.current = null;
@@ -199,11 +258,12 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
     objectUrlRef.current = objectUrl;
     imageRef.current = image;
     setPreviewUrl(objectUrl);
+    pendingBlobRef.current = result.blob;
     setPendingBlob(result.blob);
     setImagePath(null);
     uploadedPathRef.current = null;
-    setDimensions({ width: result.width, height: result.height });
-    setSlots(result.slots);
+    commitDimensions({ width: result.width, height: result.height });
+    commitSlots(result.slots);
     setFileError(null);
     setWarnings(
       result.slots.length === 0
@@ -214,27 +274,37 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isPending || isUploading) {
+
+    /* Ref dipakai agar klik ganda dalam frame yang sama tetap terblokir,
+     * meskipun state React belum sempat berubah. */
+    if (submittingRef.current || isPending || isUploading) {
       return;
     }
 
     const form = event.currentTarget;
-    if (!pendingBlob && !imagePath) {
+    /* Baca blob dari ref: hasil "Edit PNG" bisa belum ter-render saat tombol
+     * simpan ditekan, dan tanpa ini edit tersebut diam-diam tidak tersimpan. */
+    const blob = pendingBlobRef.current;
+    if (!blob && !imagePath) {
       setFileError("File PNG overlay wajib diunggah.");
       return;
     }
 
-    if (state.status === "error") {
-      uploadedPathRef.current = null;
-    }
+    submittingRef.current = true;
+    setFileError(null);
 
     void (async () => {
       const formData = new FormData(form);
+      /* Timpa nilai hidden input dengan versi ref agar hasil deteksi/edit
+       * terbaru tidak pernah tertinggal oleh render React yang belum selesai. */
+      formData.set("slots", JSON.stringify(slotsRef.current));
+      formData.set("width", String(dimensionsRef.current.width));
+      formData.set("height", String(dimensionsRef.current.height));
+      let dispatched = false;
 
-      if (pendingBlob) {
-        setIsUploading(true);
-        setFileError(null);
-        try {
+      try {
+        if (blob) {
+          setIsUploading(true);
           let path = uploadedPathRef.current;
           if (!path) {
             const target = await createFrameUploadUrlAction(slug);
@@ -246,7 +316,7 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
             const supabase = createClient();
             const { error } = await supabase.storage
               .from(STORAGE_BUCKETS.frames)
-              .uploadToSignedUrl(target.path, target.token, pendingBlob, {
+              .uploadToSignedUrl(target.path, target.token, blob, {
                 contentType: "image/png",
               });
             if (error) {
@@ -260,24 +330,49 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
 
           formData.set("image_path", path);
           setImagePath(path);
-        } catch {
-          setFileError("Gagal mengunggah PNG. Coba lagi.");
-          return;
-        } finally {
-          setIsUploading(false);
+        }
+
+        startTransition(() => {
+          formAction(formData);
+        });
+        dispatched = true;
+      } catch {
+        setFileError("Gagal mengunggah PNG. Coba lagi.");
+      } finally {
+        setIsUploading(false);
+        /* Bila aksi tidak pernah dikirim (mis. unggah gagal), buka penjaga
+         * sekarang. Bila sudah dikirim, efek `state` yang akan membukanya
+         * setelah server selesai. */
+        if (!dispatched) {
+          submittingRef.current = false;
         }
       }
-
-      startTransition(() => {
-        formAction(formData);
-      });
     })();
   };
 
   const handleRedetect = () => {
+    setFileError(null);
     if (imageRef.current) {
-      runDetection(imageRef.current);
+      runDetection(imageRef.current, { keepExistingWhenEmpty: true });
+      return;
     }
+
+    if (!previewUrl) {
+      setFileError("Pratinjau overlay belum siap. Unggah PNG terlebih dahulu.");
+      return;
+    }
+
+    void (async () => {
+      try {
+        const image = await loadImage(previewUrl, true);
+        imageRef.current = image;
+        runDetection(image, { keepExistingWhenEmpty: true });
+      } catch {
+        setFileError(
+          "Gagal memuat ulang overlay untuk deteksi. Coba unggah ulang PNG.",
+        );
+      }
+    })();
   };
 
   return (
@@ -421,7 +516,7 @@ export function FrameForm({ mode, categories, action, frame, onSuccess }: FrameF
             width={dimensions.width}
             height={dimensions.height}
             slots={slots}
-            onChange={setSlots}
+            onChange={commitSlots}
           />
 
           <div className="space-y-3">

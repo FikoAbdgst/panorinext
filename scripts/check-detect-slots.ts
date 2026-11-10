@@ -71,6 +71,27 @@ function runSyntheticTests() {
   assert.equal(ordered[0].y, 100, "slot teratas harus lebih dulu");
   assert.equal(ordered[1].y, 300);
 
+  // Latar luar transparan (menyentuh banyak sisi) bukan slot foto.
+  const borderBackground = makeImage(60, 60, clear);
+  fillRect(borderBackground, 5, 5, 50, 50, opaque);
+  fillRect(borderBackground, 20, 20, 20, 20, clear);
+  const borderSlots = detectSlots(borderBackground);
+  assert.equal(borderSlots.length, 1, "latar luar harus diabaikan");
+  assert.deepEqual(borderSlots[0], { x: 20, y: 20, w: 20, h: 20 });
+
+  // Slot yang hanya menyentuh satu tepi tetap dipertahankan.
+  const edgeSlot = makeImage(60, 60, opaque);
+  fillRect(edgeSlot, 10, 0, 20, 20, clear);
+  assert.equal(detectSlots(edgeSlot).length, 1);
+
+  // Slot full-bleed yang menyentuh beberapa sisi tetapi tidak menutupi
+  // hampir seluruh kanvas juga harus tetap terdeteksi.
+  const fullBleedSlot = makeImage(100, 100, opaque);
+  fillRect(fullBleedSlot, 0, 0, 100, 30, clear);
+  const fullBleedSlots = detectSlots(fullBleedSlot);
+  assert.equal(fullBleedSlots.length, 1, "slot full-bleed tidak boleh dibuang");
+  assert.deepEqual(fullBleedSlots[0], { x: 0, y: 0, w: 100, h: 30 });
+
   const solid = makeImage(100, 100, opaque);
   assert.equal(hasTransparentPixels(solid), false);
   assert.equal(detectSlots(solid).length, 0);

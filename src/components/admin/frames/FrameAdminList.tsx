@@ -216,9 +216,18 @@ export function FrameAdminList({
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-[#FEF3E2] px-2.5 py-1 text-xs font-semibold text-[#BF3131]">
-                      {frame.slots.length} Slot
-                    </span>
+                    {frame.slots.length === 0 ? (
+                      <span
+                        className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700"
+                        title="Frame tanpa slot tidak bisa dipakai user. Buka Edit lalu deteksi/tambah slot."
+                      >
+                        0 Slot — perlu diperbaiki
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full bg-[#FEF3E2] px-2.5 py-1 text-xs font-semibold text-[#BF3131]">
+                        {frame.slots.length} Slot
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-neutral-600">{frame.used}</td>
                   <td className="px-4 py-3">

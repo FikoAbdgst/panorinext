@@ -366,7 +366,7 @@ export function FrameImageEditor({
       const blob = await imageDataToPngBlob(imageData);
       const totalArea = imageData.width * imageData.height;
       const detected = addSlot
-        ? detectSlots(imageData, { minAreaRatio: 0.005 }).filter(
+        ? detectSlots(imageData, { minAreaRatio: 0.002 }).filter(
             (slot) => slot.w * slot.h < totalArea * 0.95,
           )
         : [];
