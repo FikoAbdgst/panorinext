@@ -46,7 +46,7 @@ export async function FeaturedFrames() {
   return (
     <section
       id="frame-rack"
-      className="relative overflow-hidden bg-[#FEF3E2] font-['Poppins']"
+      className="relative scroll-mt-28 overflow-hidden bg-[#FEF3E2] font-['Poppins']"
     >
       <FilmEdge />
 

@@ -15,7 +15,7 @@ export async function TestimonialsSection() {
   return (
     <section
       id="testimoni"
-      className="relative overflow-hidden bg-[#FEF3E2] pb-16 pt-10 font-['Poppins'] sm:pb-20 sm:pt-14"
+      className="relative scroll-mt-28 overflow-hidden bg-[#FEF3E2] pb-16 pt-10 font-['Poppins'] sm:pb-20 sm:pt-14"
     >
       <div
         aria-hidden="true"

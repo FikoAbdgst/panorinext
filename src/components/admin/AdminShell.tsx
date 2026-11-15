@@ -43,6 +43,7 @@ const NAV_GROUPS: {
     label: "Katalog",
     items: [
       { href: "/admin/frames", label: "Frame", icon: "frame" },
+      { href: "/admin/flipbook", label: "Flipbook", icon: "frame" },
       { href: "/admin/categories", label: "Kategori", icon: "tag" },
     ],
   },
@@ -58,6 +59,7 @@ const SECTION_TITLES: { prefix: string; title: string }[] = [
   { prefix: "/admin/packs", title: "Paket" },
   { prefix: "/admin/rooms", title: "Ruang Premium" },
   { prefix: "/admin/frames", title: "Frame" },
+  { prefix: "/admin/flipbook", title: "Flipbook" },
   { prefix: "/admin/categories", title: "Kategori" },
   { prefix: "/admin/testimoni", title: "Testimoni" },
 ];

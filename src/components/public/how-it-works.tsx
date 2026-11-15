@@ -238,7 +238,7 @@ export function HowItWorks() {
   return (
     <section
       id="cara-kerja"
-      className="relative scroll-mt-24 overflow-hidden bg-[#BF3131] pb-16 pt-10 font-['Poppins'] sm:pb-20 sm:pt-14"
+      className="relative scroll-mt-28 overflow-hidden bg-[#BF3131] pb-16 pt-10 font-['Poppins'] sm:pb-20 sm:pt-14"
     >
       <div
         aria-hidden="true"

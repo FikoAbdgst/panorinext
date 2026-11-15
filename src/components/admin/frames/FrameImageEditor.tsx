@@ -28,6 +28,7 @@ type FrameImageEditorProps = {
   open: boolean;
   imageUrl: string | null;
   initialSlots?: FrameSlot[];
+  applyLabel?: string;
   onClose: () => void;
   onApply: (result: FrameImageEditResult) => Promise<void> | void;
 };
@@ -161,6 +162,7 @@ export function FrameImageEditor({
   open,
   imageUrl,
   initialSlots,
+  applyLabel = "Terapkan ke Frame",
   onClose,
   onApply,
 }: FrameImageEditorProps) {
@@ -756,7 +758,7 @@ export function FrameImageEditor({
               </label>
               <p className="text-xs leading-relaxed text-neutral-500">
                 {tool === "brush"
-                  ? "Area yang dilewati menjadi transparan. Gunakan ukuran 1–3px untuk sela-sela kecil. Slot baru dari area kuas dideteksi saat menekan Terapkan ke Frame."
+                  ? "Area yang dilewati menjadi transparan. Gunakan ukuran 1–3px untuk sela-sela kecil. Slot baru dari area kuas dideteksi saat menekan tombol terapkan."
                   : "Area yang dilewati dikembalikan ke gambar PNG asli. Berguna untuk memperbaiki bagian yang terlanjur terhapus."}
               </p>
             </div>
@@ -836,7 +838,7 @@ export function FrameImageEditor({
               disabled={!imageData || applying}
               className="rounded-lg bg-[#BF3131] px-4 py-2 text-sm font-medium text-white hover:bg-[#a52929] disabled:opacity-60"
             >
-              {applying ? "Menyiapkan..." : "Terapkan ke Frame"}
+              {applying ? "Menyiapkan..." : applyLabel}
             </button>
             <button
               type="button"

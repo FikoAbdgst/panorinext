@@ -16,6 +16,10 @@ export const FRAME_STANDARD_SIZE = { width: 380, height: 1000 } as const;
 /** Bucket Supabase Storage. */
 export const STORAGE_BUCKETS = {
   frames: "frames",
+  flipbookFrames: "flipbook-frames",
   paymentProofs: "payment-proofs",
   photoResults: "photo-results",
 } as const;
+
+/** Satu sesi flipbook selalu berisi 10 halaman dan 10 frame rekaman. */
+export const FLIPBOOK_PAGE_COUNT = 10;

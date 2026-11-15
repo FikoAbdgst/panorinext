@@ -118,6 +118,119 @@ export type Database = {
           },
         ];
       };
+      flipbook_frames: {
+        Row: {
+          id: number;
+          name: string;
+          slug: string;
+          image_path: string | null;
+          width: number;
+          height: number;
+          slots: FrameSlot[];
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          name: string;
+          slug: string;
+          image_path?: string | null;
+          width?: number;
+          height?: number;
+          slots?: FrameSlot[];
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          name?: string;
+          slug?: string;
+          image_path?: string | null;
+          width?: number;
+          height?: number;
+          slots?: FrameSlot[];
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      flipbook_frame_assets: {
+        Row: {
+          id: number;
+          frame_id: number;
+          kind: "cover" | "page" | "back";
+          page_index: number;
+          image_path: string;
+          width: number;
+          height: number;
+          slots: FrameSlot[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          frame_id: number;
+          kind: "cover" | "page" | "back";
+          page_index?: number;
+          image_path: string;
+          width?: number;
+          height?: number;
+          slots?: FrameSlot[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          frame_id?: number;
+          kind?: "cover" | "page" | "back";
+          page_index?: number;
+          image_path?: string;
+          width?: number;
+          height?: number;
+          slots?: FrameSlot[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "flipbook_frame_assets_frame_id_fkey";
+            columns: ["frame_id"];
+            isOneToOne: false;
+            referencedRelation: "flipbook_frames";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      flipbook_covers: {
+        Row: {
+          kind: "cover" | "back";
+          image_path: string | null;
+          use_photo: boolean;
+          is_active: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          kind: "cover" | "back";
+          image_path?: string | null;
+          use_photo?: boolean;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          kind?: "cover" | "back";
+          image_path?: string | null;
+          use_photo?: boolean;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       packs: {
         Row: {
           id: number;

@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { AosRefresh } from "@/components/public/aos-refresh";
 import { CustomPacks } from "@/components/public/custom-packs";
 import { FeaturedFrames } from "@/components/public/featured-frames";
+import { FlipbookPromo } from "@/components/public/flipbook-promo";
 import { Footer } from "@/components/public/footer";
 import { Hero } from "@/components/public/hero";
 import { HowItWorks } from "@/components/public/how-it-works";
@@ -70,6 +71,8 @@ export default function HomePage() {
         <FeaturedFrames />
         <AosRefresh />
       </Suspense>
+      <FlipbookPromo />
+      <AosRefresh />
       <HowItWorks />
       <AosRefresh />
       <CustomPacks />

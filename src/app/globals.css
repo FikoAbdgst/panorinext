@@ -3266,3 +3266,133 @@ html.lenis body {
     transition: none;
   }
 }
+/* Kamera flipbook: navbar disembunyikan agar kamera penuh ---------------- */
+html[data-flipbook-capture="true"] [data-site-navbar] {
+  display: none;
+}
+
+html[data-flipbook-capture="true"] #flipbook-studio {
+  scroll-margin-top: 0;
+}
+
+/* Flipbook 3D ------------------------------------------------------------ */
+
+.page-flipbook .flipbook-stage {
+  perspective: 1800px;
+  perspective-origin: 50% 42%;
+}
+
+.page-flipbook .flipbook-book {
+  transform-style: preserve-3d;
+}
+
+.page-flipbook .flipbook-leaf {
+  position: absolute;
+  inset: 0;
+  background: #fffbf3;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.page-flipbook .flipbook-leaf-gloss {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(42, 10, 10, 0) 0%,
+    rgba(42, 10, 10, 0.16) 48%,
+    rgba(42, 10, 10, 0.42) 100%
+  );
+}
+
+@keyframes flipbook-turn-next {
+  from {
+    transform: rotateY(0deg);
+  }
+
+  to {
+    transform: rotateY(-180deg);
+  }
+}
+
+@keyframes flipbook-turn-prev {
+  from {
+    transform: rotateY(-180deg);
+  }
+
+  to {
+    transform: rotateY(0deg);
+  }
+}
+
+@keyframes flipbook-gloss-sweep {
+  0% {
+    opacity: 0;
+  }
+
+  42% {
+    opacity: 0.62;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.page-flipbook .flipbook-leaf--next {
+  animation: flipbook-turn-next 520ms cubic-bezier(0.34, 0.05, 0.24, 1) both;
+}
+
+.page-flipbook .flipbook-leaf--prev {
+  animation: flipbook-turn-prev 520ms cubic-bezier(0.34, 0.05, 0.24, 1) both;
+}
+
+.page-flipbook .flipbook-leaf--next .flipbook-leaf-gloss,
+.page-flipbook .flipbook-leaf--prev .flipbook-leaf-gloss {
+  animation: flipbook-gloss-sweep 520ms ease-in-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-flipbook .flipbook-leaf--next,
+  .page-flipbook .flipbook-leaf--prev {
+    animation-duration: 140ms;
+  }
+
+  .page-flipbook .flipbook-leaf--next .flipbook-leaf-gloss,
+  .page-flipbook .flipbook-leaf--prev .flipbook-leaf-gloss {
+    animation: none;
+  }
+}
+
+/* Animasi cekrek singkat di kamera flipbook ------------------------------ */
+@keyframes flipbook-shutter {
+  0% {
+    opacity: 0.95;
+    transform: scale(1.012);
+  }
+
+  55% {
+    opacity: 0.28;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+.page-flipbook .flipbook-shutter {
+  animation: flipbook-shutter 180ms ease-out forwards;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-flipbook .flipbook-shutter {
+    animation-duration: 90ms;
+  }
+}

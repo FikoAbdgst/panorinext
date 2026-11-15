@@ -116,6 +116,14 @@ export function Footer() {
                   Frame
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/flipbook"
+                  className="transition hover:text-[#BF3131] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2]"
+                >
+                  Flipbook
+                </Link>
+              </li>
               {PREMIUM_PUBLIC_ENABLED ? (
                 <li>
                   <Link

@@ -384,7 +384,7 @@ export function CustomPacks() {
   return (
     <section
       id="custom-pack"
-      className="relative overflow-hidden bg-[#FEF3E2] pb-16 pt-10 font-['Poppins'] sm:pb-20 sm:pt-14"
+      className="relative scroll-mt-28 overflow-hidden bg-[#FEF3E2] pb-16 pt-10 font-['Poppins'] sm:pb-20 sm:pt-14"
     >
       <style>{`
         @keyframes pack-scene-in {

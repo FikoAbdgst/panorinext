@@ -203,6 +203,37 @@ export function Hero() {
               </a>
             </div>
 
+            <div
+              suppressHydrationWarning
+              data-aos="lab-focus"
+              data-aos-duration="900"
+              data-aos-delay="360"
+              className="mt-4 flex justify-center"
+            >
+              <Link
+                href="/flipbook"
+                className="group inline-flex flex-wrap items-center justify-center gap-2 text-[11px] font-semibold text-[#7A5A50] underline-offset-4 transition hover:text-[#BF3131] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FEF3E2] sm:text-xs"
+              >
+                <span className="inline-flex items-center gap-1 rounded-full border border-[#BF3131]/30 bg-[#FFFBF3] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#BF3131]">
+                  <span className="h-1 w-1 rounded-full bg-[#BF3131]" />
+                  Baru
+                </span>
+                Flipbook dari banyak foto
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
+            </div>
+
             {/* <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 border-y border-dashed border-[#BF3131]/35 py-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#7A3E32] min-[380px]:gap-x-4 min-[380px]:text-[10px] min-[380px]:tracking-[0.18em] sm:text-[11px]">
               <span>Tanpa install</span>
               <span
