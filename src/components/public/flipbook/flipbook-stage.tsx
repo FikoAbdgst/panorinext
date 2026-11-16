@@ -51,7 +51,7 @@ export function useFlipbookStage(): FlipbookStageContextValue {
 export function FlipbookHeroGate({ children }: { children: ReactNode }) {
   const { stage } = useFlipbookStage();
 
-  if (stage === "capture") {
+  if (stage === "capture" || stage === "book") {
     return <div aria-hidden="true" className="h-4 sm:h-5" />;
   }
 

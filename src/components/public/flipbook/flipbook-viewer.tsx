@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
+import Link from "next/link"
 import {
   useCallback,
   useEffect,
@@ -673,6 +674,16 @@ export function FlipbookViewer({
         />
       ) : null}
 
+      <div className="mb-4 flex items-center justify-end">
+        <Link
+          href="/fitur"
+          className={`${BTN_SECONDARY} min-h-10 px-3 text-xs`}
+        >
+          <ArrowIcon direction="prev" />
+          Kembali ke Fitur
+        </Link>
+      </div>
+
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <div>
           <div className="flex items-center justify-between gap-3">
@@ -691,7 +702,7 @@ export function FlipbookViewer({
                 </span>
               ) : null}
               <span className="border border-[#BF3131]/25 bg-[#FFFBF3] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#7A5A50]">
-                {photos.length} foto
+                {photos.length} frame
               </span>
             </div>
           </div>
@@ -842,7 +853,7 @@ export function FlipbookViewer({
               )}
             </button>
             <button type="button" onClick={onRetake} className={BTN_SECONDARY}>
-              Foto ulang
+              Rekam ulang
             </button>
             <button type="button" onClick={onRestart} className={BTN_SECONDARY}>
               Mulai baru
@@ -854,7 +865,7 @@ export function FlipbookViewer({
           </p>
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-28">
+        <aside className="space-y-4 lg:sticky lg:top-6">
           <div className="border border-[#BF3131]/25 bg-[#FFFBF3] p-4 shadow-[0_20px_50px_-40px_rgba(42,10,10,0.7)]">
             <h3 className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#BF3131]">
               Bawa pulang

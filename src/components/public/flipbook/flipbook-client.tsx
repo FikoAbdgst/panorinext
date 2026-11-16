@@ -2,13 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-} from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import {
   BoothToast,
@@ -20,7 +14,6 @@ import { FlipbookWizard } from "@/components/public/flipbook/flipbook-wizard"
 import { FramedPhoto } from "@/components/public/flipbook/framed-photo"
 import { FLIPBOOK_PAGE_COUNT } from "@/lib/constants"
 import { FLIPBOOK_FRAME_ASPECT } from "@/lib/flipbook/constants"
-import { loadImageElement } from "@/lib/flipbook/export"
 import type { FlipbookFrame } from "@/lib/flipbook/types"
 
 type FacingMode = "user" | "environment"
@@ -82,24 +75,6 @@ function findNextEmpty(
     }
   }
   return null
-}
-
-function ShutterIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-6 w-6"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M4 8h3l1.6-2h6.8L17 8h3v10H4z" />
-      <circle cx="12" cy="13" r="3.4" />
-    </svg>
-  )
 }
 
 function RecordIcon() {
@@ -166,41 +141,6 @@ function SwapIcon() {
   )
 }
 
-function FlashIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M13 2L4.5 13H11l-1 9L19.5 10H13z" />
-    </svg>
-  )
-}
-
-function UploadIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 16V5M8 9l4-4 4 4" />
-      <path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" />
-    </svg>
-  )
-}
-
 export function FlipbookClient({
   frames,
 }: {
@@ -210,8 +150,6 @@ export function FlipbookClient({
   const [countdownSetting, setCountdownSetting] = useState<number>(3)
   const [filter, setFilter] = useState("none")
   const [isMirrored, setIsMirrored] = useState(true)
-  const [isFlashEnabled, setIsFlashEnabled] = useState(false)
-  const [isFlashVisible, setIsFlashVisible] = useState(false)
   const [facingMode, setFacingMode] = useState<FacingMode>("user")
   const [selectedFrameId, setSelectedFrameId] = useState<number | null>(
     frames[0]?.id ?? null,
@@ -223,7 +161,6 @@ export function FlipbookClient({
   const [activeIndex, setActiveIndex] = useState(0)
   const [isCapturing, setIsCapturing] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
   const [countdownDisplay, setCountdownDisplay] = useState<string | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [isResetConfirm, setIsResetConfirm] = useState(false)
@@ -236,7 +173,6 @@ export function FlipbookClient({
   const photosRef = useRef<Array<string | null>>(photos)
   const captureRunRef = useRef(0)
   const toastIdRef = useRef(0)
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     photosRef.current = photos
@@ -244,11 +180,12 @@ export function FlipbookClient({
 
   useEffect(() => {
     const root = document.documentElement
-    if (stage !== "capture") {
+    const fullscreen = stage === "capture" || stage === "book"
+    if (!fullscreen) {
       delete root.dataset.flipbookCapture
       return
     }
-    /* Navbar & hero disembunyikan saat kamera aktif; kamera ke viewport. */
+    /* Navbar & hero disembunyikan saat kamera dan hasil flipbook aktif. */
     root.dataset.flipbookCapture = "true"
     document
       .getElementById("flipbook-studio")
@@ -348,7 +285,7 @@ export function FlipbookClient({
 
       if (!stream) {
         setCameraError(
-          "Gagal mengakses kamera. Izinkan kamera di browser, lalu tekan Coba lagi. Kamu juga bisa mengunggah foto dari galeri.",
+          "Gagal mengakses kamera. Izinkan kamera di browser, lalu tekan Coba lagi.",
         )
         return
       }
@@ -373,7 +310,6 @@ export function FlipbookClient({
       setIsCapturing(false)
       setIsRecording(false)
       setCountdownDisplay(null)
-      setIsFlashVisible(false)
     }
   }, [stage, startWebcam, stopStream])
 
@@ -406,26 +342,6 @@ export function FlipbookClient({
       return true
     },
     [countdownSetting],
-  )
-
-  const triggerFlash = useCallback(
-    async (token: number): Promise<boolean> => {
-      if (!isFlashEnabled) {
-        return true
-      }
-      if (token !== captureRunRef.current) {
-        return false
-      }
-      setIsFlashVisible(true)
-      await sleep(220)
-      setIsFlashVisible(false)
-      if (token !== captureRunRef.current) {
-        return false
-      }
-      await sleep(60)
-      return token === captureRunRef.current
-    },
-    [isFlashEnabled],
   )
 
   const captureAt = useCallback(
@@ -485,42 +401,8 @@ export function FlipbookClient({
     [filter, isMirrored],
   )
 
-  const handleCapture = async () => {
-    if (isCapturing || isUploading) {
-      return
-    }
-    setIsCapturing(true)
-    const token = ++captureRunRef.current
-    try {
-      const ready = await waitCountdown(token)
-      if (!ready) {
-        return
-      }
-      const flashed = await triggerFlash(token)
-      if (!flashed) {
-        return
-      }
-      if (!captureAt(activeIndex)) {
-        showToast("Kamera belum siap. Tunggu preview muncul, lalu coba lagi.", "warning")
-        return
-      }
-
-      const nextEmpty = findNextEmpty(photosRef.current, activeIndex)
-      if (nextEmpty === null) {
-        showToast("Semua halaman siap. Susun flipbook-mu!", "success", 3500)
-      } else {
-        setActiveIndex(nextEmpty)
-      }
-    } finally {
-      if (token === captureRunRef.current) {
-        setIsCapturing(false)
-        setCountdownDisplay(null)
-      }
-    }
-  }
-
   const handleRecord = async () => {
-    if (isCapturing || isUploading) {
+    if (isCapturing) {
       return
     }
     const startIndex = photosRef.current.findIndex((photo) => !photo)
@@ -583,70 +465,6 @@ export function FlipbookClient({
     showToast("Rekaman dihentikan.", "info", 2500)
   }
 
-  const handleUploadChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    event.target.value = ""
-    if (!file || isUploading) {
-      return
-    }
-
-    setIsUploading(true)
-    const objectUrl = URL.createObjectURL(file)
-    try {
-      const image = await loadImageElement(objectUrl)
-      const width = image.naturalWidth || image.width
-      const height = image.naturalHeight || image.height
-      if (width <= 0 || height <= 0) {
-        throw new Error("Ukuran foto tidak valid")
-      }
-      const scale = Math.min(
-        1,
-        CAPTURE_MAX_DIMENSION / Math.max(width, height),
-      )
-      const canvas = document.createElement("canvas")
-      canvas.width = Math.round(width * scale)
-      canvas.height = Math.round(height * scale)
-      const ctx = canvas.getContext("2d")
-      if (!ctx) {
-        throw new Error("Canvas tidak tersedia")
-      }
-      ctx.imageSmoothingEnabled = true
-      ctx.imageSmoothingQuality = "high"
-      ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
-      const dataUrl = canvas.toDataURL("image/png")
-
-      const next = [...photosRef.current]
-      next[activeIndex] = dataUrl
-      photosRef.current = next
-      setPhotos(next)
-
-      const nextEmpty = findNextEmpty(next, activeIndex)
-      if (nextEmpty !== null) {
-        setActiveIndex(nextEmpty)
-      }
-      showToast(
-        `Foto dimasukkan ke halaman ${pad(activeIndex + 1)}.`,
-        "success",
-        2800,
-      )
-    } catch {
-      showToast("Gagal membaca foto. Coba file JPG atau PNG.", "error")
-    } finally {
-      URL.revokeObjectURL(objectUrl)
-      setIsUploading(false)
-    }
-  }
-
-  const removePhoto = (index: number) => {
-    if (isCapturing) return
-    const next = [...photosRef.current]
-    next[index] = null
-    photosRef.current = next
-    setPhotos(next)
-    setActiveIndex(index)
-    showToast(`Halaman ${pad(index + 1)} dihapus.`, "info", 2200)
-  }
-
   const clearAll = () => {
     if (isCapturing) return
     captureRunRef.current += 1
@@ -662,9 +480,20 @@ export function FlipbookClient({
   }
 
   const handleRetakeFromBook = () => {
+    captureRunRef.current += 1
+    const empty = Array.from({ length: photos.length }, () => null)
+    photosRef.current = empty
+    setPhotos(empty)
     setActiveIndex(0)
+    setIsCapturing(false)
+    setIsRecording(false)
+    setCountdownDisplay(null)
     setStage("capture")
-    showToast("Pilih halaman lewat thumbnail, lalu ambil foto baru.", "info", 4000)
+    showToast(
+      "Halaman dikosongkan. Tekan rekam untuk merekam ulang seluruh video.",
+      "info",
+      4500,
+    )
   }
 
   const handleRestartFromBook = () => {
@@ -678,7 +507,6 @@ export function FlipbookClient({
   }
 
   const activeLabel = `Halaman ${pad(activeIndex + 1)}`
-  const activeFilled = Boolean(photos[activeIndex])
 
   return (
     <div className="relative">
@@ -691,16 +519,6 @@ export function FlipbookClient({
           onDone={dismissToast}
         />
       ) : null}
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(event) => {
-          void handleUploadChange(event)
-        }}
-      />
 
       {stage === "book" ? (
         <FlipbookViewer
@@ -715,7 +533,7 @@ export function FlipbookClient({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="inline-flex min-h-10 items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A5A50]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#BF3131]" />
-                Sesi foto
+                Sesi rekam
               </span>
 
               <div className="flex items-center gap-2">
@@ -790,13 +608,6 @@ export function FlipbookClient({
                       >
                         Coba lagi
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="inline-flex min-h-10 items-center justify-center rounded-[2px] border border-[#FEF3E2]/40 px-4 py-2 text-xs font-bold text-[#FEF3E2] transition hover:bg-[#FEF3E2]/10"
-                      >
-                        Unggah foto
-                      </button>
                     </div>
                   </div>
                 ) : null}
@@ -836,13 +647,6 @@ export function FlipbookClient({
                   </div>
                 ) : null}
 
-                <div
-                  aria-hidden="true"
-                  className={`pointer-events-none absolute inset-0 z-30 bg-white transition-opacity duration-150 ${
-                    isFlashVisible ? "opacity-90" : "opacity-0"
-                  }`}
-                />
-
                 {shutterPulse > 0 ? (
                   <div
                     key={shutterPulse}
@@ -878,6 +682,9 @@ export function FlipbookClient({
                         >
                           <SwapIcon />
                         </button>
+                      </div>
+
+                      <div className="flex flex-col items-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => {
@@ -889,66 +696,26 @@ export function FlipbookClient({
                           }}
                           disabled={!isRecording && (isCapturing || allFilled)}
                           aria-label={
-                            isRecording ? "Stop rekaman" : "Rekam semua halaman"
-                          }
-                          title={isRecording ? "Stop rekaman" : "Rekam semua halaman"}
-                          className={`${ICON_BUTTON} ${
-                            isRecording ? "bg-[#BF3131] text-[#FEF3E2]" : ""
-                          }`}
-                        >
-                          {isRecording ? <StopIcon /> : <RecordIcon />}
-                        </button>
-                      </div>
-
-                      <div className="flex flex-col items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void handleCapture()
-                          }}
-                          disabled={isCapturing || isUploading}
-                          aria-label={
-                            activeFilled
-                              ? `Ganti foto ${activeLabel}`
-                              : `Ambil foto ${activeLabel}`
+                            isRecording
+                              ? "Stop rekaman"
+                              : "Rekam semua halaman sekaligus"
                           }
                           className={`flex h-16 w-16 items-center justify-center rounded-full border-[3px] border-[#FEF3E2] bg-[#BF3131] text-[#FEF3E2] shadow-[0_10px_30px_-12px_rgba(0,0,0,0.8)] transition duration-200 hover:scale-105 hover:bg-[#A02828] active:scale-95 disabled:pointer-events-none disabled:opacity-50 ${FOCUS_RING}`}
                         >
-                          <ShutterIcon />
+                          {isRecording ? <StopIcon /> : <RecordIcon />}
                         </button>
                         <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#FEF3E2]/85">
-                          {isCapturing
-                            ? "Menyiapkan..."
-                            : activeFilled
-                              ? "Ganti"
-                              : "Ambil"}
+                          {isRecording
+                            ? "Stop"
+                            : isCapturing
+                              ? "Menyiapkan..."
+                              : "Rekam"}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={isUploading}
-                          aria-label="Unggah foto untuk halaman aktif"
-                          title="Unggah foto"
-                          className={ICON_BUTTON}
-                        >
-                          <UploadIcon />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setIsFlashEnabled((value) => !value)}
-                          aria-pressed={isFlashEnabled}
-                          aria-label="Aktifkan atau matikan flash"
-                          title="Flash"
-                          className={`${ICON_BUTTON} ${
-                            isFlashEnabled ? "bg-[#BF3131] text-[#FEF3E2]" : ""
-                          }`}
-                        >
-                          <FlashIcon />
-                        </button>
-                      </div>
+                      <span className="mb-7 inline-flex items-center rounded-[2px] bg-[#2A0A0A]/55 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#FEF3E2] backdrop-blur">
+                        {takenCount}/{photos.length} frame
+                      </span>
                     </div>
                   </div>
                 ) : null}
@@ -977,8 +744,9 @@ export function FlipbookClient({
             </div>
 
             <p className="mt-3 text-[11px] leading-relaxed text-[#7A5A50]">
-              Klik thumbnail untuk memilih halaman. Ambil ulang halaman yang
-              kurang pas tanpa kehilangan foto lain.
+              Flipbook hanya memakai rekaman video. Tekan tombol rekam untuk
+              mengisi {photos.length} frame berurutan, lalu susun jadi buku.
+              Untuk mengganti hasil, rekam ulang seluruh sesi.
             </p>
 
             {allFilled ? (
@@ -1079,7 +847,7 @@ export function FlipbookClient({
                           ) : (
                             <img
                               src={photo}
-                              alt={`Foto halaman ${index + 1}`}
+                              alt={`Frame halaman ${index + 1}`}
                               draggable={false}
                               className="h-full w-full object-cover"
                             />
@@ -1100,43 +868,12 @@ export function FlipbookClient({
                           </span>
                         ) : null}
                       </button>
-                      {photo ? (
-                        <button
-                          type="button"
-                          onClick={() => removePhoto(index)}
-                          aria-label={`Hapus foto halaman ${index + 1}`}
-                          className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border border-[#BF3131]/30 bg-[#FFFBF3] text-[#BF3131] shadow transition hover:bg-[#BF3131] hover:text-[#FEF3E2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131]"
-                        >
-                          <svg
-                            aria-hidden="true"
-                            viewBox="0 0 24 24"
-                            className="h-3 w-3"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                          >
-                            <path d="M6 6l12 12M18 6L6 18" />
-                          </svg>
-                        </button>
-                      ) : null}
                     </div>
                   )
                 })}
               </div>
 
               <div className="mt-3 grid gap-2">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                  className={BTN_SECONDARY}
-                >
-                  <UploadIcon />
-                  {isUploading
-                    ? "Memuat foto..."
-                    : `Unggah ke halaman ${pad(activeIndex + 1)}`}
-                </button>
                 {isRecording ? (
                   <button
                     type="button"
@@ -1206,7 +943,7 @@ export function FlipbookClient({
                   disabled={isCapturing || takenCount === 0}
                   className={`${BTN_GHOST} mt-2 w-full border border-[#BF3131]/20`}
                 >
-                  Hapus semua foto
+                  Hapus semua frame
                 </button>
               )}
             </div>

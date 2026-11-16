@@ -29,7 +29,7 @@ const TUTORIAL_STEPS = [
   },
   {
     title: `Rekam ${FLIPBOOK_PAGE_COUNT} frame`,
-    body: `Kamera mengambil ${FLIPBOOK_PAGE_COUNT} frame berurutan. Hitung mundur bisa diubah kapan saja di layar kamera.`,
+    body: `Semua halaman diisi dari satu sesi rekaman video. Tidak ada foto atau unggah gambar; hitung mundur bisa diubah kapan saja di layar kamera.`,
   },
   {
     title: "Putar & bawa pulang",
@@ -179,7 +179,8 @@ export function FlipbookWizard({
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5B3A32]">
             Seperti photostrip, frame dipilih duluan. Frame PNG ini dipasang di
-            setiap halaman flipbook. Foto rekaman mengisi area transparannya.
+            setiap halaman flipbook. Frame rekaman video mengisi area
+            transparannya.
           </p>
 
           {frames.length > 0 ? (
@@ -280,7 +281,7 @@ export function FlipbookWizard({
             Cara main flipbook.
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5B3A32]">
-            Empat langkah singkat. Semua foto diproses di perangkatmu, tidak
+            Empat langkah singkat. Semua frame diproses di perangkatmu, tidak
             diunggah ke server.
           </p>
 
