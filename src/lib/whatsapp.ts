@@ -18,22 +18,52 @@ export function buildAdminWhatsappUrl(message: string): string {
   return buildWhatsappUrl(ADMIN_WHATSAPP_NUMBER, message);
 }
 
+type CustomFrameRequestInput = {
+  name: string;
+  whatsapp: string;
+  occasion: string;
+  eventName: string;
+  date: string;
+  slots: string;
+  theme: string;
+  reference: string;
+};
+
+export function buildCustomFrameRequestMessage({
+  name,
+  whatsapp,
+  occasion,
+  eventName,
+  date,
+  slots,
+  theme,
+  reference,
+}: CustomFrameRequestInput): string {
+  const lines = [
+    "Halo admin PanoriCam, saya ingin request custom frame.",
+    "",
+    `Nama: ${name}`,
+    `WhatsApp: ${whatsapp}`,
+    `Jenis acara: ${occasion}`,
+    `Nama acara: ${eventName}`,
+    `Tanggal: ${date}`,
+    `Jumlah frame/slot: ${slots}`,
+    `Tema/warna: ${theme}`,
+  ];
+
+  if (reference) {
+    lines.push(`Referensi: ${reference}`);
+  }
+
+  return lines.join("\n");
+}
+
 export const WHATSAPP_TEMPLATES = {
   footer: [
     "Halo admin PanoriCam, saya ingin bertanya.",
     "",
     "Nama:",
     "Kebutuhan:",
-  ].join("\n"),
-  customFrame: [
-    "Halo admin PanoriCam, saya ingin konsultasi custom frame.",
-    "",
-    "Nama:",
-    "Acara:",
-    "Tanggal:",
-    "Tema/warna:",
-    "Jumlah frame/slot:",
-    "Referensi (link/foto):",
   ].join("\n"),
   customPack: [
     "Halo admin PanoriCam, saya ingin konsultasi paket frame custom.",

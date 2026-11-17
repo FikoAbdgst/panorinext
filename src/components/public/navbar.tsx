@@ -20,7 +20,6 @@ const HOME_LINKS: readonly SectionLink[] = [
 const FRAME_LINKS: readonly SectionLink[] = [
   { hash: "#frame-catalog", label: "Katalog" },
   { hash: "#custom-frame", label: "Custom Frame" },
-  { hash: "#pindah-fitur", label: "Pindah Fitur" },
 ]
 
 const FLIPBOOK_LINKS: readonly SectionLink[] = []

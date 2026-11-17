@@ -45,9 +45,9 @@ const BTN_PRIMARY = `inline-flex min-h-12 items-center justify-center gap-2 roun
 
 const BTN_SECONDARY = `inline-flex min-h-11 items-center justify-center gap-2 rounded-[2px] border border-[#BF3131]/35 bg-[#FFFBF3] px-4 py-2.5 text-sm font-semibold text-[#BF3131] transition duration-200 hover:border-[#BF3131] hover:bg-[#FEF3E2] disabled:pointer-events-none disabled:opacity-40 ${FOCUS_RING}`
 
-const BTN_GHOST = `inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[2px] px-2.5 text-xs font-semibold text-[#7A3E32] transition hover:bg-[#BF3131]/8 hover:text-[#2A0A0A] disabled:pointer-events-none disabled:opacity-40 ${FOCUS_RING}`
+const BTN_GHOST = `inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[2px] px-2.5 text-xs font-semibold text-[#7A3E32] transition hover:bg-[#BF3131]/8 hover:text-[#2A0A0A] disabled:pointer-events-none disabled:opacity-40 ${FOCUS_RING}`
 
-const ICON_BUTTON = `flex h-10 w-10 items-center justify-center rounded-full bg-[#FEF3E2]/90 text-[#2A0A0A] shadow-[0_6px_18px_-10px_rgba(42,10,10,0.7)] backdrop-blur transition hover:bg-[#FEF3E2] disabled:pointer-events-none disabled:opacity-45 ${FOCUS_RING}`
+const ICON_BUTTON = `flex h-11 w-11 items-center justify-center rounded-full bg-[#FEF3E2]/90 text-[#2A0A0A] shadow-[0_6px_18px_-10px_rgba(42,10,10,0.7)] backdrop-blur transition hover:bg-[#FEF3E2] disabled:pointer-events-none disabled:opacity-45 ${FOCUS_RING}`
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms))
@@ -77,6 +77,23 @@ function findNextEmpty(
   return null
 }
 
+function ArrowLeftIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M15 19l-7-7 7-7" />
+    </svg>
+  )
+}
+
 function RecordIcon() {
   return (
     <svg
@@ -103,7 +120,8 @@ function StopIcon() {
   )
 }
 
-function MirrorIcon() {  return (
+function MirrorIcon() {
+  return (
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
@@ -163,7 +181,6 @@ export function FlipbookClient({
   const [isRecording, setIsRecording] = useState(false)
   const [countdownDisplay, setCountdownDisplay] = useState<string | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
-  const [isResetConfirm, setIsResetConfirm] = useState(false)
   const [shutterPulse, setShutterPulse] = useState(0)
 
   const [toast, setToast] = useState<ToastState | null>(null)
@@ -173,6 +190,8 @@ export function FlipbookClient({
   const photosRef = useRef<Array<string | null>>(photos)
   const captureRunRef = useRef(0)
   const toastIdRef = useRef(0)
+  const resultDialogRef = useRef<HTMLDivElement | null>(null)
+  const bookTriggerRef = useRef<HTMLButtonElement | null>(null)
 
   useEffect(() => {
     photosRef.current = photos
@@ -196,12 +215,25 @@ export function FlipbookClient({
   }, [stage])
 
   useEffect(() => {
-    if (!isResetConfirm) {
+    if (stage !== "book") {
       return
     }
-    const timer = window.setTimeout(() => setIsResetConfirm(false), 4500)
-    return () => window.clearTimeout(timer)
-  }, [isResetConfirm])
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setStage("capture")
+      }
+    }
+    const previousOverflow = document.body.style.overflow
+    const trigger = bookTriggerRef.current
+    document.body.style.overflow = "hidden"
+    window.addEventListener("keydown", onKeyDown)
+    resultDialogRef.current?.focus()
+    return () => {
+      window.removeEventListener("keydown", onKeyDown)
+      document.body.style.overflow = previousOverflow
+      trigger?.focus()
+    }
+  }, [stage, setStage])
 
   const showToast = useCallback(
     (message: string, type: ToastType = "info", duration = 4000) => {
@@ -475,11 +507,10 @@ export function FlipbookClient({
     setIsCapturing(false)
     setIsRecording(false)
     setCountdownDisplay(null)
-    setIsResetConfirm(false)
     showToast("Semua halaman dikosongkan.", "info", 2500)
   }
 
-  const handleRetakeFromBook = () => {
+  const handleRetake = () => {
     captureRunRef.current += 1
     const empty = Array.from({ length: photos.length }, () => null)
     photosRef.current = empty
@@ -496,14 +527,16 @@ export function FlipbookClient({
     )
   }
 
-  const handleRestartFromBook = () => {
-    const empty = Array.from({ length: photos.length }, () => null)
-    photosRef.current = empty
-    setPhotos(empty)
-    setActiveIndex(0)
-    setSelectedFrameId(frames[0]?.id ?? null)
+  /** Kembali ke pilih frame tanpa membuang frame yang sudah direkam. */
+  const handleBackStage = () => {
+    if (stage !== "capture") {
+      return
+    }
+    captureRunRef.current += 1
+    setIsCapturing(false)
+    setIsRecording(false)
+    setCountdownDisplay(null)
     setStage("frame")
-    showToast("Sesi baru dimulai.", "info", 2500)
   }
 
   const activeLabel = `Halaman ${pad(activeIndex + 1)}`
@@ -520,34 +553,44 @@ export function FlipbookClient({
         />
       ) : null}
 
-      {stage === "book" ? (
-        <FlipbookViewer
-          photos={photos.filter((photo): photo is string => Boolean(photo))}
-          frame={selectedFrame}
-          onRetake={handleRetakeFromBook}
-          onRestart={handleRestartFromBook}
+      {stage === "frame" ? (
+        <FlipbookWizard
+          frames={frames}
+          selectedFrameId={selectedFrameId}
+          onSelectFrame={setSelectedFrameId}
+          onStartCapture={() => {
+            const firstEmpty = photos.findIndex((photo) => !photo)
+            setActiveIndex(firstEmpty === -1 ? 0 : firstEmpty)
+            setStage("capture")
+          }}
         />
-      ) : stage === "capture" ? (
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(270px,0.5fr)] lg:items-start">
-          <div>
+      ) : (
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
+          <div className="mx-auto w-full min-w-0 max-w-3xl lg:mx-0 lg:max-w-none">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="inline-flex min-h-10 items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A5A50]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#BF3131]" />
-                Sesi rekam
-              </span>
+              <button
+                type="button"
+                onClick={handleBackStage}
+                aria-label="Kembali ke pilih frame"
+                className={`${BTN_GHOST} -ml-1.5`}
+              >
+                <ArrowLeftIcon />
+                Kembali
+              </button>
 
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A5A50]">
-                  {takenCount} / {photos.length} terisi
+              <div className="flex items-center gap-1">
+                <span className="pl-1 text-[10px] font-bold uppercase tracking-[0.18em] tabular-nums text-[#7A5A50]">
+                  {takenCount}/{photos.length} terisi
                 </span>
-                <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[#BF3131]/15">
-                  <div
-                    className="h-full rounded-full bg-[#BF3131] transition-all duration-300"
-                    style={{
-                      width: `${Math.round((takenCount / photos.length) * 100)}%`,
-                    }}
-                  />
-                </div>
+                {takenCount > 0 && !allFilled && !isRecording ? (
+                  <button
+                    type="button"
+                    onClick={clearAll}
+                    className={`${BTN_GHOST} ml-1`}
+                  >
+                    Kosongkan
+                  </button>
+                ) : null}
               </div>
             </div>
 
@@ -604,7 +647,7 @@ export function FlipbookClient({
                         onClick={() => {
                           void startWebcam(facingMode)
                         }}
-                        className="inline-flex min-h-10 items-center justify-center rounded-[2px] bg-[#FEF3E2] px-4 py-2 text-xs font-bold text-[#BF3131] transition hover:bg-white"
+                        className="inline-flex min-h-11 items-center justify-center rounded-[2px] bg-[#FEF3E2] px-4 py-2 text-xs font-bold text-[#BF3131] transition hover:bg-white"
                       >
                         Coba lagi
                       </button>
@@ -613,10 +656,6 @@ export function FlipbookClient({
                 ) : null}
 
                 <div className="pointer-events-none absolute left-3 top-3 z-20 flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-[2px] bg-[#2A0A0A]/65 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-[#FEF3E2] backdrop-blur">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#F16767]" />
-                    Live
-                  </span>
                   <span className="rounded-[2px] bg-[#FEF3E2]/90 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#2A0A0A]">
                     {activeLabel}
                   </span>
@@ -632,7 +671,7 @@ export function FlipbookClient({
                   <button
                     type="button"
                     onClick={stopRecording}
-                    className="absolute right-3 top-3 z-20 inline-flex min-h-9 items-center gap-1.5 rounded-[2px] bg-[#BF3131] px-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#FEF3E2] shadow-[0_8px_20px_-10px_rgba(0,0,0,0.8)] transition hover:bg-[#A02828] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FEF3E2]"
+                    className="absolute right-3 top-3 z-20 inline-flex min-h-11 items-center gap-1.5 rounded-[2px] bg-[#BF3131] px-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#FEF3E2] shadow-[0_8px_20px_-10px_rgba(0,0,0,0.8)] transition hover:bg-[#A02828] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FEF3E2]"
                   >
                     <StopIcon />
                     <span className="hidden sm:inline">Stop</span>
@@ -712,257 +751,172 @@ export function FlipbookClient({
                               : "Rekam"}
                         </span>
                       </div>
-
-                      <span className="mb-7 inline-flex items-center rounded-[2px] bg-[#2A0A0A]/55 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#FEF3E2] backdrop-blur">
-                        {takenCount}/{photos.length} frame
-                      </span>
                     </div>
                   </div>
                 ) : null}
               </div>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-1.5">
-              <span className="mr-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#7A5A50]">
-                Filter
-              </span>
-              {FILTER_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  aria-pressed={filter === option.value}
-                  onClick={() => setFilter(option.value)}
-                  className={`inline-flex min-h-9 items-center justify-center rounded-full border px-3 text-[11px] font-semibold transition ${
-                    filter === option.value
-                      ? "border-[#BF3131] bg-[#BF3131] text-[#FEF3E2]"
-                      : "border-[#BF3131]/25 bg-[#FFFBF3] text-[#7A3E32] hover:border-[#BF3131]/60"
-                  } ${FOCUS_RING}`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-
-            <p className="mt-3 text-[11px] leading-relaxed text-[#7A5A50]">
-              Flipbook hanya memakai rekaman video. Tekan tombol rekam untuk
-              mengisi {photos.length} frame berurutan, lalu susun jadi buku.
-              Untuk mengganti hasil, rekam ulang seluruh sesi.
-            </p>
-
-            {allFilled ? (
-              <div className="mt-4 flex flex-col gap-3 border-2 border-[#BF3131] bg-[#FEF3E2] p-4 shadow-[4px_4px_0_#7A1C1C] sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#BF3131]">
-                    Semua halaman siap
-                  </p>
-                  <p className="mt-1 text-sm font-semibold leading-snug text-[#2A0A0A]">
-                    Susun jadi flipbook dan putar seperti buku.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setStage("book")}
-                  className={`${BTN_PRIMARY} shrink-0`}
-                >
-                  Susun flipbook
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.9"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M14 5l7 7-7 7M21 12H3" />
-                  </svg>
-                </button>
-              </div>
-            ) : null}
-          </div>
-
-          <aside className="space-y-4">
-            <div className="border border-[#BF3131]/25 bg-[#FFFBF3] p-4 shadow-[0_20px_50px_-42px_rgba(42,10,10,0.75)]">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7A5A50]">
-                  Hitung mundur
-                </h3>
-                <span className="text-[10px] font-bold tabular-nums text-[#BF3131]">
-                  {countdownSetting === 0 ? "off" : `${countdownSetting}s`}
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 sm:gap-x-5">
+              <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
+                <span className="mr-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#7A5A50] sm:mr-1">
+                  Filter
                 </span>
+                {FILTER_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={filter === option.value}
+                    onClick={() => setFilter(option.value)}
+                    className={`inline-flex min-h-11 items-center justify-center rounded-full border px-2.5 text-[11px] font-semibold transition sm:px-3 ${
+                      filter === option.value
+                        ? "border-[#BF3131] bg-[#BF3131] text-[#FEF3E2]"
+                        : "border-[#BF3131]/25 bg-[#FFFBF3] text-[#7A3E32] hover:border-[#BF3131]/60"
+                    } ${FOCUS_RING}`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
               </div>
-              <div className="mt-2 grid grid-cols-2 gap-1.5">
+
+              <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
+                <span className="mr-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#7A5A50] sm:mr-1">
+                  Timer
+                </span>
                 {COUNTDOWN_OPTIONS.map((option) => (
                   <button
                     key={option}
                     type="button"
                     aria-pressed={countdownSetting === option}
                     onClick={() => setCountdownSetting(option)}
-                    className={`inline-flex min-h-9 items-center justify-center rounded-[2px] border px-2 text-xs font-semibold transition ${
+                    className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border px-2.5 text-[11px] font-semibold tabular-nums transition sm:px-3 ${
                       countdownSetting === option
                         ? "border-[#BF3131] bg-[#BF3131] text-[#FEF3E2]"
-                        : "border-[#BF3131]/25 bg-[#FEF3E2]/50 text-[#7A3E32] hover:border-[#BF3131]/60"
+                        : "border-[#BF3131]/25 bg-[#FFFBF3] text-[#7A3E32] hover:border-[#BF3131]/60"
                     } ${FOCUS_RING}`}
                   >
-                    {option === 0 ? "Tanpa timer" : `${option} detik`}
+                    {option === 0 ? "Off" : `${option}s`}
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-[11px] leading-relaxed text-[#7A5A50]">
-                Berlaku untuk pengambilan berikutnya.
-              </p>
             </div>
 
-            <div className="border border-[#BF3131]/25 bg-[#FFFBF3] p-4 shadow-[0_20px_50px_-42px_rgba(42,10,10,0.75)]">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7A5A50]">
-                  Halaman
-                </h3>
-                <span className="text-[10px] font-bold tabular-nums text-[#BF3131]">
-                  {takenCount}/{photos.length}
-                </span>
-              </div>
+            {!allFilled ? (
+              <p className="mt-3 text-[11px] leading-relaxed text-[#7A5A50]">
+                Tekan tombol rekam untuk mengisi {photos.length} frame sekaligus.
+              </p>
+            ) : null}
+          </div>
 
-              <div className="mt-3 grid grid-cols-3 gap-2">
+          <aside className="min-w-0 space-y-3">
+            <div className="border border-[#BF3131]/25 bg-[#FFFBF3] p-3 sm:p-4">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7A5A50]">
+                Hasil
+              </h3>
+
+              <div className="mt-3 grid grid-cols-4 gap-1.5 sm:grid-cols-5 sm:gap-2 lg:grid-cols-3">
                 {photos.map((photo, index) => {
-                  const active = index === activeIndex
                   const pageAsset = selectedFrame?.pages[index] ?? null
                   return (
-                    <div key={index} className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setActiveIndex(index)}
-                        aria-label={`Pilih halaman ${index + 1}`}
-                        aria-pressed={active}
-                        className={`relative aspect-[4/3] w-full overflow-hidden rounded-[2px] border-2 transition ${
-                          active
-                            ? "border-[#BF3131] shadow-[0_0_0_2px_rgba(191,49,49,0.18)]"
-                            : "border-[#BF3131]/20 hover:border-[#BF3131]/55"
-                        } ${FOCUS_RING}`}
-                      >
-                        {photo ? (
-                          pageAsset ? (
-                            <FramedPhoto photo={photo} asset={pageAsset} />
-                          ) : (
-                            <img
-                              src={photo}
-                              alt={`Frame halaman ${index + 1}`}
-                              draggable={false}
-                              className="h-full w-full object-cover"
-                            />
-                          )
+                    <div
+                      key={index}
+                      className="relative aspect-[4/3] overflow-hidden rounded-[2px] border border-[#BF3131]/20 bg-[#FEF3E2]/70"
+                    >
+                      {photo ? (
+                        pageAsset ? (
+                          <FramedPhoto photo={photo} asset={pageAsset} />
                         ) : (
-                          <span className="flex h-full w-full flex-col items-center justify-center gap-0.5 bg-[#FEF3E2]/70 text-[#BF3131]/45">
-                            <span className="text-sm font-extrabold tabular-nums">
-                              {pad(index + 1)}
-                            </span>
-                            <span className="text-[7px] font-semibold uppercase tracking-[0.12em]">
-                              kosong
-                            </span>
-                          </span>
-                        )}
-                        {active ? (
-                          <span className="absolute inset-x-0 bottom-0 bg-[#BF3131] py-0.5 text-[7px] font-bold uppercase tracking-[0.14em] text-[#FEF3E2]">
-                            aktif
-                          </span>
-                        ) : null}
-                      </button>
+                          <img
+                            src={photo}
+                            alt={`Halaman ${index + 1}`}
+                            draggable={false}
+                            className="h-full w-full object-cover"
+                          />
+                        )
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center text-[11px] font-extrabold tabular-nums text-[#BF3131]/40">
+                          {pad(index + 1)}
+                        </span>
+                      )}
                     </div>
                   )
                 })}
               </div>
 
-              <div className="mt-3 grid gap-2">
-                {isRecording ? (
+              {allFilled ? (
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
                   <button
+                    ref={bookTriggerRef}
                     type="button"
-                    onClick={stopRecording}
-                    className={`${BTN_PRIMARY} bg-[#2A0A0A] shadow-[3px_3px_0_#BF3131] hover:bg-[#3A1010] hover:shadow-[4px_4px_0_#BF3131]`}
+                    onClick={() => setStage("book")}
+                    className={BTN_PRIMARY}
                   >
-                    <StopIcon />
-                    Stop rekaman
+                    Lihat flipbook
                   </button>
-                ) : (
                   <button
                     type="button"
-                    onClick={() => {
-                      void handleRecord()
-                    }}
-                    disabled={isCapturing || allFilled}
+                    onClick={handleRetake}
                     className={BTN_SECONDARY}
                   >
-                    <RecordIcon />
-                    Rekam semua halaman
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="border border-[#BF3131]/20 bg-[#FFFBF3]/70 p-4">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A5A50]">
-                Sesi
-              </h3>
-              <p className="mt-1.5 text-xs leading-relaxed text-[#5B3A32]">
-                Frame:{" "}
-                <span className="font-semibold">
-                  {selectedFrame ? selectedFrame.name : "tanpa frame"}
-                </span>
-                <br />
-                Sampul &amp; penutup:{" "}
-                <span className="font-semibold">
-                  {selectedFrame ? "dari frame terpilih" : "desain bawaan"}
-                </span>
-                <br />
-                Timer:{" "}
-                {countdownSetting === 0
-                  ? "tanpa hitung mundur"
-                  : `${countdownSetting} detik`}
-              </p>
-              {isResetConfirm ? (
-                <div className="mt-3 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={clearAll}
-                    className="inline-flex min-h-9 flex-1 items-center justify-center rounded-[2px] bg-[#BF3131] px-3 text-xs font-bold text-[#FEF3E2] transition hover:bg-[#A02828] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131]"
-                  >
-                    Ya, hapus
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsResetConfirm(false)}
-                    className="inline-flex min-h-9 flex-1 items-center justify-center rounded-[2px] border border-[#BF3131]/30 px-3 text-xs font-bold text-[#BF3131] transition hover:bg-[#FEF3E2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BF3131]"
-                  >
-                    Batal
+                    Rekam ulang
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsResetConfirm(true)}
-                  disabled={isCapturing || takenCount === 0}
-                  className={`${BTN_GHOST} mt-2 w-full border border-[#BF3131]/20`}
-                >
-                  Hapus semua frame
-                </button>
+                <p className="mt-3 text-[11px] leading-relaxed text-[#7A5A50]">
+                  Hasil muncul setelah {photos.length} frame terisi.
+                </p>
               )}
             </div>
           </aside>
         </div>
-      ) : (
-        <FlipbookWizard
-          step={stage}
-          frames={frames}
-          selectedFrameId={selectedFrameId}
-          onSelectFrame={setSelectedFrameId}
-          onStepChange={setStage}
-          onStartCapture={() => {
-            const firstEmpty = photos.findIndex((photo) => !photo)
-            setActiveIndex(firstEmpty === -1 ? 0 : firstEmpty)
-            setStage("capture")
-          }}
-        />
       )}
+
+      {stage === "book" ? (
+        <div
+          ref={resultDialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="flipbook-result-title"
+          tabIndex={-1}
+          className="fixed inset-0 z-[80] flex flex-col bg-[#FEF3E2] outline-none"
+        >
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#BF3131]/20 px-4 py-2.5 sm:px-6">
+            <p
+              id="flipbook-result-title"
+              className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7A5A50]"
+            >
+              Hasil flipbook
+            </p>
+            <button
+              type="button"
+              onClick={() => setStage("capture")}
+              className={`${BTN_SECONDARY} min-h-11 px-3 text-xs`}
+            >
+              Tutup
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+              >
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto overscroll-contain">
+            <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-5 sm:px-6 sm:pb-12">
+              <FlipbookViewer
+                photos={photos.filter((photo): photo is string => Boolean(photo))}
+                frame={selectedFrame}
+                onRetake={handleRetake}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

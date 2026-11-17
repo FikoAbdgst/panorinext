@@ -2,7 +2,6 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import Link from "next/link"
 import {
   useCallback,
   useEffect,
@@ -18,7 +17,6 @@ import { FramedPhoto } from "@/components/public/flipbook/framed-photo"
 import {
   buildMeta,
   createBackCoverPng,
-  createContactSheetPng,
   createCoverPng,
   createFlipbookGif,
   createPhotoPagePng,
@@ -398,12 +396,10 @@ export function FlipbookViewer({
   photos,
   frame,
   onRetake,
-  onRestart,
 }: {
   photos: string[]
   frame: FlipbookFrame | null
   onRetake: () => void
-  onRestart: () => void
 }) {
   const meta = useMemo(() => buildMeta(), [])
   const bookPages = useMemo<BookPage[]>(
@@ -471,17 +467,6 @@ export function FlipbookViewer({
       nonce: nonceRef.current,
     })
   }, [current, flip])
-
-  const jumpTo = useCallback(
-    (index: number) => {
-      if (flip || index < 0 || index >= totalPages || index === current) {
-        return
-      }
-      setAutoplay(false)
-      setCurrent(index)
-    },
-    [current, flip, totalPages],
-  )
 
   useEffect(() => {
     if (!flip) {
@@ -613,44 +598,6 @@ export function FlipbookViewer({
     }
   }
 
-  const handleShare = async () => {
-    if (busy) return
-    setBusy({ label: "Menyiapkan file untuk dibagikan...", progress: null })
-    try {
-      const blob = await createContactSheetPng(photos, meta, frame)
-      const file = new File([blob], flipbookFilename("flipbook"), {
-        type: "image/png",
-      })
-      const canShare =
-        typeof navigator !== "undefined" &&
-        typeof navigator.canShare === "function" &&
-        navigator.canShare({ files: [file] })
-
-      if (canShare && typeof navigator.share === "function") {
-        await navigator.share({
-          files: [file],
-          title: "Flipbook PanoriCam",
-          text: `Flipbook dari PanoriCam — ${photos.length} halaman.`,
-        })
-        showToast("Flipbook dibagikan.", "success", 2500)
-      } else {
-        downloadBlob(blob, flipbookFilename("flipbook"))
-        showToast(
-          "Perangkat belum mendukung bagikan langsung. File flipbook sudah diunduh.",
-          "info",
-          4500,
-        )
-      }
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        return
-      }
-      showToast("Gagal membagikan flipbook.", "error")
-    } finally {
-      setBusy(null)
-    }
-  }
-
   const baseIndex = flip
     ? flip.direction === "next"
       ? flip.to
@@ -674,28 +621,13 @@ export function FlipbookViewer({
         />
       ) : null}
 
-      <div className="mb-4 flex items-center justify-end">
-        <Link
-          href="/fitur"
-          className={`${BTN_SECONDARY} min-h-10 px-3 text-xs`}
-        >
-          <ArrowIcon direction="prev" />
-          Kembali ke Fitur
-        </Link>
-      </div>
-
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
-        <div>
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#BF3131]">
-                Hasil flipbook
-              </p>
-              <h2 className="mt-1 text-2xl font-extrabold leading-tight tracking-[-0.03em] text-[#2A0A0A] sm:text-3xl">
-                Siap diputar.
-              </h2>
-            </div>
-            <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <h2 className="text-2xl font-extrabold leading-tight tracking-[-0.03em] text-[#2A0A0A] sm:text-3xl">
+              Siap diputar.
+            </h2>
+            <div className="flex flex-wrap items-center justify-end gap-1.5">
               {frame ? (
                 <span className="border border-[#BF3131]/25 bg-[#FEF3E2] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#BF3131]">
                   {frame.name}
@@ -775,36 +707,6 @@ export function FlipbookViewer({
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#7A5A50]">
                 {currentLabel}
               </p>
-              <div
-                className="mt-2 flex max-w-[280px] flex-wrap items-center justify-center gap-1 sm:max-w-none"
-                role="tablist"
-                aria-label="Pilih halaman flipbook"
-              >
-                {bookPages.map((page, index) => {
-                  const label =
-                    page.kind === "cover"
-                      ? "Sampul"
-                      : page.kind === "back"
-                        ? "Sampul belakang"
-                        : `Halaman ${page.index + 1}`
-                  const active = index === current
-                  return (
-                    <button
-                      key={`${page.kind}-${index}`}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      aria-label={label}
-                      onClick={() => jumpTo(index)}
-                      className={`h-2.5 rounded-full transition-all duration-200 ${
-                        active
-                          ? "w-6 bg-[#BF3131]"
-                          : "w-2.5 bg-[#BF3131]/25 hover:bg-[#BF3131]/50"
-                      }`}
-                    />
-                  )
-                })}
-              </div>
             </div>
 
             <button
@@ -855,13 +757,10 @@ export function FlipbookViewer({
             <button type="button" onClick={onRetake} className={BTN_SECONDARY}>
               Rekam ulang
             </button>
-            <button type="button" onClick={onRestart} className={BTN_SECONDARY}>
-              Mulai baru
-            </button>
           </div>
 
           <p className="mt-3 text-center text-[10px] font-medium uppercase tracking-[0.16em] text-[#7A5A50]">
-            Geser halaman, klik panah, atau pakai tombol ← → di keyboard.
+            Geser, klik panah, atau pakai tombol ← → di keyboard.
           </p>
         </div>
 
@@ -899,14 +798,6 @@ export function FlipbookViewer({
               >
                 Unduh GIF flipbook
               </button>
-              <button
-                type="button"
-                onClick={handleShare}
-                disabled={Boolean(busy)}
-                className={BTN_SECONDARY}
-              >
-                Bagikan flipbook
-              </button>
             </div>
 
             {busy ? (
@@ -937,48 +828,6 @@ export function FlipbookViewer({
               </p>
             )}
           </div>
-
-          {photos.length > 1 ? (
-            <div className="border border-[#BF3131]/20 bg-[#FFFBF3]/70 p-3">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7A5A50]">
-                Lompat ke halaman
-              </h3>
-              <div className="mt-2.5 grid grid-cols-4 gap-2">
-                {photos.map((photo, index) => {
-                  const active = current === index + 1
-                  const pageAsset = frame?.pages[index] ?? null
-                  return (
-                    <button
-                      key={`${photo.slice(-16)}-${index}`}
-                      type="button"
-                      onClick={() => jumpTo(index + 1)}
-                      aria-label={`Buka halaman ${index + 1}`}
-                      aria-current={active ? "page" : undefined}
-                      className={`relative aspect-[4/3] overflow-hidden rounded-[2px] border-2 transition ${
-                        active
-                          ? "border-[#BF3131] shadow-[0_0_0_2px_rgba(191,49,49,0.2)]"
-                          : "border-transparent opacity-80 hover:opacity-100"
-                      }`}
-                    >
-                      {pageAsset ? (
-                        <FramedPhoto photo={photo} asset={pageAsset} />
-                      ) : (
-                        <img
-                          src={photo}
-                          alt=""
-                          draggable={false}
-                          className="h-full w-full object-cover"
-                        />
-                      )}
-                      <span className="absolute bottom-0 left-0 bg-[#2A0A0A]/75 px-1 text-[8px] font-bold tabular-nums text-[#FEF3E2]">
-                        {pad(index + 1)}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ) : null}
         </aside>
       </div>
     </div>

@@ -8,11 +8,7 @@ import {
   type ReactNode,
 } from "react";
 
-export type FlipbookStage =
-  | "frame"
-  | "tutorial"
-  | "capture"
-  | "book";
+export type FlipbookStage = "frame" | "capture" | "book";
 
 type FlipbookStageContextValue = {
   stage: FlipbookStage;

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { AosRefresh } from "@/components/public/aos-refresh";
-import { BoothSwitch } from "@/components/public/booth-switch";
 import { CustomFrameSection } from "@/components/public/custom-frame-section";
 import { FrameCatalog } from "@/components/public/frame/frame-catalog";
 import { PREMIUM_PUBLIC_ENABLED } from "@/lib/premium/availability";
@@ -103,7 +102,6 @@ export default function FramePage({ searchParams }: PageProps<"/frame">) {
       </section>
 
       <CustomFrameSection />
-      <BoothSwitch from="frame" />
       <AosRefresh />
     </div>
   );

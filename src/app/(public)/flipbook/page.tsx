@@ -34,10 +34,10 @@ function StudioFallback() {
   return (
     <div
       aria-busy="true"
-      className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]"
+      className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]"
     >
-      <div className="h-[520px] animate-pulse border border-[#BF3131]/15 bg-[#FFFBF3]" />
-      <div className="h-[520px] animate-pulse border border-[#BF3131]/15 bg-[#FFFBF3]" />
+      <div className="h-[320px] animate-pulse border border-[#BF3131]/15 bg-[#FFFBF3] sm:h-[420px] lg:h-[520px]" />
+      <div className="h-[320px] animate-pulse border border-[#BF3131]/15 bg-[#FFFBF3] sm:h-[420px] lg:h-[520px]" />
     </div>
   );
 }
@@ -70,9 +70,8 @@ export default function FlipbookPage() {
                   </h1>
 
                   <p className="mt-5 max-w-xl text-pretty text-sm leading-relaxed text-[#5B3A32] sm:text-base">
-                    Pilih frame seperti photostrip, ikuti tutorial singkat, lalu
-                    rekam 10 frame berurutan. Hasilnya diputar seperti buku
-                    sungguhan.
+                    Pilih frame, rekam 10 frame berurutan, lalu putar hasilnya
+                    seperti buku sungguhan.
                   </p>
                 </div>
 
